@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "baseUrl": ".",
+    "typeRoots": ["node_modules/@types"],
+    "lib": [
+      "DOM",
+      "es2016",
+      "ES6",
+      "ES2015.Promise",
+      "ES2018.Promise",
+      "es2015.core",
+      "ScriptHost"
+    ]
+  },
+  "include": ["__tests__", "src"]
+}
