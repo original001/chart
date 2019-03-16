@@ -4,6 +4,7 @@ import { data, ChartDto } from "./chart_data";
 
 export const CHART_HEIGHT = 200;
 export const CHART_WIDTH = 900;
+export const SLIDER_HEIGHT = 50;
 const SCALE_X = 10;
 const NS = "http://www.w3.org/2000/svg";
 
@@ -12,47 +13,56 @@ type Chart = Dot[];
 
 export const createPathAttr = (
   chart: Chart,
-  scaleX: number,
-  scaleY: number,
-  offsetY: number = 0,
-  offsetX: number = 0
-): string =>
+  projectX: (x: number) => number,
+  projectY: (y: number) => number
+) =>
   chart.reduce(
     (acc, [x, y], i) =>
-    i === 0 ? `M0 ${(y - offsetY) * scaleY}` :
-      acc + ` L${(i) * scaleX + offsetX} ${(y - offsetY) * scaleY}`,
+      i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
     ""
   );
 
 export const createDots = (chart: Chart, offset: number = 0, color: string) =>
   chart.map(([x, y], i) => createSvgDot(i * 100, y, offset, color));
 
+export const createSvg = (
+  type: string,
+  attrs: [string, string | number][] = []
+) => {
+  const svg = document.createElementNS(NS, type);
+
+  attrs.forEach(([caption, value]) => {
+    svg.setAttributeNS(null, caption, value + "");
+  });
+  return svg;
+};
+
+export const createSvgGroup = () => createSvg("g");
+
 export const createSvgDot = (
   x: number,
   y: number,
   offset: number,
   color: string
-) => {
-  const svgDot = document.createElementNS(NS, "circle");
-  //innerHTML?
-  svgDot.setAttributeNS(null, "cx", x + "");
-  svgDot.setAttributeNS(null, "cy", y + offset + "");
-  svgDot.setAttributeNS(null, "r", "10");
-  svgDot.setAttributeNS(null, "stroke-width", "2");
-  svgDot.setAttributeNS(null, "stroke", color); //need color
-  svgDot.setAttributeNS(null, "fill", "#fff"); //need color
-  return svgDot;
-};
+) =>
+  createSvg("circle", [
+    ["cx", x],
+    ["cy", y + offset + ""],
+    ["r", "10"],
+    ["stroke-width", "2"],
+    ["stroke", color],
+    ["fill", "#fff"]
+  ]);
 
-export const createSvg = () => {
+export const createRootSvg = () => {
   const svg = document.createElementNS(NS, "svg");
-  svg.setAttributeNS(null, "width", "100%");
-  svg.setAttributeNS(null, "height", CHART_HEIGHT + 50 + "");
-  svg.setAttributeNS(
-    null,
-    "viewBox",
-    `0 ${-CHART_HEIGHT} ${CHART_WIDTH} ${CHART_HEIGHT}`
-  );
+  svg.setAttributeNS(null, "width", CHART_WIDTH + "");
+  svg.setAttributeNS(null, "height", CHART_HEIGHT + "");
+  // svg.setAttributeNS(
+  //   null,
+  //   "viewBox",
+  //   `0 ${-CHART_HEIGHT} ${CHART_WIDTH} ${CHART_HEIGHT}`
+  // );
   return svg;
 };
 
@@ -75,15 +85,15 @@ export const createSvgRuler = (y: number, label: string) => {
   const svgLine = document.createElementNS(NS, "line");
   //innerHTML?
   svgLine.setAttributeNS(null, "x1", "0");
-  svgLine.setAttributeNS(null, "y1", y + "");
+  svgLine.setAttributeNS(null, "y1", CHART_HEIGHT - y + "");
   svgLine.setAttributeNS(null, "x2", "100%");
-  svgLine.setAttributeNS(null, "y2", y + "");
+  svgLine.setAttributeNS(null, "y2", CHART_HEIGHT - y + "");
   svgLine.setAttributeNS(null, "stroke-width", "1");
   svgLine.setAttributeNS(null, "stroke", "gray"); //need color
   const svgText = document.createElementNS(NS, "text");
   //innerHTML?
   svgText.setAttributeNS(null, "x", "0");
-  svgText.setAttributeNS(null, "y", y - 10 + "");
+  svgText.setAttributeNS(null, "y", CHART_HEIGHT - y - 10 + "");
   svgText.setAttributeNS(null, "fill", "gray"); //need color
   svgText.innerHTML = label;
   return [svgLine, svgText];
@@ -98,6 +108,49 @@ export const createSvgLabel = (timestamp: number, offset: number) => {
   const [_, month, day] = new Date(timestamp).toString().split(" ");
   svgText.innerHTML = `${month} ${day}`;
   return svgText;
+};
+
+export const createRaf = (fn: (...args) => void) => {
+  let isRafAvailable = true;
+  return (...args) => {
+    if (isRafAvailable) {
+      isRafAvailable = false;
+      requestAnimationFrame(() => {
+        fn(...args);
+        isRafAvailable = true;
+      });
+    }
+  };
+};
+
+export const createSliderMarkup = onUpdate => {
+  const wrapper = document.createElement("div");
+  wrapper.className = "sliderWrapper";
+  wrapper.style.left = "-1000px";
+  const onMouseMove = createRaf((e: MouseEvent) => {
+    const newPosition = e.clientX - wrapper.parentElement.offsetLeft - 1000;
+    wrapper.style.left = newPosition + "px";
+
+    const newData: ChartDto = {
+      ...data[0],
+      columns: data[0].columns.map(col => col.slice(0))
+    };
+
+    newData.columns.forEach(col => {
+      col.splice((-newPosition - 1000) / 10);
+    });
+    onUpdate(newData);
+  });
+  const slider = document.createElement("div");
+  slider.className = "slider";
+  slider.addEventListener("mousedown", e => {
+    document.addEventListener("mousemove", onMouseMove);
+  });
+  document.addEventListener("mouseup", e => {
+    document.removeEventListener("mousemove", onMouseMove);
+  });
+  wrapper.append(slider);
+  return wrapper;
 };
 
 export const createLabels = () => {};
@@ -124,11 +177,12 @@ export const getHighLow = (data: ChartDto) => {
   const lowY = extremum(ar => Math.min.apply(Math, ar), 1);
   const highX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const lowX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
-  return [highY, lowY, highX, lowY];
+  return [highY, lowY, highX, lowX];
 };
 
 export const createChart = (data: ChartDto) => {
-  const svg = createSvg();
+  document.getElementById("main").innerHTML = "";
+  const svg = createRootSvg();
   const charts = getChartsFromData(data);
   const [highY, lowY, highX, lowX] = getHighLow(data);
   const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
@@ -138,72 +192,60 @@ export const createChart = (data: ChartDto) => {
   );
   const scaleY = getScaleY(CHART_HEIGHT, max, min);
   const scaleX = getScaleX(CHART_WIDTH, data.columns[0].length - 1);
-  const reversedScaleY = -scaleY;
-  const svgRulers = createRulers(values, reversedScaleY);
+  const svgRulers = createRulers(values, scaleY);
+
   const svgCharts = charts.map(chart =>
     createSvgPath(
-      createPathAttr(chart, scaleX, reversedScaleY, values[0]),
+      createPathAttr(
+        chart,
+        x => x * scaleX,
+        y => CHART_HEIGHT - (y - values[0]) * scaleY
+      ),
       "gray"
     )
   ); //?
   // const svgDots = charts.map(chart => createDots(chart, values[0], "gray"));
+  const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
+  const svgChartsInSlider = charts.map(chart =>
+    createSvgPath(
+      createPathAttr(
+        chart,
+        x => x * scaleX,
+        y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
+      ),
+      "gray"
+    )
+  ); //?
 
+  const div = document.createElement("div");
   svgRulers.forEach(([line, text]) => {
     svg.append(line, text);
   });
   svg.append.apply(svg, svgCharts);
-  svg.append.apply(svg, labels);
-  // svg.append.apply(svg, svgDots.reduce((acc, dots) => acc.concat(dots), []));
-  return svg;
-  // createLabels()
-  // createTooltip()
-  // const chart = document.createElement("div");
-  // chart.addEventListener("mousemove", e => {
-  //   updateSvgInDom({ activeLabelIndex: e.clientX });
-  //   //updatebutton
-  // });
+
+  div.append(svg);
+  const svgLabelsRoot = createSvg("svg", [
+    ["width", CHART_WIDTH],
+    ["height", "30"]
+  ]);
+  svgLabelsRoot.append.apply(svgLabelsRoot, labels);
+  div.append(svgLabelsRoot);
+  const svgSliderRoot = createSvg("svg", [
+    ["width", CHART_WIDTH],
+    ["height", SLIDER_HEIGHT]
+  ]);
+  svgSliderRoot.append.apply(svgSliderRoot, svgChartsInSlider);
+  const sliderRoot = document.createElement("div");
+  sliderRoot.style.position = "relative";
+  sliderRoot.style.overflow = "hidden";
+  const slider = createSliderMarkup(createChart);
+  sliderRoot.append(svgSliderRoot);
+  sliderRoot.append(slider);
+  div.append(sliderRoot);
+
+  document.getElementById("main").append(div);
 };
 
-const start = () =>
-  document.getElementById("main").append(createChart(data[0]));
+const start = () => createChart(data[0]);
 
 window["start"] = start;
-
-interface State {
-  xScale: number;
-  yScale: number;
-  rulers: number[];
-  labels: number[];
-  offset: number;
-  visibility: { [x: string]: boolean };
-  activeLabelIndex: number;
-}
-
-export const updateSvgInDom = (state: Partial<State>) => {
-  // xScale, yScale, rulers, labels, position, dots, tooltip -> update attrs
-  // if rulers !== nextRulers
-  //   moveup or movedown and hide rulers than remove
-  // ...
-  // raf(appendToDom)
-};
-
-export const createSlider = svgChart => {
-  const SCALE = 100;
-  // create dom element
-  // add eventListeners
-  const slider = document.createElement("div");
-  slider.addEventListener("mousemove", e => {
-    updateSvgInDom({ offset: e.clientX });
-    //updatebutton
-  });
-};
-
-export const createButtons = (chartDto: ChartDto) => {
-  //create buttons
-  // add eventListeners per button
-  const button = document.createElement("div");
-  button.addEventListener("click", () => {
-    updateSvgInDom({ visibility: { y: false } });
-    //updatebutton
-  });
-};
