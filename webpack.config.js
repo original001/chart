@@ -2,17 +2,27 @@ const path = require("path");
 const ClosureCompilerPlugin = require("webpack-closure-compiler");
 
 module.exports = {
-  context: path.resolve(__dirname, "src"),
   entry: {
-    app: "./app.js"
+    app: "./src/app"
   },
   output: {
-    filename: "bundle.js"
+    filename: "bundle.js",
+    publicPath: "/dist"
   },
-  optimization: {
-    minimizer: [
-      new ClosureCompilerPlugin({mode: 'AGGRESSIVE_BUNDLE'}, { })
+  module: {
+    rules: [
+      {
+        test: /.ts$/,
+        loader: "ts-loader",
+        include: [path.resolve(__dirname, "./src")]
+      }
     ]
   },
-  devtool: false
+  optimization: {
+    minimizer: [new ClosureCompilerPlugin({ mode: "AGGRESSIVE_BUNDLE" }, {})]
+  },
+  resolve: {
+    extensions: ['.js', '.ts']
+  },
+  devtool: 'inline'
 };

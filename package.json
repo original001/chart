@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "webpack-dev-server"
   },
   "author": "",
   "license": "ISC",
@@ -21,6 +21,7 @@
     "jest": "^24.5.0",
     "terser-webpack-plugin": "^1.2.3",
     "ts-jest": "^24.0.0",
+    "ts-loader": "^5.3.3",
     "webpack-cli": "^3.2.3",
     "webpack-closure-compiler": "^2.1.6"
   }

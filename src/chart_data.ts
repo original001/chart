@@ -1,6 +1,12 @@
-[
+export interface ChartDto {
+  columns: (number | string)[][];
+  types: { [id: string]: "line" | "x" };
+  names: { [id: string]: string };
+  colors: { [id: string]: string };
+}
+export const data: ChartDto[] = [
   {
-    "columns": [
+    columns: [
       [
         "x",
         1542412800000,
@@ -347,12 +353,12 @@
         52
       ]
     ],
-    "types": { "y0": "line", "y1": "line", "x": "x" },
-    "names": { "y0": "#0", "y1": "#1" },
-    "colors": { "y0": "#3DC23F", "y1": "#F34C44" }
+    types: { y0: "line", y1: "line", x: "x" },
+    names: { y0: "#0", y1: "#1" },
+    colors: { y0: "#3DC23F", y1: "#F34C44" }
   },
   {
-    "columns": [
+    columns: [
       [
         "x",
         1542412800000,
@@ -699,12 +705,12 @@
         4809
       ]
     ],
-    "types": { "y0": "line", "y1": "line", "x": "x" },
-    "names": { "y0": "#0", "y1": "#1" },
-    "colors": { "y0": "#3DC23F", "y1": "#F34C44" }
+    types: { y0: "line", y1: "line", x: "x" },
+    names: { y0: "#0", y1: "#1" },
+    colors: { y0: "#3DC23F", y1: "#F34C44" }
   },
   {
-    "columns": [
+    columns: [
       [
         "x",
         1542412800000,
@@ -1051,12 +1057,12 @@
         5224
       ]
     ],
-    "types": { "y0": "line", "y1": "line", "x": "x" },
-    "names": { "y0": "#0", "y1": "#1" },
-    "colors": { "y0": "#3DC23F", "y1": "#F34C44" }
+    types: { y0: "line", y1: "line", x: "x" },
+    names: { y0: "#0", y1: "#1" },
+    colors: { y0: "#3DC23F", y1: "#F34C44" }
   },
   {
-    "columns": [
+    columns: [
       [
         "x",
         1542412800000,
@@ -1403,12 +1409,12 @@
         18
       ]
     ],
-    "types": { "y0": "line", "y1": "line", "x": "x" },
-    "names": { "y0": "#0", "y1": "#1" },
-    "colors": { "y0": "#3DC23F", "y1": "#F34C44" }
+    types: { y0: "line", y1: "line", x: "x" },
+    names: { y0: "#0", y1: "#1" },
+    colors: { y0: "#3DC23F", y1: "#F34C44" }
   },
   {
-    "columns": [
+    columns: [
       [
         "x",
         1520035200000,
@@ -3285,19 +3291,19 @@
         439140
       ]
     ],
-    "types": {
-      "y0": "line",
-      "y1": "line",
-      "y2": "line",
-      "y3": "line",
-      "x": "x"
+    types: {
+      y0: "line",
+      y1: "line",
+      y2: "line",
+      y3: "line",
+      x: "x"
     },
-    "names": { "y0": "#0", "y1": "#1", "y2": "#2", "y3": "#3" },
-    "colors": {
-      "y0": "#cb513a",
-      "y1": "#73c03a",
-      "y2": "#65b9ac",
-      "y3": "#4682b4"
+    names: { y0: "#0", y1: "#1", y2: "#2", y3: "#3" },
+    colors: {
+      y0: "#cb513a",
+      y1: "#73c03a",
+      y2: "#65b9ac",
+      y3: "#4682b4"
     }
   }
-]
+];
