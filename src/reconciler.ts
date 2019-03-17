@@ -101,6 +101,7 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
     //unmount
     render(nextTree, lastTree.host);
   }
+  nextTree.host = host;
 
   if (prevProps !== props) {
     for (let nextProp in props) {
@@ -140,7 +141,6 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
 export const updateComponent = (comp: Component) => {
   const nextTree = comp.render(comp.props, comp.state);
   updateChildren(comp._innerTree, nextTree);
-  comp._innerTree.element = nextTree.element;
-  comp._innerTree.props = nextTree.props;
+  comp._innerTree = nextTree
   comp.didUpdate && comp.didUpdate(comp);
 };
