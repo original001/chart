@@ -9,6 +9,14 @@ import {
 } from "../src/app";
 import { getBounds } from "../src/axis";
 import { ChartDto } from "../src/chart_data";
+import {
+  Tree,
+  render,
+  Component,
+  Ruller,
+  createElement,
+  renderComponent
+} from "../src/reconciler";
 
 describe("", () => {
   // it("create path", () => {
@@ -19,7 +27,7 @@ describe("", () => {
     const path = createPathAttr(
       [[10000, 100], [20000, 105], [30000, 110]],
       x => x * 100,
-      y => 200 - (y - 100) * 20 
+      y => 200 - (y - 100) * 20
     );
     expect(path).toBe("M0 200 L100 100 L200 0");
   });
@@ -81,5 +89,47 @@ describe("axis", () => {
   it("get bounds 820900-1417200", () => {
     const { values } = getBounds(200, 1417200, 820900);
     expect(values).toEqual([800000, 1000000, 1200000, 1400000]);
+  });
+});
+
+describe("render", () => {
+  const ruler = (y, label) =>
+    createElement("g", {}, [
+      // createElement("line", {
+      //   x1: "0",
+      //   y1: y + "",
+      //   x2: "100%",
+      //   y2: y + "",
+      //   "stroke-width": "1",
+      //   stroke: "gray" //need col,
+      // }),
+      // createElement("text", {
+      //   x: 0,
+      //   y: y - 10 + "",
+      //   fill: "gray",
+      //   caption: label
+      // }),
+      createElement(Ruller, {
+        values: [1, 2, 3],
+        scale: 1
+      })
+    ]);
+  xit("", () => {
+    expect(render(ruler(1, "1"), document.body)).toEqual({});
+  });
+  it("", () => {
+    const tree = render(ruler(1, "1"), document.body);
+    // expect(tree).toEqual({})
+    // Ruller.send('update');
+    expect(tree).toEqual({})
+  });
+  xit("renderComponent", () => {
+    expect(
+      renderComponent(createElement(Ruller, { values: [1, 2, 3], scale: 1 }))
+    ).toEqual({});
+  });
+
+  xit("createElement", () => {
+    expect(ruler(1, "1")).toBe({});
   });
 });

@@ -181,7 +181,6 @@ export const getHighLow = (data: ChartDto) => {
 };
 
 export const createChart = (data: ChartDto) => {
-  document.getElementById("main").innerHTML = "";
   const svg = createRootSvg();
   const charts = getChartsFromData(data);
   const [highY, lowY, highX, lowX] = getHighLow(data);
@@ -194,6 +193,7 @@ export const createChart = (data: ChartDto) => {
   const scaleX = getScaleX(CHART_WIDTH, data.columns[0].length - 1);
   const svgRulers = createRulers(values, scaleY);
 
+
   const svgCharts = charts.map(chart =>
     createSvgPath(
       createPathAttr(
@@ -203,7 +203,7 @@ export const createChart = (data: ChartDto) => {
       ),
       "gray"
     )
-  ); //?
+  );
   // const svgDots = charts.map(chart => createDots(chart, values[0], "gray"));
   const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
   const svgChartsInSlider = charts.map(chart =>
