@@ -1,6 +1,6 @@
 export type ComponentType = () => Component;
 export interface Tree {
-  host?: SVGElement;
+  host?: Element;
   element: string | ComponentType;
   props: Props;
 }
@@ -11,9 +11,9 @@ export interface Props {
 
 export interface Component {
   _innerTree: Tree;
-  state: {};
-  props: Props;
-  getDeriviedStateFromProps: (props, state) => {};
+  state?: {};
+  props?: Props;
+  getDeriviedStateFromProps?: (props, state) => {};
   didUpdate?: (self: Component) => void;
   didMount?: () => void;
   reducer?: (action, state) => {};
@@ -21,26 +21,7 @@ export interface Component {
   send: (action: string) => void;
   host: Element;
 }
-const CHART_HEIGHT = 200;
 const NS = "http://www.w3.org/2000/svg";
-
-const ruler = (y, label) =>
-  createElement("g", {}, [
-    createElement("line", {
-      x1: "0",
-      y1: CHART_HEIGHT - y + ""
-      // x2: "100%",
-      // y2: CHART_HEIGHT - y + "",
-      // "stroke-width": "1",
-      // stroke: "gray" //need col,
-    }),
-    createElement("text", {
-      // x: 0,
-      // y: CHART_HEIGHT - y - 10 + "",
-      // fill: "gray",
-      caption: label
-    })
-  ]);
 
 export const createElement = (
   element: string | ComponentType,
@@ -61,41 +42,7 @@ export const createElement = (
   };
 };
 
-export const Ruller : ComponentType = () => ({
-  state: {
-    values: null,
-    scale: null,
-    status: "initial" as "update" | "ready" | "initial"
-  },
-  getDeriviedStateFromProps: (props, state) => {
-    if (!state.values) return props;
-    if (state.values !== props.values) {
-      return {
-        ...state,
-        status: "update"
-      };
-    }
-  },
-  didUpdate() {
-    setTimeout(() => {
-      this.send("update");
-    }, 300);
-  },
-  render: (props, state) => {
-    return createElement(
-      "g",
-      {},
-      props.values
-        .slice(state.status === "ready" ? 1 : 0)
-        .map(y => ruler((y - props.values[0]) * props.scale, state.status))
-    );
-  },
-  reducer: (action, state) => {
-    switch (action) {
-      case "update":
-        return { ...state, status: "ready" };
-    }
-  },
+export const componentMixin = () => ({
   props: null,
   host: null,
   _innerTree: null,
@@ -107,15 +54,25 @@ export const Ruller : ComponentType = () => ({
 });
 
 export const render = (tree: Tree, container: Element) => {
-  if (typeof tree.element === "string") {
-    const el = document.createElementNS(NS, tree.element);
+  const type = tree.element;
+  if (typeof type === "string") {
+    const el = /div|span/.test(type)
+      ? document.createElement(type)
+      : document.createElementNS(NS, type);
+    const children = tree.props.children;
     tree.host = el;
     for (let caption in tree.props) {
       if (caption === "children") continue;
       el.setAttributeNS(null, caption, tree.props[caption]);
     }
-    if (tree.props.children) {
-      tree.props.children = tree.props.children.map(child => render(child, el));
+    if (children) {
+      if (typeof children === "string") {
+        el.textContent = children;
+      } else {
+        tree.props.children = tree.props.children.map(child =>
+          render(child, el)
+        );
+      }
     }
     container && container.append(el);
   } else {
@@ -126,7 +83,7 @@ export const render = (tree: Tree, container: Element) => {
 };
 
 export const renderComponent = (tree: Tree) => {
-  if (typeof tree.element === 'string') return tree;
+  if (typeof tree.element === "string") return tree;
   const comp = tree.element();
   comp.props = tree.props;
   const innerTree = comp.render(tree.props, comp.state);
@@ -170,12 +127,11 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
     for (let prevChild of prevProps.children) {
       const prevChildIndex = prevProps.children.indexOf(prevChild);
       if (!props.children[prevChildIndex]) {
-        host.removeChild(prevChild.host)
+        host.removeChild(prevChild.host);
       }
     }
   }
 };
-
 
 export const updateComponent = (comp: Component) => {
   const nextTree = comp.render(comp.props, comp.state);

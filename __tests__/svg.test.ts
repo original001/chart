@@ -1,6 +1,5 @@
 import {
   createPathAttr,
-  createSvgPath,
   zipDots,
   getChartsFromData,
   createChart,
@@ -13,10 +12,10 @@ import {
   Tree,
   render,
   Component,
-  Ruller,
   createElement,
   renderComponent
 } from "../src/reconciler";
+import { Ruller } from "../src/ruller";
 
 describe("", () => {
   // it("create path", () => {
@@ -30,12 +29,6 @@ describe("", () => {
       y => 200 - (y - 100) * 20
     );
     expect(path).toBe("M0 200 L100 100 L200 0");
-  });
-  xit("create svgPath", () => {
-    const svgPath = createSvgPath("M1 1 L2 2 L3 3", "#3DC23F");
-    expect(svgPath).toBe(
-      '<path path="M1 1 L2 2 L3 3" stroke="#3DC23F" stroke-width="2" />'
-    );
   });
 });
 
@@ -117,7 +110,7 @@ describe("render", () => {
   xit("", () => {
     expect(render(ruler(1, "1"), document.body)).toEqual({});
   });
-  it("", () => {
+  xit("", () => {
     const tree = render(ruler(1, "1"), document.body);
     // expect(tree).toEqual({})
     // Ruller.send('update');
