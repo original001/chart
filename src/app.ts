@@ -122,7 +122,7 @@ export const createChart = (data: ChartDto) => {
     {
       style: `position: relative; overflow: hidden; height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
     },
-    [createElement(Slider, {}, sliderChart)]
+    [createElement(Slider, {}), sliderChart]
   );
   const labels = createElement(
     "svg",

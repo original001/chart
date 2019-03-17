@@ -18,7 +18,7 @@ export interface Component {
   didMount?: () => void;
   reducer?: (action, state) => {};
   render: (props, state) => Tree;
-  send: (action: string) => void;
+  send: (action: Action) => void;
   host: Element;
 }
 const NS = "http://www.w3.org/2000/svg";
@@ -42,11 +42,16 @@ export const createElement = (
   };
 };
 
+export interface Action {
+  type: string;
+  payload: {}
+}
+
 export const componentMixin = () => ({
   props: null,
   host: null,
   _innerTree: null,
-  send(action: string) {
+  send(action: Action) {
     // console.log(this)
     this.state = this.reducer(action, this.state);
     updateComponent(this);
@@ -76,20 +81,18 @@ export const render = (tree: Tree, container: Element) => {
     }
     container && container.append(el);
   } else {
-    const renderedTree = renderComponent(tree);
-    render(renderedTree, container);
+    const comp = type();
+    comp.props = tree.props;
+    const innerTree = comp.render(tree.props, comp.state);
+    comp._innerTree = innerTree;
+    render(innerTree, container);
+
+    comp.didMount && comp.didMount();
   }
   return tree;
 };
 
-export const renderComponent = (tree: Tree) => {
-  if (typeof tree.element === "string") return tree;
-  const comp = tree.element();
-  comp.props = tree.props;
-  const innerTree = comp.render(tree.props, comp.state);
-  comp._innerTree = innerTree;
-  return innerTree;
-};
+export const renderComponent = (tree: Tree) => {};
 
 const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   const { props: prevProps, host } = lastTree;
@@ -121,6 +124,7 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       if (child === prevChild) {
         continue;
       } else {
+        //todo: prevchild shoud have host
         updateChildren(prevChild, child);
       }
     }
@@ -136,6 +140,7 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
 export const updateComponent = (comp: Component) => {
   const nextTree = comp.render(comp.props, comp.state);
   updateChildren(comp._innerTree, nextTree);
-  comp._innerTree = nextTree;
-  comp.didUpdate(comp);
+  comp._innerTree.element = nextTree.element;
+  comp._innerTree.props = nextTree.props;
+  comp.didUpdate && comp.didUpdate(comp);
 };
