@@ -39,11 +39,6 @@ export const Ruller: ComponentType = () => ({
       };
     }
   },
-  didUpdate() {
-    setTimeout(() => {
-      this.send("update");
-    }, 300);
-  },
   render: (props, state) => {
     return createElement(
       "g",

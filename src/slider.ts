@@ -48,6 +48,11 @@ export const Slider: ComponentType = () => ({
       e.dataTransfer.setDragImage(dragImage, 0, 0);
     };
   },
+  didUpdate() {
+    const left = this.state.left / CHART_WIDTH;
+    const right = this.state.right / CHART_WIDTH;
+    this.props.onChange({left, right})
+  },
   reducer({ type, payload }, state) {
     switch (type) {
       case "updatePos":

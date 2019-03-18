@@ -2,7 +2,6 @@ import {
   createPathAttr,
   zipDots,
   getChartsFromData,
-  createChart,
   getScaleY,
   getHighLow
 } from "../src/app";
@@ -61,10 +60,6 @@ describe("utils", () => {
   xit("getCharts", () => {
     const charts = getChartsFromData(data);
     expect(charts).toEqual([]);
-  });
-  xit("createChart", () => {
-    const chart = createChart(data);
-    expect(chart).toBe("<svg/>");
   });
 });
 

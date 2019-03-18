@@ -1,10 +1,16 @@
 import { getBounds } from "./axis";
 import { data, ChartDto } from "./chart_data";
-import { render, createElement } from "./reconciler";
+import {
+  render,
+  createElement,
+  ComponentType,
+  componentMixin
+} from "./reconciler";
 import { Ruller } from "./ruller";
 import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
+import { statement } from "@babel/template";
 
 type Dot = [number, number];
 type Chart = Dot[];
@@ -69,70 +75,102 @@ export const getHighLow = (data: ChartDto) => {
   return [highY, lowY, highX, lowX];
 };
 
-export const createChart = (data: ChartDto) => {
-  const charts = getChartsFromData(data);
-  const [highY, lowY, highX, lowX] = getHighLow(data);
-  const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
-  const { values: valuesX } = getBounds(CHART_WIDTH, highX, lowX, 100);
-  const scaleY = getScaleY(CHART_HEIGHT, max, min);
-  const scaleX = getScaleX(CHART_WIDTH, data.columns[0].length - 1);
-  const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
+const App: ComponentType = () => ({
+  ...componentMixin(),
+  state: {
+    extraScale: 1,
+    offset: 0
+  },
+  reducer({ type, payload }, state) {
+    switch (type) {
+      case "updateSlider":
+        const scale = 1 / (payload.right - payload.left);
+        console.log(payload.left, scale)
+        return {
+          ...state,
+          extraScale: scale,
+          offset: CHART_WIDTH * payload.left * scale
+        };
+    }
+  },
+  render(props, state) {
+    const data = props.data as ChartDto;
+    const lengthX = data.columns[0];
+    const charts = getChartsFromData(data);
+    const [highY, lowY, highX, lowX] = getHighLow(data);
+    const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
+    const { values: valuesX } = getBounds(CHART_WIDTH, highX, lowX, 100);
+    const scaleY = getScaleY(CHART_HEIGHT, max, min);
+    const scaleX = getScaleX(CHART_WIDTH, data.columns[0].length - 1);
+    const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
 
-  const chart = createElement(
-    "svg",
-    {
-      width: CHART_WIDTH,
-      height: CHART_HEIGHT
-    },
-    [
-      createElement(Ruller, { values, scale: scaleY }),
-      ...charts.map(chart =>
+    const chart = createElement(
+      "svg",
+      {
+        width: CHART_WIDTH,
+        height: CHART_HEIGHT
+      },
+      [
+        createElement(Ruller, { values, scale: scaleY }),
+        createElement(
+          "g",
+          {style: `transform: translateX(-${state.offset}px)`},
+          charts.map(chart =>
+            path(
+              createPathAttr(
+                chart,
+                x => x * scaleX * state.extraScale,
+                y => CHART_HEIGHT - (y - values[0]) * scaleY
+              ),
+              "gray"
+            )
+          )
+        )
+      ]
+    );
+    const sliderChart = createElement(
+      "svg",
+      {
+        width: CHART_WIDTH,
+        height: SLIDER_HEIGHT
+      },
+      charts.map(chart =>
         path(
           createPathAttr(
             chart,
             x => x * scaleX,
-            y => CHART_HEIGHT - (y - values[0]) * scaleY
+            y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
           ),
           "gray"
         )
       )
-    ]
-  );
-  const sliderChart = createElement(
-    "svg",
-    {
-      width: CHART_WIDTH,
-      height: SLIDER_HEIGHT
-    },
-    charts.map(chart =>
-      path(
-        createPathAttr(
-          chart,
-          x => x * scaleX,
-          y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
-        ),
-        "gray"
-      )
-    )
-  );
-  const slider = createElement(
-    "div",
-    {
-      style: `position: relative; overflow: hidden; height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
-    },
-    [createElement(Slider, {}), sliderChart]
-  );
-  const labels = createElement(
-    "svg",
-    { width: CHART_WIDTH, height: 30 },
-    valuesX.map((x, i) => label(x, (i * CHART_WIDTH) / valuesX.length))
-  );
+    );
+    const slider = createElement(
+      "div",
+      {
+        style: `position: relative; overflow: hidden; height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
+      },
+      [
+        createElement(Slider, {
+          onChange: payload => this.send({ type: "updateSlider", payload })
+        }),
+        sliderChart
+      ]
+    );
+    const labels = createElement(
+      "svg",
+      { width: CHART_WIDTH, height: 30 },
+      valuesX.map((x, i) => label(x, (i * CHART_WIDTH) / valuesX.length))
+    );
+    return createElement("div", {}, [chart, labels, slider]);
+  }
+});
+
+const start = () => {
   render(
-    createElement("div", {}, [chart, labels, slider]),
+    createElement(App, { data: data[0] }),
     document.getElementById("main")
   );
 };
-
-const start = () => createChart(data[0]);
 
 window["start"] = start;

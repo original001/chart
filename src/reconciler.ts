@@ -14,7 +14,7 @@ export interface Component {
   state?: {};
   props?: Props;
   getDeriviedStateFromProps?: (props, state) => {};
-  didUpdate?: (self: Component) => void;
+  didUpdate?: () => void;
   didMount?: () => void;
   reducer?: (action, state) => {};
   render: (props, state) => Tree;
@@ -85,6 +85,7 @@ export const render = (tree: Tree, container: Element) => {
     comp.props = tree.props;
     const innerTree = comp.render(tree.props, comp.state);
     comp._innerTree = innerTree;
+    tree.host = container;
     render(innerTree, container);
 
     comp.didMount && comp.didMount();
@@ -143,5 +144,5 @@ export const updateComponent = (comp: Component) => {
   const nextTree = comp.render(comp.props, comp.state);
   updateChildren(comp._innerTree, nextTree);
   comp._innerTree = nextTree
-  comp.didUpdate && comp.didUpdate(comp);
+  comp.didUpdate && comp.didUpdate();
 };
