@@ -4,9 +4,7 @@ import { render, createElement } from "./reconciler";
 import { Ruller } from "./ruller";
 import { Slider } from "./slider";
 
-export const CHART_HEIGHT = 200;
-export const CHART_WIDTH = 900;
-export const SLIDER_HEIGHT = 50;
+import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
 
 type Dot = [number, number];
 type Chart = Dot[];

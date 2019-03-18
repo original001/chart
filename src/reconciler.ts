@@ -139,6 +139,7 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
 };
 
 export const updateComponent = (comp: Component) => {
+  //compare prevstate and next
   const nextTree = comp.render(comp.props, comp.state);
   updateChildren(comp._innerTree, nextTree);
   comp._innerTree = nextTree
