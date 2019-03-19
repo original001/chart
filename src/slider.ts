@@ -48,10 +48,12 @@ export const Slider: ComponentType = () => ({
       e.dataTransfer.setDragImage(dragImage, 0, 0);
     };
   },
-  didUpdate() {
+  didUpdate(prevProps, prevState) {
     const left = this.state.left / CHART_WIDTH;
     const right = this.state.right / CHART_WIDTH;
-    this.props.onChange({left, right})
+    if (prevState.left !== this.state.left || prevState.right !== this.state.right) {
+      this.props.onChange({left, right})
+    }
   },
   reducer({ type, payload }, state) {
     switch (type) {

@@ -1,5 +1,6 @@
 export type ComponentType = () => Component;
 export interface Tree {
+  _instance?: Component;
   host?: Element;
   element: string | ComponentType;
   props: Props;
@@ -14,7 +15,7 @@ export interface Component {
   state?: {};
   props?: Props;
   getDeriviedStateFromProps?: (props, state) => {};
-  didUpdate?: () => void;
+  didUpdate?: (prevProps: Props, prevState) => void;
   didMount?: () => void;
   reducer?: (action, state) => {};
   render: (props, state) => Tree;
@@ -44,7 +45,7 @@ export const createElement = (
 
 export interface Action {
   type: string;
-  payload: {}
+  payload?: {};
 }
 
 export const componentMixin = () => ({
@@ -53,8 +54,8 @@ export const componentMixin = () => ({
   _innerTree: null,
   send(action: Action) {
     // console.log(this)
-    this.state = this.reducer(action, this.state);
-    updateComponent(this);
+    const nextState = this.reducer(action, this.state);
+    updateComponent(this, this.props, nextState);
   }
 });
 
@@ -86,22 +87,44 @@ export const render = (tree: Tree, container: Element) => {
     const innerTree = comp.render(tree.props, comp.state);
     comp._innerTree = innerTree;
     tree.host = container;
+    tree._instance = comp;
     render(innerTree, container);
-
     comp.didMount && comp.didMount();
   }
   return tree;
 };
 
-export const renderComponent = (tree: Tree) => {};
+export const renderComponent = (
+  tree: Tree,
+  element: ComponentType,
+  container: Element
+) => {
+  const comp = element();
+  comp.props = tree.props;
+  const innerTree = comp.render(tree.props, comp.state);
+  comp._innerTree = innerTree;
+  tree.host = container;
+  render(innerTree, container);
 
-const updateChildren = (lastTree: Tree, nextTree: Tree) => {
+  comp.didMount && comp.didMount();
+};
+
+export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   const { props: prevProps, host } = lastTree;
   const { props } = nextTree;
   if (lastTree.element !== nextTree.element) {
     //unmount
     render(nextTree, lastTree.host);
+    return;
   }
+
+  if (typeof nextTree.element === "function") {
+    updateComponent(lastTree._instance, nextTree.props);
+    nextTree.host = host;
+    nextTree._instance = lastTree._instance;
+    return;
+  }
+
   nextTree.host = host;
 
   if (prevProps !== props) {
@@ -116,6 +139,10 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
     }
   }
   if (props.children) {
+    if (typeof props.children === "string") {
+      host.textContent = props.children;
+      return;
+    }
     for (let child of props.children) {
       const childIndex = props.children.indexOf(child);
       const prevChild = prevProps.children[childIndex];
@@ -139,10 +166,16 @@ const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   }
 };
 
-export const updateComponent = (comp: Component) => {
+export const updateComponent = (comp: Component, nextProps, nextState?) => {
   //compare prevstate and next
-  const nextTree = comp.render(comp.props, comp.state);
+  const prevState = comp.state;
+  const prevProps = comp.props;
+  if (nextState) {
+    comp.state = nextState;
+  }
+  comp.props = nextProps;
+  const nextTree = comp.render(nextProps, nextState || prevState);
   updateChildren(comp._innerTree, nextTree);
-  comp._innerTree = nextTree
-  comp.didUpdate && comp.didUpdate();
+  comp.didUpdate && comp.didUpdate(prevProps, prevState || comp.state);
+  comp._innerTree = nextTree;
 };

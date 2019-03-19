@@ -12,9 +12,10 @@ import {
   render,
   Component,
   createElement,
-  renderComponent
+  renderComponent,
+  ComponentType,
+  componentMixin
 } from "../src/reconciler";
-import { Ruller } from "../src/ruller";
 
 describe("", () => {
   // it("create path", () => {
@@ -81,41 +82,81 @@ describe("axis", () => {
 });
 
 describe("render", () => {
-  const ruler = (y, label) =>
-    createElement("g", {}, [
-      // createElement("line", {
-      //   x1: "0",
-      //   y1: y + "",
-      //   x2: "100%",
-      //   y2: y + "",
-      //   "stroke-width": "1",
-      //   stroke: "gray" //need col,
-      // }),
-      // createElement("text", {
-      //   x: 0,
-      //   y: y - 10 + "",
-      //   fill: "gray",
-      //   caption: label
-      // }),
+  const Inner: ComponentType = () => ({
+    ...componentMixin(),
+    render(props) {
+      return createElement("text", {}, props.text);
+    }
+  });
+  const Ruller: ComponentType = () => ({
+    ...componentMixin(),
+    state: {
+      status: "initial" as "update" | "ready" | "initial"
+    },
+
+    render: (props, state) => {
+      return createElement(
+        "g",
+        { status: state.status },
+        [createElement(Inner, {text: state.status})]
+      );
+    },
+    reducer: (action, state) => {
+      switch (action.type) {
+        case "update":
+          return { ...state, status: "ready" };
+      }
+    }
+  });
+  const ruler = (y, label) => {
+    return createElement("g", {}, [
+      createElement("line", {
+        stroke: "gray" //need col,
+      }),
+
       createElement(Ruller, {
         values: [1, 2, 3],
         scale: 1
       })
     ]);
-  xit("", () => {
-    expect(render(ruler(1, "1"), document.body)).toEqual({});
+  };
+  const body = document.body;
+  const tree = render(ruler(1, "1"), body);
+  it("render", () => {
+    expect(body.firstElementChild.tagName).toEqual("g");
+    expect(body.firstElementChild.firstElementChild.tagName).toEqual("line");
+    expect(
+      body.firstElementChild.firstElementChild.getAttribute("stroke")
+    ).toEqual("gray");
+
+    const rullerElement = body.firstElementChild.lastElementChild;
+    expect(rullerElement.tagName).toBe("g");
+    expect(rullerElement.getAttribute("status")).toBe("initial");
+    const innerComp = rullerElement.firstElementChild;
+    expect(innerComp.tagName).toBe('text')
+    expect(innerComp.textContent).toBe('initial')
+
+    const rullerInstance = tree.props.children[1]._instance;
+    expect(rullerInstance.props).toEqual({ values: [1, 2, 3], scale: 1 });
+    expect(rullerInstance.state).toEqual({ status: "initial" });
+
+    rullerInstance.send({ type: "update" });
+    expect(rullerInstance.state).toEqual({ status: "ready" });
+    expect(rullerElement.getAttribute("status")).toBe("ready");
+    expect(innerComp.textContent).toBe('ready')
+    rullerInstance.send({ type: "update" });
   });
   xit("", () => {
     const tree = render(ruler(1, "1"), document.body);
     // expect(tree).toEqual({})
     // Ruller.send('update');
-    expect(tree).toEqual({})
+    expect(tree).toEqual({});
   });
-  xit("renderComponent", () => {
-    expect(
-      renderComponent(createElement(Ruller, { values: [1, 2, 3], scale: 1 }))
-    ).toEqual({});
-  });
+  // xit("renderComponent", () => {
+  //   expect(
+  //     renderComponent(createElement(Ruller, { values: [1, 2, 3], scale: 1 }))
+  //   ).toEqual({});
+  // });
 
   xit("createElement", () => {
     expect(ruler(1, "1")).toBe({});

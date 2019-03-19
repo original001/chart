@@ -79,25 +79,66 @@ const App: ComponentType = () => ({
   ...componentMixin(),
   state: {
     extraScale: 1,
-    offset: 0
+    offset: 0,
+    sliderPos: { left: 0, right: 1 } // workaround
   },
   reducer({ type, payload }, state) {
     switch (type) {
       case "updateSlider":
         const scale = 1 / (payload.right - payload.left);
-        console.log(payload.left, scale)
+        console.log(payload.left, scale);
         return {
           ...state,
           extraScale: scale,
-          offset: CHART_WIDTH * payload.left * scale
+          offset: payload.left * scale,
+          sliderPos: { ...payload }
         };
     }
   },
   render(props, state) {
     const data = props.data as ChartDto;
-    const lengthX = data.columns[0];
     const charts = getChartsFromData(data);
-    const [highY, lowY, highX, lowX] = getHighLow(data);
+    // const [highY, lowY, highX, lowX] = getHighLow(data);
+
+    const extremum = (fn, from, to?) =>
+      fn(data.columns.slice(from, to).map(ys => fn(ys.slice(1))));
+    // const highY = extremum(ar => Math.max.apply(Math, ar), 1);
+    // const lowY = extremum(ar => Math.min.apply(Math, ar), 1);
+    const highX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
+    const lowX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
+
+    const dataLength = data.columns[0].length;
+
+    const highY = Math.max.apply(
+      Math,
+      data.columns
+        .slice(1)
+        .map(ys =>
+          Math.max.apply(
+            Math,
+            ys.slice(
+              Math.floor(dataLength * state.sliderPos.left) + 1,
+              Math.ceil(dataLength * state.sliderPos.right)
+            )
+          )
+        )
+    );
+
+    const lowY = Math.min.apply(
+      Math,
+      data.columns
+        .slice(1)
+        .map(ys =>
+          Math.min.apply(
+            Math,
+            ys.slice(
+              Math.floor(dataLength * state.sliderPos.left) + 1,
+              Math.ceil(dataLength * state.sliderPos.right)
+            )
+          )
+        )
+    );
+
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
     const { values: valuesX } = getBounds(CHART_WIDTH, highX, lowX, 100);
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
@@ -106,15 +147,12 @@ const App: ComponentType = () => ({
 
     const chart = createElement(
       "svg",
-      {
-        width: CHART_WIDTH,
-        height: CHART_HEIGHT
-      },
+      { width: CHART_WIDTH, height: CHART_HEIGHT },
       [
         createElement(Ruller, { values, scale: scaleY }),
         createElement(
           "g",
-          {style: `transform: translateX(-${state.offset}px)`},
+          { style: `transform: translateX(-${state.offset * CHART_WIDTH}px)` },
           charts.map(chart =>
             path(
               createPathAttr(
@@ -130,10 +168,7 @@ const App: ComponentType = () => ({
     );
     const sliderChart = createElement(
       "svg",
-      {
-        width: CHART_WIDTH,
-        height: SLIDER_HEIGHT
-      },
+      { width: CHART_WIDTH, height: SLIDER_HEIGHT },
       charts.map(chart =>
         path(
           createPathAttr(
@@ -162,7 +197,7 @@ const App: ComponentType = () => ({
       { width: CHART_WIDTH, height: 30 },
       valuesX.map((x, i) => label(x, (i * CHART_WIDTH) / valuesX.length))
     );
-    return createElement("div", {}, [chart, labels, slider]);
+    return createElement("div", {}, [chart, slider]);
   }
 });
 
