@@ -25,7 +25,9 @@ const ruler = (y: number, label: string) =>
 type Status = "entering" | "entered" | "exiting" | "exited";
 interface State {
   nextValues: number[];
+  nextScale: number;
   values: number[];
+  scale: number;
   status: Status;
 }
     let inProccess = false;
@@ -33,7 +35,9 @@ export const TransitionRuller: ComponentType = () => ({
   ...componentMixin(),
   state: {
     nextValues: null,
+    nextScale: null,
     values: null,
+    scale: null,
     status: null
   } as State,
   getDeriviedStateFromProps(props, prevState: State): State {
@@ -41,13 +45,16 @@ export const TransitionRuller: ComponentType = () => ({
       return {
         ...prevState,
         values: props.values,
+        scale: props.scale,
         status: "entered"
       };
     }
     if (props.values[2] !== prevState.values[2] || props.values.length !== prevState.values.length) {
       return {
         values: prevState.values,
+        scale: prevState.scale,
         nextValues: props.values,
+        nextScale: props.scale,
         status: "exiting"
       };
     }
@@ -62,7 +69,7 @@ export const TransitionRuller: ComponentType = () => ({
       setTimeout(() => {
         inProccess = false;
         this.send({ type: "update" });
-      }, 1000);
+      }, 200);
     }
     if (prevState.status === "exited") {
       this.send({ type: "show" });
@@ -72,15 +79,15 @@ export const TransitionRuller: ComponentType = () => ({
       setTimeout(() => {
         inProccess = false;
         this.send({ type: "entered" });
-      }, 100);
+      }, 20);
     }
   },
   render: (props, state: State) => {
     return createElement("g", {}, state.status === 'exited' ? null : [
       createElement(
         "g",
-        { class: state.status + " transition", secondValue: props.values[1] },
-        state.values.map(y => ruler((y - props.values[0]) * props.scale, y.toString()))
+        { class: state.status + " transition", secondValue: state.values[1] },
+        state.values.map(y => ruler((y - state.values[0]) * state.scale, y.toString()))
       )
     ]);
   },
@@ -100,7 +107,8 @@ export const TransitionRuller: ComponentType = () => ({
         return {
           ...state,
           status: "entering",
-          values: state.nextValues
+          values: state.nextValues,
+          scale: state.nextScale
         };
     }
   }

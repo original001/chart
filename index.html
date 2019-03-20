@@ -52,12 +52,16 @@
         background-color: #777;
       }
       .transition {
-        transition: transform 1s, opacity 1s;
+        transition: transform .2s, opacity .2s;
         opacity: 1;
         transform: translateY(0px);
       }
-      .exiting, .entering {
+      .exiting {
         transform: translateY(-20px);
+        opacity: 0;
+      }
+      .entering {
+        transform: translateY(20px);
         opacity: 0;
       }
       .entered {

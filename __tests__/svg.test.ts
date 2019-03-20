@@ -206,6 +206,7 @@ describe("animation", () => {
     helperInst.send({ type: "1" });
     expect(group.firstElementChild.getAttribute("class")).toBe("exiting transition");
     expect(group.firstElementChild.children.length).toBe(3);
+    expect(group.firstElementChild.getAttribute("secondValue")).toBe("2");
     jest.runOnlyPendingTimers();
     expect(group.firstElementChild.getAttribute("class")).toBe("entering transition");
 
