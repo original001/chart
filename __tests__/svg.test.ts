@@ -16,6 +16,9 @@ import {
   ComponentType,
   componentMixin
 } from "../src/reconciler";
+import { TransitionRuller } from "../src/ruller";
+
+jest.useFakeTimers();
 
 describe("", () => {
   // it("create path", () => {
@@ -84,8 +87,17 @@ describe("axis", () => {
 describe("render", () => {
   const Inner: ComponentType = () => ({
     ...componentMixin(),
-    render(props) {
-      return createElement("text", {}, props.text);
+    state: {
+      extra: ""
+    },
+    getDeriviedStateFromProps(props, prevState) {
+      if (props.text === "test") {
+        return { extra: "wow" };
+      }
+      return prevState;
+    },
+    render(props, state) {
+      return createElement("text", {}, props.text + state.extra);
     }
   });
   const Ruller: ComponentType = () => ({
@@ -93,13 +105,12 @@ describe("render", () => {
     state: {
       status: "initial" as "update" | "ready" | "initial"
     },
-
     render: (props, state) => {
-      return createElement(
-        "g",
-        { status: state.status },
-        [createElement(Inner, {text: state.status})]
-      );
+      return createElement("g", { status: state.status }, [
+        createElement(Inner, {
+          text: state.status === "initial" ? "initial" : "test"
+        })
+      ]);
     },
     reducer: (action, state) => {
       switch (action.type) {
@@ -133,8 +144,8 @@ describe("render", () => {
     expect(rullerElement.tagName).toBe("g");
     expect(rullerElement.getAttribute("status")).toBe("initial");
     const innerComp = rullerElement.firstElementChild;
-    expect(innerComp.tagName).toBe('text')
-    expect(innerComp.textContent).toBe('initial')
+    expect(innerComp.tagName).toBe("text");
+    expect(innerComp.textContent).toBe("initial");
 
     const rullerInstance = tree.props.children[1]._instance;
     expect(rullerInstance.props).toEqual({ values: [1, 2, 3], scale: 1 });
@@ -143,7 +154,7 @@ describe("render", () => {
     rullerInstance.send({ type: "update" });
     expect(rullerInstance.state).toEqual({ status: "ready" });
     expect(rullerElement.getAttribute("status")).toBe("ready");
-    expect(innerComp.textContent).toBe('ready')
+    expect(innerComp.textContent).toBe("testwow");
     rullerInstance.send({ type: "update" });
   });
   xit("", () => {
@@ -160,5 +171,54 @@ describe("render", () => {
 
   xit("createElement", () => {
     expect(ruler(1, "1")).toBe({});
+  });
+});
+
+describe("animation", () => {
+  beforeAll(() => {
+    document.body.removeChild(document.body.firstChild);
+  });
+  it("", () => {
+  
+    const Helper: ComponentType = () => ({
+      ...componentMixin(),
+      state: { values: [1, 2, 3] },
+      reducer(action, state) {
+        switch (action.type) {
+          case "1":
+            return { values: [1, 5, 7] };
+          case "2":
+            return { values: [1, 1.5, 2] };
+        }
+      },
+      render(props, state) {
+        return createElement(TransitionRuller, { values: state.values });
+      }
+    });
+   
+    const body = document.body;
+    const tree = render(createElement(Helper, {}), body);
+
+    const helperInst = tree._instance;
+    const group = body.firstElementChild;
+    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.children.length).toBe(3);
+    helperInst.send({ type: "1" });
+    expect(group.firstElementChild.getAttribute("class")).toBe("exiting transition");
+    expect(group.firstElementChild.children.length).toBe(3);
+    jest.runOnlyPendingTimers();
+    expect(group.firstElementChild.getAttribute("class")).toBe("entering transition");
+
+    jest.runOnlyPendingTimers();
+    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.getAttribute("secondValue")).toBe("5");
+    expect(group.firstElementChild.children.length).toBe(3);
+    helperInst.send({ type: "2" });
+    expect(group.firstElementChild.getAttribute("class")).toBe("exiting transition");
+    expect(group.firstElementChild.children.length).toBe(3);
+    jest.runAllTimers();
+    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.getAttribute("secondValue")).toBe("1.5");
+    expect(group.firstElementChild.children.length).toBe(3);
   });
 });

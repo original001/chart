@@ -22,34 +22,86 @@ const ruler = (y: number, label: string) =>
       label
     )
   ]);
-
-export const Ruller: ComponentType = () => ({
+type Status = "entering" | "entered" | "exiting" | "exited";
+interface State {
+  nextValues: number[];
+  values: number[];
+  status: Status;
+}
+    let inProccess = false;
+export const TransitionRuller: ComponentType = () => ({
   ...componentMixin(),
   state: {
+    nextValues: null,
     values: null,
-    scale: null,
-    status: "initial" as "update" | "ready" | "initial"
-  },
-  getDeriviedStateFromProps: (props, state) => {
-    if (!state.values) return props;
-    if (state.values !== props.values) {
+    status: null
+  } as State,
+  getDeriviedStateFromProps(props, prevState: State): State {
+    if (prevState.values === null) {
       return {
-        ...state,
-        status: "update"
+        ...prevState,
+        values: props.values,
+        status: "entered"
       };
     }
+    if (props.values[2] !== prevState.values[2] || props.values.length !== prevState.values.length) {
+      return {
+        values: prevState.values,
+        nextValues: props.values,
+        status: "exiting"
+      };
+    }
+    return prevState;
   },
-  render: (props, state) => {
-    return createElement(
-      "g",
-      {},
-      props.values.map(y => ruler((y - props.values[0]) * props.scale, y + ""))
-    );
+  didUpdate() {
+    if (inProccess) return;
+
+    const prevState = this.state as State;
+    if (prevState.status === "exiting") {
+      inProccess = true;
+      setTimeout(() => {
+        inProccess = false;
+        this.send({ type: "update" });
+      }, 1000);
+    }
+    if (prevState.status === "exited") {
+      this.send({ type: "show" });
+    }
+    if (prevState.status === "entering") {
+      inProccess = true;
+      setTimeout(() => {
+        inProccess = false;
+        this.send({ type: "entered" });
+      }, 100);
+    }
   },
-  reducer: (action, state) => {
-    switch (action) {
+  render: (props, state: State) => {
+    return createElement("g", {}, state.status === 'exited' ? null : [
+      createElement(
+        "g",
+        { class: state.status + " transition", secondValue: props.values[1] },
+        state.values.map(y => ruler((y - props.values[0]) * props.scale, y.toString()))
+      )
+    ]);
+  },
+  reducer: (action, state: State): State => {
+    switch (action.type) {
+      case "entered":
+        return {
+          ...state,
+          status: "entered"
+        };
       case "update":
-        return { ...state, status: "ready" };
+        return {
+          ...state,
+          status: "exited",
+        };
+      case "show":
+        return {
+          ...state,
+          status: "entering",
+          values: state.nextValues
+        };
     }
   }
 });

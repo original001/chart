@@ -51,6 +51,19 @@
       .sliderEdge:hover {
         background-color: #777;
       }
+      .transition {
+        transition: transform 1s, opacity 1s;
+        opacity: 1;
+        transform: translateY(0px);
+      }
+      .exiting, .entering {
+        transform: translateY(-20px);
+        opacity: 0;
+      }
+      .entered {
+        opacity: 1;
+        transform: translateY(0px);
+      }
     </style>
   </head>
   <body>

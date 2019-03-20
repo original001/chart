@@ -6,7 +6,7 @@ import {
   ComponentType,
   componentMixin
 } from "./reconciler";
-import { Ruller } from "./ruller";
+import { TransitionRuller } from "./ruller";
 import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
@@ -86,7 +86,6 @@ const App: ComponentType = () => ({
     switch (type) {
       case "updateSlider":
         const scale = 1 / (payload.right - payload.left);
-        console.log(payload.left, scale);
         return {
           ...state,
           extraScale: scale,
@@ -149,7 +148,7 @@ const App: ComponentType = () => ({
       "svg",
       { width: CHART_WIDTH, height: CHART_HEIGHT },
       [
-        createElement(Ruller, { values, scale: scaleY }),
+        createElement(TransitionRuller, { values, scale: scaleY }),
         createElement(
           "g",
           { style: `transform: translateX(-${state.offset * CHART_WIDTH}px)` },

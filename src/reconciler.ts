@@ -17,6 +17,7 @@ export interface Component {
   getDeriviedStateFromProps?: (props, state) => {};
   didUpdate?: (prevProps: Props, prevState) => void;
   didMount?: () => void;
+  willRemove?: (onRemove, host) => void;
   reducer?: (action, state) => {};
   render: (props, state) => Tree;
   send: (action: Action) => void;
@@ -84,7 +85,7 @@ export const render = (tree: Tree, container: Element) => {
   } else {
     const comp = type();
     comp.props = tree.props;
-    const innerTree = comp.render(tree.props, comp.state);
+    const innerTree = renderComponent(comp, tree.props);
     comp._innerTree = innerTree;
     tree.host = container;
     tree._instance = comp;
@@ -94,19 +95,13 @@ export const render = (tree: Tree, container: Element) => {
   return tree;
 };
 
-export const renderComponent = (
-  tree: Tree,
-  element: ComponentType,
-  container: Element
-) => {
-  const comp = element();
-  comp.props = tree.props;
-  const innerTree = comp.render(tree.props, comp.state);
-  comp._innerTree = innerTree;
-  tree.host = container;
-  render(innerTree, container);
-
-  comp.didMount && comp.didMount();
+export const renderComponent = (comp: Component, props, state?) => {
+  let derivedState = state || comp.state;
+  if (!state && comp.getDeriviedStateFromProps) {
+    derivedState = comp.getDeriviedStateFromProps(props, comp.state);
+  }
+  comp.state = derivedState;
+  return comp.render(props, derivedState);
 };
 
 export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
@@ -138,14 +133,27 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       }
     }
   }
+  if (!props.children && prevProps.children) {
+    for (let child of prevProps.children) {
+      host.removeChild(child.host);
+    }
+    return 
+  }
+
   if (props.children) {
     if (typeof props.children === "string") {
       host.textContent = props.children;
       return;
     }
+    if (!prevProps.children) {
+      for (let child of props.children) {
+        render(child, host);
+      }
+      return
+    }
     for (let child of props.children) {
       const childIndex = props.children.indexOf(child);
-      const prevChild = prevProps.children[childIndex];
+      const prevChild = prevProps.children && prevProps.children[childIndex];
       if (!(prevProps.children && prevChild)) {
         render(child, host);
         continue;
@@ -174,8 +182,8 @@ export const updateComponent = (comp: Component, nextProps, nextState?) => {
     comp.state = nextState;
   }
   comp.props = nextProps;
-  const nextTree = comp.render(nextProps, nextState || prevState);
+  const nextTree = renderComponent(comp, nextProps, nextState);
   updateChildren(comp._innerTree, nextTree);
-  comp.didUpdate && comp.didUpdate(prevProps, prevState || comp.state);
   comp._innerTree = nextTree;
+  comp.didUpdate && comp.didUpdate(prevProps, prevState || comp.state);
 };
