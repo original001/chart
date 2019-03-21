@@ -139,7 +139,12 @@ const App: ComponentType = () => ({
     );
 
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
-    const { values: valuesX } = getBounds(CHART_WIDTH, highX, lowX, 100);
+    const { values: valuesX } = getBounds(
+      CHART_WIDTH * state.extraScale,
+      highX,
+      lowX,
+      100
+    );
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
     const scaleX = getScaleX(CHART_WIDTH, data.columns[0].length - 1);
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
@@ -191,12 +196,17 @@ const App: ComponentType = () => ({
         sliderChart
       ]
     );
+    const scaledWidth = CHART_WIDTH * state.extraScale;
     const labels = createElement(
       "svg",
-      { width: CHART_WIDTH, height: 30 },
-      valuesX.map((x, i) => label(x, (i * CHART_WIDTH) / valuesX.length))
+      {
+        width: scaledWidth,
+        height: 30,
+        style: `transform: translateX(-${state.offset * CHART_WIDTH}px)`
+      },
+      valuesX.map((x, i) => label(x, (i * scaledWidth) / valuesX.length))
     );
-    return createElement("div", {}, [chart, slider]);
+    return createElement("div", {}, [chart, labels, slider]);
   }
 });
 
