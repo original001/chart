@@ -10,3 +10,4 @@ export const createRaf = (fn: (...args) => void) => {
     }
   };
 };
+export const values = Object.values || (obj => Object.keys(obj).map(k => obj[k]))

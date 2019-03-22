@@ -17,6 +17,8 @@ import {
   componentMixin
 } from "../src/reconciler";
 import { TransitionRuller } from "../src/ruller";
+import { Transition } from "../src/transition";
+import { TransitionLabels } from "../src/labels";
 
 jest.useFakeTimers();
 
@@ -175,11 +177,10 @@ describe("render", () => {
 });
 
 describe("animation", () => {
-  beforeAll(() => {
+  beforeEach(() => {
     document.body.removeChild(document.body.firstChild);
   });
-  it("", () => {
-  
+  it("ruller", () => {
     const Helper: ComponentType = () => ({
       ...componentMixin(),
       state: { values: [1, 2, 3] },
@@ -195,31 +196,119 @@ describe("animation", () => {
         return createElement(TransitionRuller, { values: state.values });
       }
     });
-   
+
     const body = document.body;
     const tree = render(createElement(Helper, {}), body);
 
     const helperInst = tree._instance;
     const group = body.firstElementChild;
-    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "entered transition"
+    );
     expect(group.firstElementChild.children.length).toBe(3);
     helperInst.send({ type: "1" });
-    expect(group.firstElementChild.getAttribute("class")).toBe("exiting transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "exiting transition"
+    );
     expect(group.firstElementChild.children.length).toBe(3);
     expect(group.firstElementChild.getAttribute("secondValue")).toBe("2");
     jest.runOnlyPendingTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe("entering transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "entering transition"
+    );
 
     jest.runOnlyPendingTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "entered transition"
+    );
     expect(group.firstElementChild.getAttribute("secondValue")).toBe("5");
     expect(group.firstElementChild.children.length).toBe(3);
     helperInst.send({ type: "2" });
-    expect(group.firstElementChild.getAttribute("class")).toBe("exiting transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "exiting transition"
+    );
     expect(group.firstElementChild.children.length).toBe(3);
     jest.runAllTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe("entered transition");
+    expect(group.firstElementChild.getAttribute("class")).toBe(
+      "entered transition"
+    );
     expect(group.firstElementChild.getAttribute("secondValue")).toBe("1.5");
     expect(group.firstElementChild.children.length).toBe(3);
   });
+  xit("transition", () => {
+    const Helper: ComponentType = () => ({
+      ...componentMixin(),
+      state: "enter",
+      reducer(action, state) {
+        switch (action.type) {
+          case "1":
+            return "appear";
+          case "2":
+            return "exit";
+        }
+      },
+      render(props, state) {
+        // console.log(state)
+        return createElement(Transition, {
+          children: status => createElement("g", { status }),
+          in: state !== 'appear',
+        });
+      }
+    });
+
+    const body = document.body;
+    const tree = render(createElement(Helper, {}), body);
+
+    const helperInst = tree._instance;
+    // expect(body.firstElementChild).toBe({});
+    expect(body.firstElementChild.tagName).toBe("g");
+    helperInst.send({ type: "1" });
+    expect(body.firstElementChild.getAttribute('status')).toBe('exiting');
+    jest.runOnlyPendingTimers();
+    expect(body.firstElementChild.tagName).toBe('notexisted');
+    helperInst.send({ type: "2" });
+    expect(body.firstElementChild.getAttribute('status')).toBe('entering');
+    jest.runOnlyPendingTimers();
+    expect(body.firstElementChild.getAttribute('status')).toBe('entered');
+    // expect(body.firstElementChild.getAttribute('status')).toBe('entered')
+  });
+  it('transition group', () => {
+    const Helper: ComponentType = () => ({
+      ...componentMixin(),
+      state: [1,2,3],
+      reducer(action, state) {
+        switch (action.type) {
+          case "1":
+            return [2,3];
+          case "2":
+            return [1,2,3];
+        }
+      },
+      render(props, state) {
+        // console.log(state)
+        const g = (x) => createElement(Transition, {
+          children: status => createElement("g", { status, key: x }),
+          key: x
+        });
+        return createElement(TransitionLabels, {}, state.map(g))
+      }
+    });
+
+    const body = document.body;
+    const tree = render(createElement(Helper, {}), body);
+
+    const helperInst = tree._instance;
+    const root = body.firstElementChild;
+    expect(root.firstElementChild.tagName).toBe("g");
+    expect(root.firstElementChild.getAttribute('status')).toBe('entered');
+    helperInst.send({ type: "1" });
+    expect(root.firstElementChild.getAttribute('status')).toBe('exiting');
+    jest.runOnlyPendingTimers();
+    // expect(root).toBe({});
+    // expect(root.firstElementChild.tagName).toBe('notexisted');
+    helperInst.send({ type: "2" });
+    // expect(root.firstElementChild.getAttribute('status')).toBe('exiting');
+    jest.runOnlyPendingTimers();
+    // expect(root).toBe({});
+  })
 });

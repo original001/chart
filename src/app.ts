@@ -11,6 +11,8 @@ import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
 import { statement } from "@babel/template";
+import { TransitionLabels } from "./labels";
+import { Transition } from "./transition";
 
 type Dot = [number, number];
 type Chart = Dot[];
@@ -39,13 +41,14 @@ const path = (path: string, color: string) =>
     fill: "none"
   });
 
-const label = (timestamp: number, offset: number) =>
+const label = (timestamp: number, offset: number, status: string) =>
   createElement(
     "text",
     {
       x: offset,
       y: 20,
-      fill: "gray"
+      fill: "gray",
+      class: status + " transition"
     },
     prettifyDate(timestamp)
   );
@@ -204,7 +207,18 @@ const App: ComponentType = () => ({
         height: 30,
         style: `transform: translateX(-${state.offset * CHART_WIDTH}px)`
       },
-      valuesX.map((x, i) => label(x, (i * scaledWidth) / valuesX.length))
+      [
+        createElement(
+          TransitionLabels,
+          {},
+          valuesX.map((x, i) =>
+            createElement(Transition, {
+              children: status => label(x, (i * scaledWidth) / valuesX.length, status),
+              key: x
+            })
+          )
+        )
+      ]
     );
     return createElement("div", {}, [chart, labels, slider]);
   }

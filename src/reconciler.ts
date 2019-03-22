@@ -8,6 +8,7 @@ export interface Tree {
 
 export interface Props {
   children?: Tree[];
+  [key: string]: any
 }
 
 export interface Component {
@@ -54,7 +55,7 @@ export const componentMixin = () => ({
   host: null,
   _innerTree: null,
   send(action: Action) {
-    // console.log(this)
+    // console.log(action)
     const nextState = this.reducer(action, this.state);
     updateComponent(this, this.props, nextState);
   }
@@ -106,10 +107,15 @@ export const renderComponent = (comp: Component, props, state?) => {
 
 export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   const { props: prevProps, host } = lastTree;
+  // if  (!nextTree) {
+  //  host.parentElement.removeChild(host); 
+  //   return;
+  // }
   const { props } = nextTree;
   if (lastTree.element !== nextTree.element) {
     //unmount
-    render(nextTree, lastTree.host);
+    render(nextTree, host.parentElement);
+    host.parentElement.removeChild(host); 
     return;
   }
 
@@ -158,12 +164,9 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
         render(child, host);
         continue;
       }
-      if (child === prevChild) {
-        continue;
-      } else {
+
         //todo: prevchild shoud have host
         updateChildren(prevChild, child);
-      }
     }
     for (let prevChild of prevProps.children) {
       const prevChildIndex = prevProps.children.indexOf(prevChild);
