@@ -1,6 +1,5 @@
 import {
   createPathAttr,
-  zipDots,
   getChartsFromData,
   getScaleY,
   getHighLow
@@ -19,6 +18,7 @@ import {
 import { TransitionRuller } from "../src/ruller";
 import { Transition } from "../src/transition";
 import { TransitionLabels } from "../src/labels";
+import { zipDots as zipData } from "../src/utils";
 
 jest.useFakeTimers();
 
@@ -55,17 +55,16 @@ describe("utils", () => {
     names: { y0: "#0", y1: "#1" },
     colors: { y0: "#3DC23F", y1: "#F34C44" }
   };
-  it("zip", () => {
-    const dots = zipDots([1, 2, 3, 4, 5], [10, 20, 10, 20, 20]);
-    expect(dots).toEqual([[1, 10], [2, 20], [3, 10], [4, 20], [5, 20]]);
+  it("zip data", () => {
+    const dots = zipData([[1111,1112], [1,2], [2,3],[4,5]]);
+    const dots2 = zipData(data.columns);
+    expect(dots).toEqual([[1111,1,2,4], [1112,2,3,5]]);
+    // expect(dots2).toEqual([]);
   });
+
   it("getHighLow", () => {
     const [high, low] = getHighLow(data);
     expect([high, low]).toEqual([142, 12]);
-  });
-  xit("getCharts", () => {
-    const charts = getChartsFromData(data);
-    expect(charts).toEqual([]);
   });
 });
 
@@ -272,7 +271,7 @@ describe("animation", () => {
     expect(body.firstElementChild.getAttribute('status')).toBe('entered');
     // expect(body.firstElementChild.getAttribute('status')).toBe('entered')
   });
-  it('transition group', () => {
+  fit('transition group', () => {
     const Helper: ComponentType = () => ({
       ...componentMixin(),
       state: [1,2,3],
@@ -282,6 +281,8 @@ describe("animation", () => {
             return [2,3];
           case "2":
             return [1,2,3];
+          case "3":
+            return [1,2,3,4]
         }
       },
       render(props, state) {
@@ -305,10 +306,14 @@ describe("animation", () => {
     expect(root.firstElementChild.getAttribute('status')).toBe('exiting');
     jest.runOnlyPendingTimers();
     // expect(root).toBe({});
-    // expect(root.firstElementChild.tagName).toBe('notexisted');
+    expect(root.lastElementChild.tagName).toBe('notexisted');
     helperInst.send({ type: "2" });
-    // expect(root.firstElementChild.getAttribute('status')).toBe('exiting');
-    jest.runOnlyPendingTimers();
-    // expect(root).toBe({});
+    expect(root.lastElementChild.getAttribute('status')).toBe('entering');
+    jest.runOnlyPendingTimers(); //20
+    expect(root.lastElementChild.getAttribute('status')).toBe('entered');
+    helperInst.send({ type: "3" });
+    expect(root.lastElementChild.getAttribute('status')).toBe('entering');
+    jest.runOnlyPendingTimers(); //20
+    expect(root.lastElementChild.getAttribute('status')).toBe('entered');
   })
 });

@@ -10,6 +10,7 @@ interface Props {
   status: "enter" | "appear";
 }
 let inProccess = false;
+let counter = 0;
 export const Transition: ComponentType = () => ({
   ...componentMixin(),
   state: {
@@ -17,12 +18,11 @@ export const Transition: ComponentType = () => ({
     in: null
   } as State,
   getDeriviedStateFromProps(props: Props, prevState: State): State {
-    // console.log(props)
     if (prevState.in === null) {
       return {
         ...prevState,
         in: props.in,
-        status: "entered"
+        status: props.status === "enter" ? "entered" : "entering"
       };
     }
     if (!props.in && prevState.in && prevState.status === "entered") {
@@ -40,6 +40,7 @@ export const Transition: ComponentType = () => ({
     return prevState;
   },
   didUpdate() {
+    // console.log(this.state, counter++);
     if (inProccess) return;
 
     const prevState = this.state as State;
@@ -50,19 +51,23 @@ export const Transition: ComponentType = () => ({
         this.send({ type: "update" });
       }, 200);
     }
-    if (prevState.status === "exited") {
-      // this.send({ type: "show" });
-    }
     if (prevState.status === "entering") {
-      inProccess = true;
       setTimeout(() => {
-        inProccess = false;
+        this.send({ type: "entered" });
+      }, 20);
+    }
+
+  },
+  didMount() {
+    const prevState = this.state as State;
+    if (prevState.status === "entering") {
+      setTimeout(() => {
         this.send({ type: "entered" });
       }, 20);
     }
   },
   render: (props, state: State) => {
-    console.log(state);
+    // console.log(state, counter++);
     return state.status !== "exited"
       ? props.children(state.status)
       : createElement("notexisted", { key: props.key });

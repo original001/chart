@@ -8,7 +8,7 @@ export interface Tree {
 
 export interface Props {
   children?: Tree[];
-  [key: string]: any
+  [key: string]: any;
 }
 
 export interface Component {
@@ -57,7 +57,8 @@ export const componentMixin = () => ({
   send(action: Action) {
     // console.log(action)
     const nextState = this.reducer(action, this.state);
-    updateComponent(this, this.props, nextState);
+    // console.log(nextState)
+    updateComponentBySelf(this, nextState);
   }
 });
 
@@ -107,20 +108,17 @@ export const renderComponent = (comp: Component, props, state?) => {
 
 export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   const { props: prevProps, host } = lastTree;
-  // if  (!nextTree) {
-  //  host.parentElement.removeChild(host); 
-  //   return;
-  // }
   const { props } = nextTree;
+
   if (lastTree.element !== nextTree.element) {
     //unmount
     render(nextTree, host.parentElement);
-    host.parentElement.removeChild(host); 
+    host.parentElement.removeChild(host);
     return;
   }
 
   if (typeof nextTree.element === "function") {
-    updateComponent(lastTree._instance, nextTree.props);
+    updateComponentByParent(lastTree._instance, nextTree.props);
     nextTree.host = host;
     nextTree._instance = lastTree._instance;
     return;
@@ -143,7 +141,7 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
     for (let child of prevProps.children) {
       host.removeChild(child.host);
     }
-    return 
+    return;
   }
 
   if (props.children) {
@@ -155,7 +153,7 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       for (let child of props.children) {
         render(child, host);
       }
-      return
+      return;
     }
     for (let child of props.children) {
       const childIndex = props.children.indexOf(child);
@@ -165,8 +163,8 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
         continue;
       }
 
-        //todo: prevchild shoud have host
-        updateChildren(prevChild, child);
+      //todo: prevchild shoud have host
+      updateChildren(prevChild, child);
     }
     for (let prevChild of prevProps.children) {
       const prevChildIndex = prevProps.children.indexOf(prevChild);
@@ -181,6 +179,7 @@ export const updateComponent = (comp: Component, nextProps, nextState?) => {
   //compare prevstate and next
   const prevState = comp.state;
   const prevProps = comp.props;
+
   if (nextState) {
     comp.state = nextState;
   }
@@ -189,4 +188,28 @@ export const updateComponent = (comp: Component, nextProps, nextState?) => {
   updateChildren(comp._innerTree, nextTree);
   comp._innerTree = nextTree;
   comp.didUpdate && comp.didUpdate(prevProps, prevState || comp.state);
+};
+
+export const updateComponentBySelf = (comp: Component, nextState) => {
+  //compare prevstate and next
+  const prevState = comp.state;
+  const prevProps = comp.props;
+
+  const nextTree = renderComponent(comp, prevProps, nextState);
+  updateChildren(comp._innerTree, nextTree);
+  comp._innerTree = nextTree;
+  comp.didUpdate && comp.didUpdate(prevProps, prevState);
+};
+
+export const updateComponentByParent = (comp: Component, nextProps) => {
+  //compare prevstate and next
+  const prevState = comp.state;
+  const prevProps = comp.props;
+
+  comp.props = nextProps;
+  const nextTree = renderComponent(comp, nextProps);
+  // console.log(nextTree)
+  updateChildren(comp._innerTree, nextTree);
+  comp._innerTree = nextTree;
+  comp.didUpdate && comp.didUpdate(prevProps, prevState);
 };
