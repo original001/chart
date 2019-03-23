@@ -24,3 +24,9 @@ export const zipDots = (array: any[][]) => {
   return result;
 };
 // xs.reduce((acc, cur, i) => acc.concat([[xs[i], ys[i]]]), []);
+
+export const prettifyDate = (timestamp: number) => {
+  const [_, month, day] = new Date(timestamp).toString().split(" ");
+  return `${month} ${day}`;
+};
+

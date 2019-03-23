@@ -2,7 +2,8 @@ import {
   renderComponent,
   ComponentType,
   componentMixin,
-  createElement
+  createElement,
+  updateComponentByParent
 } from "../src/reconciler";
 
 describe("reconciler", () => {
@@ -16,6 +17,9 @@ describe("reconciler", () => {
         return { extra: "wow" };
       }
       return prevState;
+    },
+    shouldUpdate(nextProps) {
+      if (nextProps.text === 'notUpdate' && this.props.text === 'test') return false
     },
     render(props, state) {
       return createElement("text", {}, props.text + ',' + state.extra);

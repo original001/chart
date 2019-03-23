@@ -14,7 +14,8 @@ import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
 import { statement } from "@babel/template";
 import { TransitionLabels } from "./labels";
 import { Transition } from "./transition";
-import { zipDots } from "./utils";
+import { zipDots, prettifyDate } from "./utils";
+import { Dots } from "./dots";
 
 type Dot = [number, number];
 type Chart = Dot[];
@@ -34,12 +35,6 @@ export const createPathAttr = (
       i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
     ""
   );
-
-const prettifyDate = (timestamp: number) => {
-  const [_, month, day] = new Date(timestamp).toString().split(" ");
-  return `${month} ${day}`;
-};
-
 const path = (path: string, color: string) =>
   createElement("path", {
     d: path,
@@ -94,86 +89,6 @@ export const getHighLow = (data: ChartDto) => {
   const lowX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   return [highY, lowY, highX, lowX];
 };
-
-function dots(
-  columns: (string | number)[][],
-  projectChartX: (x: number) => string,
-  projectChartY: (y: number) => string,
-  data: ChartDto
-): Tree[] {
-  const zippedDots = zipDots(columns);
-  const axises = zippedDots[0];
-  const popupOffset = 30;
-  const textOffset = 10 - popupOffset;
-  return zippedDots.slice(1).map((dot, i) =>
-    createElement(
-      "svg",
-      { x: projectChartX(i), y: 0, overflow: "visible", class: "popup-rect" },
-      [
-        createElement("rect", {
-          x: projectChartX(-0.5),
-          y: 0,
-          width: projectChartX(1),
-          height: CHART_HEIGHT,
-          fill: "transparent"
-        }),
-        createElement("g", {}, [
-          createElement("line", {
-            x1: 0,
-            y1: 0,
-            x2: 0,
-            y2: CHART_HEIGHT,
-            stroke: "#ddd"
-          }),
-          createElement("rect", {
-            x: -popupOffset,
-            y: 0,
-            width: "100",
-            height: "100",
-            fill: "#fff",
-            stroke: "#ddd",
-            ["stroke-width"]: "1px",
-            ry: 5,
-            rx: 5
-          }),
-          createElement("text", { x: textOffset, y: 20 }, prettifyDate(dot[0])),
-          ...dot.slice(1).map((count, i) =>
-            createElement(
-              "text",
-              {
-                x: textOffset + i * 30,
-                y: 60,
-                fill: data.colors[axises[i + 1]]
-              },
-              count + ""
-            )
-          ),
-          ...axises.slice(1).map((axis, i) =>
-            createElement(
-              "text",
-              {
-                x: textOffset + i * 30,
-                y: 90,
-                fill: data.colors[axis]
-              },
-              data.names[axis]
-            )
-          ),
-          ...axises.slice(1).map((axis, i) =>
-            createElement("circle", {
-              cx: 0,
-              cy: projectChartY(dot[i+1]),
-              r: 4,
-              stroke: data.colors[axis],
-              fill: "#fff",
-              ["stroke-width"]: 2
-            })
-          )
-        ])
-      ]
-    )
-  );
-}
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 
@@ -285,7 +200,7 @@ const App: ComponentType = () => ({
             .map(({ chart, color }) =>
               path(createPathAttr(chart, projectChartX, projectChartY), color)
             )
-            .concat(dots(columns, projectChartX, projectChartY, data))
+            .concat([createElement(Dots, {data, columns, projectChartX, projectChartY})])
         )
       ]
     );

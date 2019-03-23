@@ -16,6 +16,7 @@ export interface Component {
   state?: {};
   props?: Props;
   getDeriviedStateFromProps?: (props, state) => {};
+  shouldUpdate?: (nextProps) => boolean;
   didUpdate?: (prevProps: Props, prevState) => void;
   didMount?: () => void;
   willRemove?: (onRemove, host) => void;
@@ -206,6 +207,7 @@ export const updateComponentByParent = (comp: Component, nextProps) => {
   const prevState = comp.state;
   const prevProps = comp.props;
 
+  if (comp.shouldUpdate && !comp.shouldUpdate(nextProps)) return;
   comp.props = nextProps;
   const nextTree = renderComponent(comp, nextProps);
   // console.log(nextTree)
