@@ -6,6 +6,7 @@ const DRAG_HANDLER_NAME = "onSliderDrag";
 const DRAG_RESIZE_RIGHT_HANDLER_NAME = "onSliderDragResizeRight";
 const DRAG_RESIZE_LEFT_HANDLER_NAME = "onSliderDragResizeLeft";
 const START_DRAG_HANDLER_NAME = "onSliderStartDrag";
+const MAX_SLIDER_SIZE = 50;
 
 export const Slider: ComponentType = () => ({
   ...componentMixin(),
@@ -51,8 +52,11 @@ export const Slider: ComponentType = () => ({
   didUpdate(prevProps, prevState) {
     const left = this.state.left / CHART_WIDTH;
     const right = this.state.right / CHART_WIDTH;
-    if (prevState.left !== this.state.left || prevState.right !== this.state.right) {
-      this.props.onChange({left, right})
+    if (
+      prevState.left !== this.state.left ||
+      prevState.right !== this.state.right
+    ) {
+      this.props.onChange({ left, right });
     }
   },
   reducer({ type, payload }, state) {
@@ -65,9 +69,13 @@ export const Slider: ComponentType = () => ({
         return { left: payload, right: size + payload };
       case "updateRight":
         if (payload > CHART_WIDTH) return { ...state, right: CHART_WIDTH };
+        if (payload < MAX_SLIDER_SIZE + state.left)
+          return { ...state, right: MAX_SLIDER_SIZE + state.left };
         return { ...state, right: payload };
       case "updateLeft":
         if (payload < 0) return { ...state, left: 0 };
+        if (payload > state.right - MAX_SLIDER_SIZE)
+          return { ...state, left: state.right - MAX_SLIDER_SIZE };
         return { ...state, left: payload };
     }
   },
