@@ -42,7 +42,8 @@ export const Dots: ComponentType = () => ({
           x: projectChartX(i),
           y: 0,
           overflow: "visible",
-          class: "popup-rect"
+          class: "popup-rect",
+          onclick: ""
         },
         [
           createElement("rect", {
