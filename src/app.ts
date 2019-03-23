@@ -31,9 +31,7 @@ export const createPathAttr = (
 ) =>
   chart.reduce(
     (acc, [x, y], i) =>
-      i === 0
-        ? `M0 ${projectY(y)}`
-        : acc + ` L${projectX(i)} ${projectY(y)}`,
+      i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
     ""
   );
 
@@ -108,67 +106,72 @@ function dots(
   const popupOffset = 30;
   const textOffset = 10 - popupOffset;
   return zippedDots.slice(1).map((dot, i) =>
-    createElement("svg", { x: projectChartX(i), y: 0, overflow: "visible" }, [
-      createElement("rect", {
-        x: projectChartX(-0.5),
-        y: 0,
-        width: projectChartX(1),
-        height: CHART_HEIGHT,
-        fill: "none",
-        class: 'popup-rect'
-      }),
-      createElement("line", {
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: CHART_HEIGHT,
-        stroke: "#ddd"
-      }),
-      createElement("rect", {
-        x: -popupOffset,
-        y: 0,
-        width: "100",
-        height: "100",
-        fill: "#fff",
-        stroke: "#ddd",
-        ["stroke-width"]: "1px",
-        ry: 5,
-        rx: 5
-      }),
-      createElement("text", { x: textOffset, y: 20 }, prettifyDate(dot[0])),
-      ...dot
-        .slice(1)
-        .map((count, i) =>
-          createElement(
-            "text",
-            { x: textOffset + i * 30, y: 60, fill: data.colors[axises[i + 1]] },
-            count + ""
-          )
-        ),
-      ...axises.slice(1).map((axis, i) =>
-        createElement(
-          "text",
-          {
-            x: textOffset + i * 30,
-            y: 90,
-            fill: data.colors[axis]
-          },
-          data.names[axis]
-        )
-      ),
-      ...dot
-        .slice(1)
-        .map(y =>
-          createElement("circle", {
-            cx: 0,
-            cy: projectChartY(y),
-            r: 3,
-            stroke: "gray",
+    createElement(
+      "svg",
+      { x: projectChartX(i), y: 0, overflow: "visible", class: "popup-rect" },
+      [
+        createElement("rect", {
+          x: projectChartX(-0.5),
+          y: 0,
+          width: projectChartX(1),
+          height: CHART_HEIGHT,
+          fill: "transparent"
+        }),
+        createElement("g", {}, [
+          createElement("line", {
+            x1: 0,
+            y1: 0,
+            x2: 0,
+            y2: CHART_HEIGHT,
+            stroke: "#ddd"
+          }),
+          createElement("rect", {
+            x: -popupOffset,
+            y: 0,
+            width: "100",
+            height: "100",
             fill: "#fff",
-            ["stroke-width"]: 2
-          })
-        )
-    ])
+            stroke: "#ddd",
+            ["stroke-width"]: "1px",
+            ry: 5,
+            rx: 5
+          }),
+          createElement("text", { x: textOffset, y: 20 }, prettifyDate(dot[0])),
+          ...dot.slice(1).map((count, i) =>
+            createElement(
+              "text",
+              {
+                x: textOffset + i * 30,
+                y: 60,
+                fill: data.colors[axises[i + 1]]
+              },
+              count + ""
+            )
+          ),
+          ...axises.slice(1).map((axis, i) =>
+            createElement(
+              "text",
+              {
+                x: textOffset + i * 30,
+                y: 90,
+                fill: data.colors[axis]
+              },
+              data.names[axis]
+            )
+          ),
+          ...axises.slice(1).map((axis, i) =>
+            createElement("circle", {
+              cx: 0,
+              cy: projectChartY(dot[i+1]),
+              r: 4,
+              stroke: data.colors[axis],
+              fill: "#fff",
+              ["stroke-width"]: 2
+            })
+          )
+        ])
+      ]
+    )
   );
 }
 
@@ -266,8 +269,10 @@ const App: ComponentType = () => ({
     const scaleX = getScaleX(CHART_WIDTH, columns[0].length - 1);
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
 
-    const projectChartX: (x: number) => string = x => (x * scaleX * state.extraScale).toFixed(1);
-    const projectChartY: (y: number) => string = y => (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
+    const projectChartX: (x: number) => string = x =>
+      (x * scaleX * state.extraScale).toFixed(1);
+    const projectChartY: (y: number) => string = y =>
+      (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
       { width: CHART_WIDTH, height: CHART_HEIGHT },
@@ -278,14 +283,7 @@ const App: ComponentType = () => ({
           { style: `transform: translateX(-${state.offset * CHART_WIDTH}px)` },
           charts
             .map(({ chart, color }) =>
-              path(
-                createPathAttr(
-                  chart,
-                  projectChartX,
-                  projectChartY
-                ),
-                color
-              )
+              path(createPathAttr(chart, projectChartX, projectChartY), color)
             )
             .concat(dots(columns, projectChartX, projectChartY, data))
         )
