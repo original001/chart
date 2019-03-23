@@ -6,13 +6,17 @@ const DRAG_HANDLER_NAME = "onSliderDrag";
 const DRAG_RESIZE_RIGHT_HANDLER_NAME = "onSliderDragResizeRight";
 const DRAG_RESIZE_LEFT_HANDLER_NAME = "onSliderDragResizeLeft";
 const START_DRAG_HANDLER_NAME = "onSliderStartDrag";
+const TOUCH_HANDLER_NAME = "onSliderTouch";
+const TOUCH_RESIZE_RIGHT_HANDLER_NAME = "onSliderTouchResizeRight";
+const TOUCH_RESIZE_LEFT_HANDLER_NAME = "onSliderTouchResizeLeft";
+const START_TOUCH_HANDLER_NAME = "onSliderStartTouch";
 const MAX_SLIDER_SIZE = 50;
 
 export const Slider: ComponentType = () => ({
   ...componentMixin(),
   state: {
     left: 0,
-    right: CHART_WIDTH
+    right: 400
   },
   didMount() {
     let beginClientX;
@@ -20,6 +24,13 @@ export const Slider: ComponentType = () => ({
     let beginRight;
     let compensation;
     let compensationRight;
+    const makeCompensation = (clientX: number) => {
+      beginClientX = clientX;
+      beginLeft = this.state.left;
+      beginRight = this.state.right;
+      compensation = 8 + (clientX - beginLeft);
+      compensationRight = 8 - (beginRight - clientX);
+    }
     window[DRAG_HANDLER_NAME] = createRaf(e => {
       this.send({ type: "updatePos", payload: e.clientX - compensation });
     });
@@ -35,13 +46,28 @@ export const Slider: ComponentType = () => ({
         payload: e.clientX - compensation
       });
     });
+    window[TOUCH_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+      this.send({ type: "updatePos", payload: e.targetTouches[0].clientX - compensation });
+    });
+    window[TOUCH_RESIZE_RIGHT_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+      this.send({
+        type: "updateRight",
+        payload: e.targetTouches[0].clientX - compensationRight
+      });
+    });
+    window[TOUCH_RESIZE_LEFT_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+      this.send({
+        type: "updateLeft",
+        payload: e.targetTouches[0].clientX - compensation
+      });
+    });
+    window[START_TOUCH_HANDLER_NAME] = (e: TouchEvent) => {
+      e.preventDefault();
+      makeCompensation(e.targetTouches[0].clientX)
+    }
     window[START_DRAG_HANDLER_NAME] = (e: DragEvent) => {
-      // e.preventDefault();
-      beginClientX = e.clientX;
-      beginLeft = this.state.left;
-      beginRight = this.state.right;
-      compensation = 8 + (beginClientX - beginLeft);
-      compensationRight = 8 - (beginRight - beginClientX);
+      makeCompensation(e.clientX)
+      if (!e.dataTransfer) return;
       let dragImage = document.createElement("img");
       dragImage.src =
         "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -92,18 +118,24 @@ export const Slider: ComponentType = () => ({
             class: "sliderEdge sliderEdgeLeft",
             ondrag: `${DRAG_RESIZE_LEFT_HANDLER_NAME}(event)`,
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
+            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME}(event)`,
             draggable: "true"
           }),
           createElement("div", {
             class: "sliderCenter",
             ondrag: `${DRAG_HANDLER_NAME}(event)`,
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
-            draggable: "true"
+            draggable: "true",
+            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchmove: `${TOUCH_HANDLER_NAME}(event)`
           }),
           createElement("div", {
             class: "sliderEdge sliderEdgeRight",
             ondrag: `${DRAG_RESIZE_RIGHT_HANDLER_NAME}(event)`,
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
+            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME}(event)`,
             draggable: "true"
           })
         ])
