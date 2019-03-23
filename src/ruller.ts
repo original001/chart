@@ -1,6 +1,6 @@
 import { ComponentType, componentMixin, createElement } from "./reconciler";
+import { CHART_HEIGHT } from "./constant";
 
-const CHART_HEIGHT = 200;
 
 const ruler = (y: number, label: string) =>
   createElement("g", {}, [
@@ -9,15 +9,14 @@ const ruler = (y: number, label: string) =>
       y1: CHART_HEIGHT - y + "",
       x2: "100%",
       y2: CHART_HEIGHT - y + "",
-      "stroke-width": "1",
-      stroke: "gray" //need col,
+      class: "r-line"
     }),
     createElement(
       "text",
       {
         x: 0,
-        y: CHART_HEIGHT - y - 10 + "",
-        fill: "gray"
+        y: CHART_HEIGHT - y - 5 + "",
+        class: "r-text"
       },
       label
     )
@@ -87,7 +86,7 @@ export const TransitionRuller: ComponentType = () => ({
       createElement(
         "g",
         { class: state.status + " transition", secondValue: state.values[1] },
-        state.values.map(y => ruler((y - state.values[0]) * state.scale, y.toString()))
+        state.values.slice(0,-1).map(y => ruler((y - state.values[0]) * state.scale, y.toString()))
       )
     ]);
   },

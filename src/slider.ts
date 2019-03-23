@@ -17,7 +17,7 @@ export const Slider: ComponentType = () => ({
   ...componentMixin(),
   state: {
     left: 0,
-    right: 400
+    right: CHART_WIDTH
   },
   didMount() {
     let beginClientX;
@@ -31,7 +31,7 @@ export const Slider: ComponentType = () => ({
       beginRight = this.state.right;
       compensation = 8 + (clientX - beginLeft);
       compensationRight = 8 - (beginRight - clientX);
-    }
+    };
     window[DRAG_HANDLER_NAME] = createRaf(e => {
       this.send({ type: "updatePos", payload: e.clientX - compensation });
     });
@@ -48,7 +48,11 @@ export const Slider: ComponentType = () => ({
       });
     });
     window[TOUCH_HANDLER_NAME] = createRaf((e: TouchEvent) => {
-      this.send({ type: "updatePos", payload: e.targetTouches[0].clientX - compensation });
+      e.preventDefault();
+      this.send({
+        type: "updatePos",
+        payload: e.targetTouches[0].clientX - compensation
+      });
     });
     window[TOUCH_RESIZE_RIGHT_HANDLER_NAME] = createRaf((e: TouchEvent) => {
       this.send({
@@ -64,13 +68,13 @@ export const Slider: ComponentType = () => ({
     });
     window[START_TOUCH_HANDLER_NAME] = (e: TouchEvent) => {
       // e.preventDefault();
-      makeCompensation(e.targetTouches[0].clientX)
-    }
+      makeCompensation(e.targetTouches[0].clientX);
+    };
     window[TOUCH_END_HANDLER_NAME] = () => {
       this.props.onTouchEnd();
-    }
+    };
     window[START_DRAG_HANDLER_NAME] = (e: DragEvent) => {
-      makeCompensation(e.clientX)
+      makeCompensation(e.clientX);
       if (!e.dataTransfer) return;
       let dragImage = document.createElement("img");
       dragImage.src =
@@ -114,7 +118,7 @@ export const Slider: ComponentType = () => ({
       "div",
       {
         class: "sliderWrapper",
-        style: `left: ${state.left - CHART_WIDTH}px; right: ${-state.right}px;`
+        style: `left: ${(state.left - CHART_WIDTH).toFixed(0)}px; right: ${-state.right.toFixed(0)}px; border-left-width: ${CHART_WIDTH}px; border-right-width: ${CHART_WIDTH}px;`
       },
       [
         createElement("div", { class: "slider" }, [

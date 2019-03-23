@@ -5,17 +5,16 @@ import {
   createElement,
   ComponentType,
   componentMixin,
-  Tree
 } from "./reconciler";
 import { TransitionRuller } from "./ruller";
 import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
-import { statement } from "@babel/template";
 import { TransitionLabels } from "./labels";
 import { Transition } from "./transition";
-import { zipDots, prettifyDate } from "./utils";
+import { prettifyDate } from "./utils";
 import { Dots } from "./dots";
+require("./app.css");
 
 type Dot = [number, number];
 type Chart = Dot[];
@@ -35,10 +34,10 @@ export const createPathAttr = (
       i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
     ""
   );
-const path = (path: string, color: string) =>
+const path = (path: string, color: string, strokeWidth: number) =>
   createElement("path", {
     d: path,
-    "stroke-width": 2,
+    "stroke-width": strokeWidth,
     stroke: color,
     fill: "none"
   });
@@ -48,9 +47,8 @@ const label = (timestamp: number, offset: number, status: string) =>
     "text",
     {
       x: Math.round(offset),
-      y: 20,
-      fill: "gray",
-      class: status + " transition",
+      y: 15,
+      class: status + " transition r-text",
       key: timestamp
     },
     prettifyDate(timestamp)
@@ -122,7 +120,7 @@ const App: ComponentType = () => ({
         return {
           ...state,
           touchEndTimestamp: payload
-        }
+        };
     }
   },
   didMount() {
@@ -196,7 +194,7 @@ const App: ComponentType = () => ({
       (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
-      { width: CHART_WIDTH, height: CHART_HEIGHT },
+      { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: 'visible' },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
         createElement(
@@ -207,7 +205,7 @@ const App: ComponentType = () => ({
               "g",
               {},
               charts.map(({ chart, color }) =>
-                path(createPathAttr(chart, projectChartX, projectChartY), color)
+                path(createPathAttr(chart, projectChartX, projectChartY), color, 2)
               )
             ),
             createElement(Dots, {
@@ -231,7 +229,8 @@ const App: ComponentType = () => ({
             x => x * scaleX,
             y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
           ),
-          color
+          color,
+          1
         )
       )
     );
@@ -243,7 +242,7 @@ const App: ComponentType = () => ({
       [
         createElement(Slider, {
           onChange: payload => this.send({ type: "updateSlider", payload }),
-          onTouchEnd: () => this.send({type: 'touchEnd', payload: Date.now()})
+          onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() })
         }),
         sliderChart
       ]
@@ -285,12 +284,7 @@ const App: ComponentType = () => ({
         )
       )
     );
-    return createElement("div", { style: "overflow: hidden" }, [
-      chart,
-      labels,
-      slider,
-      buttons
-    ]);
+    return createElement("div", {}, [chart, labels, slider, buttons]);
   }
 });
 
