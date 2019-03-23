@@ -98,7 +98,8 @@ const App: ComponentType = () => ({
     extraScale: 1,
     offset: 0,
     sliderPos: { left: 0, right: 1 },
-    hiddenNames: [] // workaround
+    hiddenNames: [],
+    touchEndTimestamp: 0 // workaround
   },
   reducer({ type, payload }, state) {
     switch (type) {
@@ -117,6 +118,11 @@ const App: ComponentType = () => ({
             ? state.hiddenNames.filter(name => name !== payload)
             : state.hiddenNames.concat([payload])
         };
+      case "touchEnd":
+        return {
+          ...state,
+          touchEndTimestamp: payload
+        }
     }
   },
   didMount() {
@@ -204,7 +210,13 @@ const App: ComponentType = () => ({
                 path(createPathAttr(chart, projectChartX, projectChartY), color)
               )
             ),
-            createElement(Dots, { data, columns, projectChartX, projectChartY })
+            createElement(Dots, {
+              data,
+              columns,
+              projectChartX,
+              projectChartY,
+              touchEndTimestamp: state.touchEndTimestamp
+            })
           ]
         )
       ]
@@ -230,7 +242,8 @@ const App: ComponentType = () => ({
       },
       [
         createElement(Slider, {
-          onChange: payload => this.send({ type: "updateSlider", payload })
+          onChange: payload => this.send({ type: "updateSlider", payload }),
+          onTouchEnd: () => this.send({type: 'touchEnd', payload: Date.now()})
         }),
         sliderChart
       ]
@@ -272,7 +285,12 @@ const App: ComponentType = () => ({
         )
       )
     );
-    return createElement("div", {}, [chart, labels, slider, buttons]);
+    return createElement("div", { style: "overflow: hidden" }, [
+      chart,
+      labels,
+      slider,
+      buttons
+    ]);
   }
 });
 

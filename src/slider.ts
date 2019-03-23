@@ -7,6 +7,7 @@ const DRAG_RESIZE_RIGHT_HANDLER_NAME = "onSliderDragResizeRight";
 const DRAG_RESIZE_LEFT_HANDLER_NAME = "onSliderDragResizeLeft";
 const START_DRAG_HANDLER_NAME = "onSliderStartDrag";
 const TOUCH_HANDLER_NAME = "onSliderTouch";
+const TOUCH_END_HANDLER_NAME = "onSliderTouchEnd";
 const TOUCH_RESIZE_RIGHT_HANDLER_NAME = "onSliderTouchResizeRight";
 const TOUCH_RESIZE_LEFT_HANDLER_NAME = "onSliderTouchResizeLeft";
 const START_TOUCH_HANDLER_NAME = "onSliderStartTouch";
@@ -62,8 +63,11 @@ export const Slider: ComponentType = () => ({
       });
     });
     window[START_TOUCH_HANDLER_NAME] = (e: TouchEvent) => {
-      e.preventDefault();
+      // e.preventDefault();
       makeCompensation(e.targetTouches[0].clientX)
+    }
+    window[TOUCH_END_HANDLER_NAME] = () => {
+      this.props.onTouchEnd();
     }
     window[START_DRAG_HANDLER_NAME] = (e: DragEvent) => {
       makeCompensation(e.clientX)
@@ -119,6 +123,7 @@ export const Slider: ComponentType = () => ({
             ondrag: `${DRAG_RESIZE_LEFT_HANDLER_NAME}(event)`,
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME}(event)`,
             draggable: "true"
           }),
@@ -128,6 +133,7 @@ export const Slider: ComponentType = () => ({
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             draggable: "true",
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_HANDLER_NAME}(event)`
           }),
           createElement("div", {
@@ -135,6 +141,7 @@ export const Slider: ComponentType = () => ({
             ondrag: `${DRAG_RESIZE_RIGHT_HANDLER_NAME}(event)`,
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME}(event)`,
             draggable: "true"
           })
