@@ -207,7 +207,7 @@ export const updateComponentByParent = (comp: Component, nextProps) => {
   const prevState = comp.state;
   const prevProps = comp.props;
 
-  if (comp.shouldUpdate && !comp.shouldUpdate(nextProps)) return;
+  // if (comp.shouldUpdate && !comp.shouldUpdate(nextProps)) return;
   comp.props = nextProps;
   const nextTree = renderComponent(comp, nextProps);
   // console.log(nextTree)

@@ -196,11 +196,16 @@ const App: ComponentType = () => ({
         createElement(
           "g",
           { style: `transform: translateX(-${state.offset * CHART_WIDTH}px)` },
-          charts
-            .map(({ chart, color }) =>
-              path(createPathAttr(chart, projectChartX, projectChartY), color)
-            )
-            .concat([createElement(Dots, {data, columns, projectChartX, projectChartY})])
+          [
+            createElement(
+              "g",
+              {},
+              charts.map(({ chart, color }) =>
+                path(createPathAttr(chart, projectChartX, projectChartY), color)
+              )
+            ),
+            createElement(Dots, { data, columns, projectChartX, projectChartY })
+          ]
         )
       ]
     );
