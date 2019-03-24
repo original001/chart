@@ -4,7 +4,10 @@ body {
   padding: 0;
   margin: 0;
 }
-
+body.night {
+  background: #242F3E;
+  color: #fff;
+}
 .header {
   font-size: 18px;
   margin: 20px 15px 0;
@@ -19,6 +22,10 @@ body {
   position: absolute;
   top: 0;
   border: 0 solid rgba(242, 251, 255, 0.8);
+}
+.night .sliderWrapper {
+
+  border: 0 solid rgba(31, 42, 56, 0.8);
 }
 .slider {
   width: 100%;
@@ -96,7 +103,7 @@ body {
   padding: 0 12px 0 8px;
   align-items: center;
   border-radius: 32px;
-  border: 1px solid #e6ecf0;
+  border: 1px solid rgba(115,153,178, .2);
   margin-right: 15px;
 }
 .button-label {
@@ -129,6 +136,17 @@ body {
   border-radius: 8px;
   width: 12px;
 }
+.night .button-icon.active{
+  border-color: #242F3E;
+  background: #242F3E;
+}
+.switch {
+  margin-top: 50px;
+  color: #108BE3;
+  font-size: 18px;
+  text-align: center;
+  font-weight: 300;
+}
 
 .popup-rect > g {
   /* display: none; */
@@ -140,10 +158,10 @@ body {
 
 .r-line {
   stroke-width: "1";
-  stroke: #f2f4f5;
+  stroke: rgba(115,153,178, .2);
 }
 .r-text {
-  fill: #96a2aa;
+  fill: rgba(106,126,140,.8);
   font-size: 11px;
   font-weight: 300;
 }
@@ -159,7 +177,7 @@ body {
 }
 
 .l-text {
-  color: #96a2aa;
+  color: rgba(106,126,140,.8);
   font-size: 11px;
   font-weight: 300;
 }
@@ -167,6 +185,16 @@ body {
   width: 110px;
   height: 78px;
   fill: #fff;
-  stroke: #eee;
+  stroke: rgba(0,0,0,.1);
   stroke-width: 1px;
+}
+
+.night .n-text {
+  fill: #fff
+}
+.n-fill {
+  fill: #fff;
+}
+.night .n-fill, .night .n-bg {
+  fill: #242F3E
 }

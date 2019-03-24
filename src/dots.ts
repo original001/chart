@@ -65,7 +65,7 @@ export const Dots: ComponentType = () => ({
                 y1: 0,
                 x2: 0,
                 y2: CHART_HEIGHT,
-                stroke: "#eee"
+                class: 'r-line'
               }),
               ...axises.slice(1).map((axis, i) =>
                 createElement("circle", {
@@ -73,20 +73,20 @@ export const Dots: ComponentType = () => ({
                   cy: projectChartY(dot[i + 1]),
                   r: 4,
                   stroke: data.colors[axis],
-                  fill: "#fff",
+                  class: 'n-fill',
                   ["stroke-width"]: 2
                 })
               ),
               createElement("rect", {
                 x: -popupOffset,
                 y: 0,
-                class: 'popup',
+                class: 'popup n-fill',
                 ry: 5,
                 rx: 5
               }),
               createElement(
                 "text",
-                { x: textOffset, y: 22 },
+                { x: textOffset, y: 22, class: "n-text" },
                 prettifyDate(dot[0], true)
               ),
               ...dot.slice(1).map((count, i) =>

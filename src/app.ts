@@ -90,6 +90,7 @@ export const getHighLow = (data: ChartDto) => {
 };
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
+const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
 
 const App: ComponentType = () => ({
   ...componentMixin(),
@@ -98,7 +99,8 @@ const App: ComponentType = () => ({
     offset: 3,
     sliderPos: { left: 0.75, right: 1 },
     hiddenNames: [],
-    touchEndTimestamp: 0 // workaround
+    touchEndTimestamp: 0,
+    mode: "day" // workaround
   },
   reducer({ type, payload }, state) {
     switch (type) {
@@ -122,11 +124,21 @@ const App: ComponentType = () => ({
           ...state,
           touchEndTimestamp: payload
         };
+      case "mode":
+        return {
+          ...state,
+          mode: payload
+        };
     }
   },
   didMount() {
     window[TOGGLE_CHART_HANDLER_NAME] = name => {
       this.send({ type: "toggle", payload: name });
+    };
+    window[TOGGLE_DAY_HANDLER_NAME] = () => {
+      const nextMode = this.state.mode === "day" ? "night" : "day";
+      document.body.setAttribute("class", nextMode);
+      this.send({ type: "mode", payload: nextMode });
     };
   },
   render(props, state) {
@@ -343,7 +355,18 @@ const App: ComponentType = () => ({
         )
       )
     );
-    return createElement("div", {}, [chart, labels, slider, buttons]);
+    const nightButton = createElement(
+      "div",
+      { class: "switch", onclick: `${TOGGLE_DAY_HANDLER_NAME}()` },
+      "Switch to Nigth Mode"
+    );
+    return createElement("div", {}, [
+      chart,
+      labels,
+      slider,
+      buttons,
+      nightButton
+    ]);
   }
 });
 
