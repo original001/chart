@@ -1,5 +1,6 @@
 body {
   font: 14px "helvetica neue", helvetica;
+  color: #404040;
   padding: 0;
   margin: 0;
 }
@@ -90,14 +91,45 @@ body {
   margin-top: 20px;
 }
 .button {
-  padding: 10px 20px;
+  display: inline-flex;
+  height: 32px;
+  padding: 0 12px 0 8px;
+  align-items: center;
+  border-radius: 32px;
+  border: 1px solid #e6ecf0;
+  margin-right: 15px;
+}
+.button-label {
+  position: relative;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
   border-radius: 100%;
-  border: 1px solid rgba(0, 0, 0, 0.3);
-  font-size: 16px;
+  margin-right: 10px;
 }
-.button.active {
-  font-weight: bold;
+.button-icon {
+  transition: all 0.2s ease-out;
+  position: absolute;
+  width: 8px;
+  height: 3px;
+  border: 2px solid #fff;
+  border-top: none;
+  border-right: none;
+  transform: rotate(-45deg);
+  top: -1px;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  margin: auto;
 }
+.button-icon.active {
+  height: 12px;
+  border: 2px solid #fff;
+  background: #fff;
+  border-radius: 8px;
+  width: 12px;
+}
+
 .popup-rect > g {
   /* display: none; */
   visibility: hidden;

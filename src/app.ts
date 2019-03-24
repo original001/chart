@@ -194,56 +194,58 @@ const App: ComponentType = () => ({
       { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
-        createElement("g", {
-
-                        style: `transform: translateX(-${state.offset *
-                          CHART_WIDTH}px) scale(${state.extraScale},1);`
-
-        }, [
-          createElement(
-            TransitionGroup,
-            {
-              wrapper: children =>
-                createElement(
-                  "g",
-                  {
-                    style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
-                    class: "transition-d"
-                  },
-                  [
-                    createElement(
-                      "g",
-                      {
-                        // style: `transform: translateX(-${state.offset *
-                        //   CHART_WIDTH}px) scale(${state.extraScale},1);`
-                      },
-                      children
-                    )
-                  ]
-                )
-            },
-            charts.map(({ chart, color }) =>
-              createElement(Transition, {
-                key: color,
-                children: status =>
-                  path(
-                    createPathAttr(chart, projectChartX, projectChartY),
-                    color,
-                    2,
-                    status
+        createElement(
+          "g",
+          {
+            style: `transform: translateX(-${state.offset *
+              CHART_WIDTH}px) scale(${state.extraScale},1);`
+          },
+          [
+            createElement(
+              TransitionGroup,
+              {
+                wrapper: children =>
+                  createElement(
+                    "g",
+                    {
+                      style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                      class: "transition-d"
+                    },
+                    [
+                      createElement(
+                        "g",
+                        {
+                          // style: `transform: translateX(-${state.offset *
+                          //   CHART_WIDTH}px) scale(${state.extraScale},1);`
+                        },
+                        children
+                      )
+                    ]
                   )
-              })
-            )
-          ),
-          createElement(Dots, {
-            data,
-            columns,
-            projectChartX: projectChartXForDots,
-            projectChartY: projectChartYForDots,
-            touchEndTimestamp: state.touchEndTimestamp,
-            scale: state.extraScale
-          })
-        ])
+              },
+              charts.map(({ chart, color }) =>
+                createElement(Transition, {
+                  key: color,
+                  children: status =>
+                    path(
+                      createPathAttr(chart, projectChartX, projectChartY),
+                      color,
+                      2,
+                      status
+                    )
+                })
+              )
+            ),
+            createElement(Dots, {
+              data,
+              columns,
+              projectChartX: projectChartXForDots,
+              projectChartY: projectChartYForDots,
+              touchEndTimestamp: state.touchEndTimestamp,
+              scale: state.extraScale
+            })
+          ]
+        )
       ]
     );
     const sliderChart = createElement(
@@ -319,10 +321,25 @@ const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            style: `background: ${data.colors[name]}`,
             onclick: `${TOGGLE_CHART_HANDLER_NAME}("${data.names[name]}")`
           },
-          name
+          [
+            createElement(
+              "span",
+              {
+                class: "button-label",
+                style: `background: ${data.colors[name]}`
+              },
+              [
+                createElement("span", {
+                  class: `button-icon ${
+                    state.hiddenNames.includes(data.names[name]) ? "active" : ""
+                  }`
+                })
+              ]
+            ),
+            createElement("span", { class: "button-text" }, name)
+          ]
         )
       )
     );
