@@ -195,55 +195,60 @@ const App: ComponentType = () => ({
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
 
     const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
+    const projectChartXForDots: (x: number) => string = x => (x * scaleX * state.extraScale).toFixed(1);
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
+    const projectChartYForDots: (y: number) => string = y =>
+      (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
       { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
-        createElement(
-          "g",
-          {
-            style: `transform: translateX(-${state.offset *
-              CHART_WIDTH}px) scale(${state.extraScale},1);`
-          },
-          [
-            createElement(
-              TransitionGroup,
-              {
-                wrapper: children =>
-                  createElement(
-                    "g",
-                    {
-                      style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
-                      class: "transition-d"
-                    },
-                    children
-                  )
-              },
-              charts.map(({ chart, color }) =>
-                createElement(Transition, {
-                  key: color,
-                  children: status =>
-                    path(
-                      createPathAttr(chart, projectChartX, projectChartY),
-                      color,
-                      2,
-                      status
+        createElement("g", {}, [
+          createElement(
+            TransitionGroup,
+            {
+              wrapper: children =>
+                createElement(
+                  "g",
+                  {
+                    style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                    class: "transition-d"
+                  },
+                  [
+                    createElement(
+                      "g",
+                      {
+                        style: `transform: translateX(-${state.offset *
+                          CHART_WIDTH}px) scale(${state.extraScale},1);`
+                      },
+                      children
                     )
-                })
-              )
-            ),
-            createElement(Dots, {
-              data,
-              columns,
-              projectChartX,
-              projectChartY,
-              touchEndTimestamp: state.touchEndTimestamp
-            })
-          ]
-        )
+                  ]
+                )
+            },
+            charts.map(({ chart, color }) =>
+              createElement(Transition, {
+                key: color,
+                children: status =>
+                  path(
+                    createPathAttr(chart, projectChartX, projectChartY),
+                    color,
+                    2,
+                    status
+                  )
+              })
+            )
+          ),
+          createElement(Dots, {
+            data,
+            columns,
+            projectChartX: projectChartXForDots,
+            projectChartY: projectChartYForDots,
+            touchEndTimestamp: state.touchEndTimestamp
+          })
+        ])
       ]
     );
     const sliderChart = createElement(
