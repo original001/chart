@@ -60,7 +60,6 @@ body {
 }
 .transition.translate {
   transition: transform 0.2s, opacity 0.2s;
-  opacity: 1;
   transform: translateY(0px);
 }
 .transition-d {
