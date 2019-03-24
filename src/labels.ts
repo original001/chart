@@ -29,7 +29,15 @@ export const TransitionLabels: ComponentType = () => ({
     return nextState;
   },
   render: (props, state: State) => {
-    const a = createElement("g", {}, values(state.children));
+    const a = createElement(
+      "div",
+      {
+        class: "flex-labels",
+        //prettier-ignore
+        style: `transform: translateX(-${props.offset * CHART_WIDTH}px); width: ${props.scaledWidth}px`
+      },
+      values(state.children)
+    );
     // console.log(a);
     return a;
   }

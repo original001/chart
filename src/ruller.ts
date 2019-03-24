@@ -85,7 +85,7 @@ export const TransitionRuller: ComponentType = () => ({
     return createElement("g", {}, state.status === 'exited' ? null : [
       createElement(
         "g",
-        { class: state.status + " transition", secondValue: state.values[1] },
+        { class: state.status + " transition translate", secondValue: state.values[1] },
         state.values.slice(0,-1).map(y => ruler((y - state.values[0]) * state.scale, y.toString()))
       )
     ]);

@@ -1,3 +1,5 @@
+import { getChildMapping, mergeChildMappings } from "./childmapping";
+
 export type ComponentType = () => Component;
 export interface Tree {
   _instance?: Component;
@@ -63,7 +65,17 @@ export const componentMixin = () => ({
   }
 });
 
-export const render = (tree: Tree, container: Element) => {
+function insertAfter(elem: Element, refElem: Element) {
+  var parent = refElem.parentNode;
+  var next = refElem.nextSibling;
+  if (next) {
+    return parent.insertBefore(elem, next);
+  } else {
+    return parent.appendChild(elem);
+  }
+}
+
+export const render = (tree: Tree, container: Element, insertBeforeHost?: Element) => {
   const type = tree.element;
   if (typeof type === "string") {
     const el = /div|span/.test(type)
@@ -84,7 +96,7 @@ export const render = (tree: Tree, container: Element) => {
         );
       }
     }
-    container && container.append(el);
+    container && insertBeforeHost ? insertAfter(el, insertBeforeHost) : container.append(el);
   } else {
     const comp = type();
     comp.props = tree.props;
@@ -92,7 +104,7 @@ export const render = (tree: Tree, container: Element) => {
     comp._innerTree = innerTree;
     tree.host = container;
     tree._instance = comp;
-    render(innerTree, container);
+    render(innerTree, container, insertBeforeHost);
     comp.didMount && comp.didMount();
   }
   return tree;
@@ -111,6 +123,7 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
   const { props: prevProps, host } = lastTree;
   const { props } = nextTree;
 
+  // console.log(nextTree)
   if (lastTree.element !== nextTree.element) {
     //unmount
     render(nextTree, host.parentElement);
@@ -156,6 +169,43 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       }
       return;
     }
+    // updating by keys
+    if (prevProps.children[0].props.key != null) {
+      const prevChildMapping = getChildMapping(prevProps.children);
+      let nextChildMapping = getChildMapping(props.children);
+      let children = mergeChildMappings(prevChildMapping, nextChildMapping);
+
+      let beforeKey;
+      Object.keys(children).sort().forEach(key => {
+        let child = children[key];
+
+        const hasPrev = key in prevChildMapping;
+        const hasNext = key in nextChildMapping;
+
+        const prevChild = prevChildMapping[key];
+
+        // console.log(hasPrev, hasNext, isLeaving)
+
+        // item is new (entering)
+        if (hasNext && (!hasPrev)) {
+          // console.log('entering', key)
+          render(child, host, nextChildMapping[beforeKey]._instance._innerTree.host);
+        beforeKey = key;
+        } else if (!hasNext && hasPrev) {
+          // item is old (exiting)
+          // console.log('leaving', key)
+          host.removeChild(prevChild.host);
+        } else if (hasNext && hasPrev) {
+          // item hasn't changed transition states
+          // copy over the last transition props;
+          // console.log('unchanged', key)
+          updateChildren(prevChild, child);
+        beforeKey = key;
+        }
+      });
+      return;
+    }
+    // updating by index
     for (let child of props.children) {
       const childIndex = props.children.indexOf(child);
       const prevChild = prevProps.children && prevProps.children[childIndex];
@@ -174,21 +224,6 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       }
     }
   }
-};
-
-export const updateComponent = (comp: Component, nextProps, nextState?) => {
-  //compare prevstate and next
-  const prevState = comp.state;
-  const prevProps = comp.props;
-
-  if (nextState) {
-    comp.state = nextState;
-  }
-  comp.props = nextProps;
-  const nextTree = renderComponent(comp, nextProps, nextState);
-  updateChildren(comp._innerTree, nextTree);
-  comp._innerTree = nextTree;
-  comp.didUpdate && comp.didUpdate(prevProps, prevState || comp.state);
 };
 
 export const updateComponentBySelf = (comp: Component, nextState) => {

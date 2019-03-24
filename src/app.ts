@@ -4,7 +4,7 @@ import {
   render,
   createElement,
   ComponentType,
-  componentMixin,
+  componentMixin
 } from "./reconciler";
 import { TransitionRuller } from "./ruller";
 import { Slider } from "./slider";
@@ -49,6 +49,15 @@ const label = (timestamp: number, offset: number, status: string) =>
       x: Math.round(offset),
       y: 15,
       class: status + " transition r-text",
+      key: timestamp
+    },
+    prettifyDate(timestamp)
+  );
+const flexLabel = (timestamp: number, offset: number, status: string) =>
+  createElement(
+    "span",
+    {
+      class: status + " transition l-text flex-item",
       key: timestamp
     },
     prettifyDate(timestamp)
@@ -181,7 +190,7 @@ const App: ComponentType = () => ({
       CHART_WIDTH * state.extraScale,
       highX,
       lowX,
-      100
+      50
     );
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
@@ -194,7 +203,7 @@ const App: ComponentType = () => ({
       (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
-      { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: 'visible' },
+      { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
         createElement(
@@ -205,7 +214,11 @@ const App: ComponentType = () => ({
               "g",
               {},
               charts.map(({ chart, color }) =>
-                path(createPathAttr(chart, projectChartX, projectChartY), color, 2)
+                path(
+                  createPathAttr(chart, projectChartX, projectChartY),
+                  color,
+                  2
+                )
               )
             ),
             createElement(Dots, {
@@ -248,26 +261,17 @@ const App: ComponentType = () => ({
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
+
     const labels = createElement(
-      "svg",
-      {
-        width: scaledWidth,
-        height: 30,
-        style: `transform: translateX(-${state.offset * CHART_WIDTH}px)`
-      },
-      [
-        createElement(
-          TransitionLabels,
-          {},
-          valuesX.map((x, i) =>
-            createElement(Transition, {
-              children: status =>
-                label(x, (i * scaledWidth) / valuesX.length, status),
-              key: x
-            })
-          )
-        )
-      ]
+      TransitionLabels,
+      { offset: state.offset, scaledWidth },
+      valuesX.map((x, i) =>
+        createElement(Transition, {
+          children: status =>
+          flexLabel(x, (i * scaledWidth) / valuesX.length, status),
+          key: x
+        })
+      )
     );
     const buttons = createElement(
       "div",

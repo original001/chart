@@ -41,15 +41,15 @@ export const Transition: ComponentType = () => ({
   },
   didUpdate() {
     // console.log(this.state, counter++);
-    if (inProccess) return;
+    // if (inProccess) return;
 
     const prevState = this.state as State;
     if (prevState.status === "exiting") {
-      inProccess = true;
+      // inProccess = true;
       setTimeout(() => {
-        inProccess = false;
+        // inProccess = false;
         this.send({ type: "update" });
-      }, 200);
+      }, 1000);
     }
     if (prevState.status === "entering") {
       setTimeout(() => {
@@ -68,9 +68,7 @@ export const Transition: ComponentType = () => ({
   },
   render: (props, state: State) => {
     // console.log(state, counter++);
-    return state.status !== "exited"
-      ? props.children(state.status)
-      : createElement("notexisted", { key: props.key });
+    return props.children(state.status)
   },
   reducer: (action, state: State): State => {
     switch (action.type) {

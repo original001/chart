@@ -46,7 +46,7 @@ export function mergeChildMappings(prev: ChildMapping, next: ChildMapping): Chil
   return childMapping
 }
 
-export function getChildMapping(children: Tree[], mapFn?: (child: Tree) => Tree) {
+export function getChildMapping(children: Tree[], mapFn?: (child: Tree) => Tree): ChildMapping {
   let mapper = child => (mapFn ? mapFn(child) : child)
 
   let result = Object.create(null)
