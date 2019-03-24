@@ -41,7 +41,8 @@ const path = (path: string, color: string, strokeWidth: number, status?) =>
     stroke: color,
     class: "transition-p" + " " + status,
     "vector-effect": "non-scaling-stroke",
-    fill: "none"
+    fill: "none",
+    key: color
   });
 
 const label = (timestamp: number, offset: number, status: string) =>
@@ -157,35 +158,44 @@ const App: ComponentType = () => ({
 
     const dataLength = columns[0].length;
 
-    const getExtremumY = (fn: string) => 
-       Math[fn].apply(
-      Math,
-      columns
-        .slice(1)
-        .map(ys =>
-          Math[fn].apply(
-            Math,
-            ys.slice(
-              Math.floor(dataLength * state.sliderPos.left) + 1,
-              Math.ceil(dataLength * state.sliderPos.right)
+    const getExtremumY = (fn: string, all?: boolean) =>
+      Math[fn].apply(
+        Math,
+        columns
+          .slice(1)
+          .map(ys =>
+            Math[fn].apply(
+              Math,
+              all
+                ? ys.slice(1)
+                : ys.slice(
+                    Math.floor(dataLength * state.sliderPos.left) + 1,
+                    Math.ceil(dataLength * state.sliderPos.right)
+                  )
             )
           )
-        )
+      );
+
+    const highY = getExtremumY("max");
+    const lowY = getExtremumY("min");
+    const highYall = getExtremumY("max", true);
+    const lowYall = getExtremumY("min", true);
+    const { max: maxYall, min: minYall } = getBounds(
+      CHART_HEIGHT,
+      highYall,
+      lowYall
     );
-
-
-    const highY = getExtremumY('max')
-    const lowY = getExtremumY('min')
 
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
     const valuesX = getBoundsX(state.extraScale, highX, lowX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
     const scaleX = getScaleX(CHART_WIDTH, columns[0].length - 1);
-    const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
+    const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxYall, minYall);
 
     const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
-    const projectChartXForDots: (x: number) => string = x => (x * scaleX * state.extraScale).toFixed(1);
+    const projectChartXForDots: (x: number) => string = x =>
+      (x * scaleX * state.extraScale).toFixed(1);
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
@@ -242,20 +252,33 @@ const App: ComponentType = () => ({
       ]
     );
     const sliderChart = createElement(
-      "svg",
-      { width: CHART_WIDTH, height: SLIDER_HEIGHT },
+      TransitionGroup,
+      {
+        wrapper: children =>
+          createElement(
+            "svg",
+            { width: CHART_WIDTH, height: SLIDER_HEIGHT },
+            children
+          )
+      },
       charts.map(({ chart, color }) =>
-        path(
-          createPathAttr(
-            chart,
-            x => x * scaleX,
-            y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
-          ),
-          color,
-          1
-        )
+        createElement(Transition, {
+          key: color,
+          children: status =>
+            path(
+              createPathAttr(
+                chart,
+                x => x * scaleX,
+                y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
+              ),
+              color,
+              1,
+              status
+            )
+        })
       )
     );
+
     const slider = createElement(
       "div",
       {
