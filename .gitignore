@@ -2,7 +2,6 @@
 .awcache
 npm-debug.log
 locals.js
-/dist/
 /prebuild/results/*
 package.hash
 .reports
