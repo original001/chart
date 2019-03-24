@@ -34,7 +34,7 @@ export const Dots: ComponentType = () => ({
     const zippedDots = zipDots(columns);
     const axises = zippedDots[0];
     const popupOffset = 30;
-    const textOffset = 10 - popupOffset;
+    const textOffset = 15 - popupOffset;
 
     const dots = zippedDots.slice(1).map((dot, i) =>
       createElement(
@@ -65,46 +65,8 @@ export const Dots: ComponentType = () => ({
                 y1: 0,
                 x2: 0,
                 y2: CHART_HEIGHT,
-                stroke: "#ddd"
+                stroke: "#eee"
               }),
-              createElement("rect", {
-                x: -popupOffset,
-                y: 0,
-                width: "100",
-                height: "100",
-                fill: "#fff",
-                stroke: "#ddd",
-                ["stroke-width"]: "1px",
-                ry: 5,
-                rx: 5
-              }),
-              createElement(
-                "text",
-                { x: textOffset, y: 20 },
-                prettifyDate(dot[0])
-              ),
-              ...dot.slice(1).map((count, i) =>
-                createElement(
-                  "text",
-                  {
-                    x: textOffset + i * 30,
-                    y: 60,
-                    fill: data.colors[axises[i + 1]]
-                  },
-                  count + ""
-                )
-              ),
-              ...axises.slice(1).map((axis, i) =>
-                createElement(
-                  "text",
-                  {
-                    x: textOffset + i * 30,
-                    y: 90,
-                    fill: data.colors[axis]
-                  },
-                  data.names[axis]
-                )
-              ),
               ...axises.slice(1).map((axis, i) =>
                 createElement("circle", {
                   cx: 0,
@@ -114,7 +76,44 @@ export const Dots: ComponentType = () => ({
                   fill: "#fff",
                   ["stroke-width"]: 2
                 })
-              )
+              ),
+              createElement("rect", {
+                x: -popupOffset,
+                y: 0,
+                class: 'popup',
+                ry: 5,
+                rx: 5
+              }),
+              createElement(
+                "text",
+                { x: textOffset, y: 22 },
+                prettifyDate(dot[0], true)
+              ),
+              ...dot.slice(1).map((count, i) =>
+                createElement(
+                  "text",
+                  {
+                    x: textOffset + i * 45,
+                    y: 48,
+                    fill: data.colors[axises[i + 1]],
+                    ['font-size']: 16,
+                    ['font-weight']: 600
+                  },
+                  count + ""
+                )
+              ),
+              ...axises.slice(1).map((axis, i) =>
+                createElement(
+                  "text",
+                  {
+                    x: textOffset + i * 45,
+                    y: 66,
+                    fill: data.colors[axis],
+                    ['font-size']: 13
+                  },
+                  data.names[axis]
+                )
+              ),
             ]
           )
         ]

@@ -25,8 +25,8 @@ export const zipDots = (array: any[][]) => {
 };
 // xs.reduce((acc, cur, i) => acc.concat([[xs[i], ys[i]]]), []);
 
-export const prettifyDate = (timestamp: number) => {
-  const [_, month, day] = new Date(timestamp).toString().split(" ");
-  return `${month} ${day}`;
+export const prettifyDate = (timestamp: number, withDate?: boolean) => {
+  const [date, month, day] = new Date(timestamp).toString().split(" ");
+  return withDate ? `${date}, ${month} ${day}` : `${month} ${day}`;
 };
 

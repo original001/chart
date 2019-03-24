@@ -55,7 +55,7 @@ body {
   background-color: #777;
 }
 .transition {
-  transition: opacity .2s;
+  transition: opacity 0.2s;
 }
 .transition.translate {
   transition: transform 0.2s, opacity 0.2s;
@@ -65,9 +65,10 @@ body {
   transition: transform 0.5s;
 }
 .transition-p {
-  transition: opacity 0.5s, d .5s;
+  transition: opacity 0.5s, d 0.5s;
 }
-.exiting, .exited {
+.exiting,
+.exited {
   opacity: 0;
 }
 .exiting.translate {
@@ -107,10 +108,10 @@ body {
 
 .r-line {
   stroke-width: "1";
-  stroke: #F2F4F5;
+  stroke: #f2f4f5;
 }
 .r-text {
-  fill: #96A2AA;
+  fill: #96a2aa;
   font-size: 11px;
   font-weight: 300;
 }
@@ -126,7 +127,14 @@ body {
 }
 
 .l-text {
-  color: #96A2AA;
+  color: #96a2aa;
   font-size: 11px;
   font-weight: 300;
+}
+.popup {
+  width: 110px;
+  height: 78px;
+  fill: #fff;
+  stroke: #eee;
+  stroke-width: 1px;
 }
