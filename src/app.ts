@@ -132,16 +132,18 @@ const App: ComponentType = () => ({
     }
   },
   didMount() {
-    window[TOGGLE_CHART_HANDLER_NAME] = name => {
+    const id = this.props.data.columns[1][1]
+    window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
       this.send({ type: "toggle", payload: name });
     };
-    window[TOGGLE_DAY_HANDLER_NAME] = () => {
+    window[TOGGLE_DAY_HANDLER_NAME + id] = () => {
       const nextMode = this.state.mode === "day" ? "night" : "day";
       document.body.setAttribute("class", nextMode);
       this.send({ type: "mode", payload: nextMode });
     };
   },
   render(props, state) {
+    const id = props.data.columns[1][1]
     const data: ChartDto = props.data;
     const names = data.names;
     const columns = data.columns.filter(
@@ -296,7 +298,8 @@ const App: ComponentType = () => ({
       [
         createElement(Slider, {
           onChange: payload => this.send({ type: "updateSlider", payload }),
-          onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() })
+          onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
+          eventId: id
         }),
         sliderChart
       ]
@@ -333,7 +336,7 @@ const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME}("${data.names[name]}")`
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${data.names[name]}")`
           },
           [
             createElement(
@@ -357,7 +360,7 @@ const App: ComponentType = () => ({
     );
     const nightButton = createElement(
       "div",
-      { class: "switch", ontouchstart: `${TOGGLE_DAY_HANDLER_NAME}()` },
+      { class: "switch", ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()` },
       "Switch to Nigth Mode"
     );
     return createElement("div", {}, [

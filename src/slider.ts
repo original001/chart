@@ -21,6 +21,7 @@ export const Slider: ComponentType = () => ({
     let beginRight;
     let compensation;
     let compensationRight;
+    const id = this.props.eventId;
     const {left, right} = this.state;
     const makeCompensation = (clientX: number) => {
       beginClientX = clientX;
@@ -29,30 +30,30 @@ export const Slider: ComponentType = () => ({
       compensation = 10 + (clientX - beginLeft);
       compensationRight = 10 - (beginRight - clientX);
     };
-    window[TOUCH_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+    window[TOUCH_HANDLER_NAME + id] = createRaf((e: TouchEvent) => {
       e.preventDefault();
       this.send({
         type: "updatePos",
         payload: e.targetTouches[0].clientX - compensation
       });
     });
-    window[TOUCH_RESIZE_RIGHT_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+    window[TOUCH_RESIZE_RIGHT_HANDLER_NAME + id] = createRaf((e: TouchEvent) => {
       this.send({
         type: "updateRight",
         payload: e.targetTouches[0].clientX - compensationRight
       });
     });
-    window[TOUCH_RESIZE_LEFT_HANDLER_NAME] = createRaf((e: TouchEvent) => {
+    window[TOUCH_RESIZE_LEFT_HANDLER_NAME + id] = createRaf((e: TouchEvent) => {
       this.send({
         type: "updateLeft",
         payload: e.targetTouches[0].clientX - compensation
       });
     });
-    window[START_TOUCH_HANDLER_NAME] = (e: TouchEvent) => {
+    window[START_TOUCH_HANDLER_NAME + id] = (e: TouchEvent) => {
       // e.preventDefault();
       makeCompensation(e.targetTouches[0].clientX);
     };
-    window[TOUCH_END_HANDLER_NAME] = () => {
+    window[TOUCH_END_HANDLER_NAME + id] = () => {
       this.props.onTouchEnd();
     };
   },
@@ -87,6 +88,7 @@ export const Slider: ComponentType = () => ({
     }
   },
   render: (props, state) => {
+    const id = props.eventId;
     return createElement(
       "div",
       {
@@ -97,25 +99,25 @@ export const Slider: ComponentType = () => ({
         createElement("div", { class: "slider" }, [
           createElement("div", {
             class: "sliderEdge sliderEdgeLeft",
-            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
-            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME}(event)`,
+            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME + id}(event)`,
             draggable: "true"
           }),
           createElement("div", {
             class: "sliderCenter",
-            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
-            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchmove: `${TOUCH_HANDLER_NAME}(event)`
+            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchmove: `${TOUCH_HANDLER_NAME + id}(event)`
           }),
           createElement("div", {
             class: "sliderEdge sliderEdgeRight",
-            ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
-            ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
-            ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME}(event)`,
+            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME + id}(event)`,
           })
         ])
       ]
