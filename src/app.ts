@@ -372,7 +372,13 @@ const App: ComponentType = () => ({
 
 const start = () => {
   render(
-    createElement(App, { data: data[0] }),
+    createElement("div", {}, [
+      createElement(App, { data: data[0] }),
+      createElement(App, { data: data[1] }),
+      createElement(App, { data: data[2] }),
+      createElement(App, { data: data[3] }),
+      createElement(App, { data: data[4] })
+    ]),
     document.getElementById("main")
   );
 };
