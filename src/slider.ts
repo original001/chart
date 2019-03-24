@@ -1,11 +1,7 @@
 import { createRaf } from "./utils";
 import { ComponentType, componentMixin, createElement } from "./reconciler";
-import { CHART_WIDTH, CHART_HEIGHT } from "./constant";
+import { CHART_WIDTH } from "./constant";
 
-const DRAG_HANDLER_NAME = "onSliderDrag";
-const DRAG_RESIZE_RIGHT_HANDLER_NAME = "onSliderDragResizeRight";
-const DRAG_RESIZE_LEFT_HANDLER_NAME = "onSliderDragResizeLeft";
-const START_DRAG_HANDLER_NAME = "onSliderStartDrag";
 const TOUCH_HANDLER_NAME = "onSliderTouch";
 const TOUCH_END_HANDLER_NAME = "onSliderTouchEnd";
 const TOUCH_RESIZE_RIGHT_HANDLER_NAME = "onSliderTouchResizeRight";
@@ -30,24 +26,9 @@ export const Slider: ComponentType = () => ({
       beginClientX = clientX;
       beginLeft = left;
       beginRight = right;
-      compensation = 8 + (clientX - beginLeft);
-      compensationRight = 8 - (beginRight - clientX);
+      compensation = 10 + (clientX - beginLeft);
+      compensationRight = 10 - (beginRight - clientX);
     };
-    window[DRAG_HANDLER_NAME] = createRaf(e => {
-      this.send({ type: "updatePos", payload: e.clientX - compensation });
-    });
-    window[DRAG_RESIZE_RIGHT_HANDLER_NAME] = createRaf((e: DragEvent) => {
-      this.send({
-        type: "updateRight",
-        payload: e.clientX - compensationRight
-      });
-    });
-    window[DRAG_RESIZE_LEFT_HANDLER_NAME] = createRaf((e: DragEvent) => {
-      this.send({
-        type: "updateLeft",
-        payload: e.clientX - compensation
-      });
-    });
     window[TOUCH_HANDLER_NAME] = createRaf((e: TouchEvent) => {
       e.preventDefault();
       this.send({
@@ -73,15 +54,6 @@ export const Slider: ComponentType = () => ({
     };
     window[TOUCH_END_HANDLER_NAME] = () => {
       this.props.onTouchEnd();
-    };
-    window[START_DRAG_HANDLER_NAME] = (e: DragEvent) => {
-      makeCompensation(e.clientX);
-      if (!e.dataTransfer) return;
-      let dragImage = document.createElement("img");
-      dragImage.src =
-        "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
-      e.dataTransfer.effectAllowed = "none";
-      e.dataTransfer.setDragImage(dragImage, 0, 0);
     };
   },
   didUpdate(prevProps, prevState) {
@@ -125,8 +97,6 @@ export const Slider: ComponentType = () => ({
         createElement("div", { class: "slider" }, [
           createElement("div", {
             class: "sliderEdge sliderEdgeLeft",
-            ondrag: `${DRAG_RESIZE_LEFT_HANDLER_NAME}(event)`,
-            ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
@@ -135,9 +105,6 @@ export const Slider: ComponentType = () => ({
           }),
           createElement("div", {
             class: "sliderCenter",
-            ondrag: `${DRAG_HANDLER_NAME}(event)`,
-            ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
-            draggable: "true",
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
@@ -145,13 +112,10 @@ export const Slider: ComponentType = () => ({
           }),
           createElement("div", {
             class: "sliderEdge sliderEdgeRight",
-            ondrag: `${DRAG_RESIZE_RIGHT_HANDLER_NAME}(event)`,
-            ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME}(event)`,
-            draggable: "true"
           })
         ])
       ]

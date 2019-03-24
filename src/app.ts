@@ -333,7 +333,7 @@ const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            onclick: `${TOGGLE_CHART_HANDLER_NAME}("${data.names[name]}")`
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME}("${data.names[name]}")`
           },
           [
             createElement(
@@ -357,7 +357,7 @@ const App: ComponentType = () => ({
     );
     const nightButton = createElement(
       "div",
-      { class: "switch", onclick: `${TOGGLE_DAY_HANDLER_NAME}()` },
+      { class: "switch", ontouchstart: `${TOGGLE_DAY_HANDLER_NAME}()` },
       "Switch to Nigth Mode"
     );
     return createElement("div", {}, [

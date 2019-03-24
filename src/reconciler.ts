@@ -75,7 +75,11 @@ function insertAfter(elem: Element, refElem: Element) {
   }
 }
 
-export const render = (tree: Tree, container: Element, insertBeforeHost?: Element) => {
+export const render = (
+  tree: Tree,
+  container: Element,
+  insertBeforeHost?: Element
+) => {
   const type = tree.element;
   if (typeof type === "string") {
     const el = /div|span/.test(type)
@@ -96,7 +100,9 @@ export const render = (tree: Tree, container: Element, insertBeforeHost?: Elemen
         );
       }
     }
-    container && insertBeforeHost ? insertAfter(el, insertBeforeHost) : container.append(el);
+    container && insertBeforeHost
+      ? insertAfter(el, insertBeforeHost)
+      : container.append(el);
   } else {
     const comp = type();
     comp.props = tree.props;
@@ -176,34 +182,39 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       let children = mergeChildMappings(prevChildMapping, nextChildMapping);
 
       let beforeKey;
-      Object.keys(children).sort().forEach(key => {
-        let child = children[key];
+      Object.keys(children)
+        .sort()
+        .forEach(key => {
+          let child = children[key];
 
-        const hasPrev = key in prevChildMapping;
-        const hasNext = key in nextChildMapping;
+          const hasPrev = key in prevChildMapping;
+          const hasNext = key in nextChildMapping;
 
-        const prevChild = prevChildMapping[key];
+          const prevChild = prevChildMapping[key];
 
-        // console.log(hasPrev, hasNext, isLeaving)
+          // console.log(hasPrev, hasNext, isLeaving)
 
-        // item is new (entering)
-        if (hasNext && (!hasPrev)) {
-          // console.log('entering', key)
-          const prevHost = nextChildMapping[beforeKey] && nextChildMapping[beforeKey]._instance._innerTree.host;
-          render(child, host, prevHost);
-        beforeKey = key;
-        } else if (!hasNext && hasPrev) {
-          // item is old (exiting)
-          // console.log('leaving', key)
-          host.removeChild(prevChild.host);
-        } else if (hasNext && hasPrev) {
-          // item hasn't changed transition states
-          // copy over the last transition props;
-          // console.log('unchanged', key)
-          updateChildren(prevChild, child);
-        beforeKey = key;
-        }
-      });
+          // item is new (entering)
+          if (hasNext && !hasPrev) {
+            // console.log('entering', key)
+            const prevHost =
+              nextChildMapping[beforeKey] &&
+              nextChildMapping[beforeKey]._instance &&
+              nextChildMapping[beforeKey]._instance._innerTree.host;
+            render(child, host, prevHost);
+            beforeKey = key;
+          } else if (!hasNext && hasPrev) {
+            // item is old (exiting)
+            // console.log('leaving', key)
+            host.removeChild(prevChild.host);
+          } else if (hasNext && hasPrev) {
+            // item hasn't changed transition states
+            // copy over the last transition props;
+            // console.log('unchanged', key)
+            updateChildren(prevChild, child);
+            beforeKey = key;
+          }
+        });
       return;
     }
     // updating by index
