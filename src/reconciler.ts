@@ -163,7 +163,7 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
       host.textContent = props.children;
       return;
     }
-    if (!prevProps.children) {
+    if (!prevProps.children || !prevProps.children.length) {
       for (let child of props.children) {
         render(child, host);
       }
@@ -189,7 +189,8 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
         // item is new (entering)
         if (hasNext && (!hasPrev)) {
           // console.log('entering', key)
-          render(child, host, nextChildMapping[beforeKey]._instance._innerTree.host);
+          const prevHost = nextChildMapping[beforeKey] && nextChildMapping[beforeKey]._instance._innerTree.host;
+          render(child, host, prevHost);
         beforeKey = key;
         } else if (!hasNext && hasPrev) {
           // item is old (exiting)

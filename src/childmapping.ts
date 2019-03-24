@@ -95,6 +95,7 @@ export function getNextChildMapping(nextChildren: Tree[], prevChildMapping: Chil
     } else if (!hasNext && hasPrev && !isLeaving) {
       // item is old (exiting)
       // console.log('leaving', key)
+      // update prevChild
       children[key].props.in = false;
     } else if (hasNext && hasPrev) {
       // item hasn't changed transition states

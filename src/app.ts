@@ -10,7 +10,7 @@ import { TransitionRuller } from "./ruller";
 import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
-import { TransitionLabels } from "./labels";
+import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { prettifyDate } from "./utils";
 import { Dots } from "./dots";
@@ -34,11 +34,13 @@ export const createPathAttr = (
       i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
     ""
   );
-const path = (path: string, color: string, strokeWidth: number) =>
+const path = (path: string, color: string, strokeWidth: number, status?) =>
   createElement("path", {
     d: path,
     "stroke-width": strokeWidth,
     stroke: color,
+    class: "transition-p" + " " + status,
+    "vector-effect": "non-scaling-stroke",
     fill: "none"
   });
 
@@ -186,16 +188,15 @@ const App: ComponentType = () => ({
     );
 
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
-    const valuesX = getBoundsX( state.extraScale, highX, lowX);
+    const valuesX = getBoundsX(state.extraScale, highX, lowX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
     const scaleX = getScaleX(CHART_WIDTH, columns[0].length - 1);
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
 
-    const projectChartX: (x: number) => string = x =>
-      (x * scaleX * state.extraScale).toFixed(1);
+    const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
     const projectChartY: (y: number) => string = y =>
-      (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
+      (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const chart = createElement(
       "svg",
       { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
@@ -203,17 +204,35 @@ const App: ComponentType = () => ({
         createElement(TransitionRuller, { values, scale: scaleY }),
         createElement(
           "g",
-          { style: `transform: translateX(-${state.offset * CHART_WIDTH}px)` },
+          {
+            style: `transform: translateX(-${state.offset *
+              CHART_WIDTH}px) scale(${state.extraScale},1);`
+          },
           [
             createElement(
-              "g",
-              {},
+              TransitionGroup,
+              {
+                wrapper: children =>
+                  createElement(
+                    "g",
+                    {
+                      style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                      class: "transition-d"
+                    },
+                    children
+                  )
+              },
               charts.map(({ chart, color }) =>
-                path(
-                  createPathAttr(chart, projectChartX, projectChartY),
-                  color,
-                  2
-                )
+                createElement(Transition, {
+                  key: color,
+                  children: status =>
+                    path(
+                      createPathAttr(chart, projectChartX, projectChartY),
+                      color,
+                      2,
+                      status
+                    )
+                })
               )
             ),
             createElement(Dots, {
@@ -258,12 +277,23 @@ const App: ComponentType = () => ({
     const scaledWidth = CHART_WIDTH * state.extraScale;
 
     const labels = createElement(
-      TransitionLabels,
-      { offset: state.offset, scaledWidth },
+      TransitionGroup,
+      {
+        wrapper: children =>
+          createElement(
+            "div",
+            {
+              class: "flex-labels",
+              //prettier-ignore
+              style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
+            },
+            children
+          )
+      },
       valuesX.map((x, i) =>
         createElement(Transition, {
           children: status =>
-          flexLabel(x, (i * scaledWidth) / valuesX.length, status),
+            flexLabel(x, (i * scaledWidth) / valuesX.length, status),
           key: x
         })
       )

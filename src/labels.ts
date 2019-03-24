@@ -12,7 +12,7 @@ interface State {
   children?: ChildMapping;
   isFirstRender: boolean;
 }
-export const TransitionLabels: ComponentType = () => ({
+export const TransitionGroup: ComponentType = () => ({
   ...componentMixin(),
   state: {
     isFirstRender: true
@@ -29,16 +29,6 @@ export const TransitionLabels: ComponentType = () => ({
     return nextState;
   },
   render: (props, state: State) => {
-    const a = createElement(
-      "div",
-      {
-        class: "flex-labels",
-        //prettier-ignore
-        style: `transform: translateX(-${props.offset * CHART_WIDTH}px); width: ${props.scaledWidth}px`
-      },
-      values(state.children)
-    );
-    // console.log(a);
-    return a;
+    return props.wrapper(values(state.children));
   }
 });

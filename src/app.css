@@ -56,14 +56,16 @@ body {
 }
 .transition {
   transition: opacity .2s;
-  opacity: 1;
 }
 .transition.translate {
   transition: transform 0.2s, opacity 0.2s;
   transform: translateY(0px);
 }
 .transition-d {
-  transition: d 0.2s;
+  transition: transform 0.5s;
+}
+.transition-p {
+  transition: opacity 0.5s, d .5s;
 }
 .exiting, .exited {
   opacity: 0;
