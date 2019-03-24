@@ -14,6 +14,7 @@ interface Props {
   projectChartY: (y: number) => string;
   data: ChartDto;
   touchEndTimestamp: number;
+  scale: number;
 }
 
 export const Dots: ComponentType = () => ({
@@ -51,65 +52,71 @@ export const Dots: ComponentType = () => ({
             y: 0,
             width: projectChartX(1),
             height: CHART_HEIGHT,
-            fill: "transparent"
+            fill: "transparent",
           }),
-          createElement("g", {}, [
-            createElement("line", {
-              x1: 0,
-              y1: 0,
-              x2: 0,
-              y2: CHART_HEIGHT,
-              stroke: "#ddd"
-            }),
-            createElement("rect", {
-              x: -popupOffset,
-              y: 0,
-              width: "100",
-              height: "100",
-              fill: "#fff",
-              stroke: "#ddd",
-              ["stroke-width"]: "1px",
-              ry: 5,
-              rx: 5
-            }),
-            createElement(
-              "text",
-              { x: textOffset, y: 20 },
-              prettifyDate(dot[0])
-            ),
-            ...dot.slice(1).map((count, i) =>
-              createElement(
-                "text",
-                {
-                  x: textOffset + i * 30,
-                  y: 60,
-                  fill: data.colors[axises[i + 1]]
-                },
-                count + ""
-              )
-            ),
-            ...axises.slice(1).map((axis, i) =>
-              createElement(
-                "text",
-                {
-                  x: textOffset + i * 30,
-                  y: 90,
-                  fill: data.colors[axis]
-                },
-                data.names[axis]
-              )
-            ),
-            ...axises.slice(1).map((axis, i) =>
-              createElement("circle", {
-                cx: 0,
-                cy: projectChartY(dot[i + 1]),
-                r: 4,
-                stroke: data.colors[axis],
+          createElement(
+            "g",
+            {
+              style: `transform: scaleX(${1 / props.scale})`
+            },
+            [
+              createElement("line", {
+                x1: 0,
+                y1: 0,
+                x2: 0,
+                y2: CHART_HEIGHT,
+                stroke: "#ddd"
+              }),
+              createElement("rect", {
+                x: -popupOffset,
+                y: 0,
+                width: "100",
+                height: "100",
                 fill: "#fff",
-                ["stroke-width"]: 2
-              })
-            )
-          ])
+                stroke: "#ddd",
+                ["stroke-width"]: "1px",
+                ry: 5,
+                rx: 5
+              }),
+              createElement(
+                "text",
+                { x: textOffset, y: 20 },
+                prettifyDate(dot[0])
+              ),
+              ...dot.slice(1).map((count, i) =>
+                createElement(
+                  "text",
+                  {
+                    x: textOffset + i * 30,
+                    y: 60,
+                    fill: data.colors[axises[i + 1]]
+                  },
+                  count + ""
+                )
+              ),
+              ...axises.slice(1).map((axis, i) =>
+                createElement(
+                  "text",
+                  {
+                    x: textOffset + i * 30,
+                    y: 90,
+                    fill: data.colors[axis]
+                  },
+                  data.names[axis]
+                )
+              ),
+              ...axises.slice(1).map((axis, i) =>
+                createElement("circle", {
+                  cx: 0,
+                  cy: projectChartY(dot[i + 1]),
+                  r: 4,
+                  stroke: data.colors[axis],
+                  fill: "#fff",
+                  ["stroke-width"]: 2
+                })
+              )
+            ]
+          )
         ]
       )
     );

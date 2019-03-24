@@ -45,17 +45,6 @@ const path = (path: string, color: string, strokeWidth: number, status?) =>
     key: color
   });
 
-const label = (timestamp: number, offset: number, status: string) =>
-  createElement(
-    "text",
-    {
-      x: Math.round(offset),
-      y: 15,
-      class: status + " transition r-text",
-      key: timestamp
-    },
-    prettifyDate(timestamp)
-  );
 const flexLabel = (timestamp: number, offset: number, status: string) =>
   createElement(
     "span",
@@ -195,7 +184,7 @@ const App: ComponentType = () => ({
 
     const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
     const projectChartXForDots: (x: number) => string = x =>
-      (x * scaleX * state.extraScale).toFixed(1);
+      (x * scaleX).toFixed(1);
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
@@ -205,7 +194,12 @@ const App: ComponentType = () => ({
       { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
-        createElement("g", {}, [
+        createElement("g", {
+
+                        style: `transform: translateX(-${state.offset *
+                          CHART_WIDTH}px) scale(${state.extraScale},1);`
+
+        }, [
           createElement(
             TransitionGroup,
             {
@@ -220,8 +214,8 @@ const App: ComponentType = () => ({
                     createElement(
                       "g",
                       {
-                        style: `transform: translateX(-${state.offset *
-                          CHART_WIDTH}px) scale(${state.extraScale},1);`
+                        // style: `transform: translateX(-${state.offset *
+                        //   CHART_WIDTH}px) scale(${state.extraScale},1);`
                       },
                       children
                     )
@@ -246,7 +240,8 @@ const App: ComponentType = () => ({
             columns,
             projectChartX: projectChartXForDots,
             projectChartY: projectChartYForDots,
-            touchEndTimestamp: state.touchEndTimestamp
+            touchEndTimestamp: state.touchEndTimestamp,
+            scale: state.extraScale
           })
         ])
       ]
