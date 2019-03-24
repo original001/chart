@@ -16,7 +16,7 @@ const MAX_SLIDER_SIZE = 50;
 export const Slider: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    left: 0,
+    left: CHART_WIDTH * 3 / 4,
     right: CHART_WIDTH
   },
   didMount() {
@@ -25,10 +25,11 @@ export const Slider: ComponentType = () => ({
     let beginRight;
     let compensation;
     let compensationRight;
+    const {left, right} = this.state;
     const makeCompensation = (clientX: number) => {
       beginClientX = clientX;
-      beginLeft = this.state.left;
-      beginRight = this.state.right;
+      beginLeft = left;
+      beginRight = right;
       compensation = 8 + (clientX - beginLeft);
       compensationRight = 8 - (beginRight - clientX);
     };

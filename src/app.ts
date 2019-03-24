@@ -104,9 +104,9 @@ const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const App: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    extraScale: 1,
-    offset: 0,
-    sliderPos: { left: 0, right: 1 },
+    extraScale: 4,
+    offset: 3,
+    sliderPos: { left: 0.75, right: 1 },
     hiddenNames: [],
     touchEndTimestamp: 0 // workaround
   },
@@ -157,12 +157,13 @@ const App: ComponentType = () => ({
 
     const dataLength = columns[0].length;
 
-    const highY = Math.max.apply(
+    const getExtremumY = (fn: string) => 
+       Math[fn].apply(
       Math,
       columns
         .slice(1)
         .map(ys =>
-          Math.max.apply(
+          Math[fn].apply(
             Math,
             ys.slice(
               Math.floor(dataLength * state.sliderPos.left) + 1,
@@ -172,20 +173,9 @@ const App: ComponentType = () => ({
         )
     );
 
-    const lowY = Math.min.apply(
-      Math,
-      columns
-        .slice(1)
-        .map(ys =>
-          Math.min.apply(
-            Math,
-            ys.slice(
-              Math.floor(dataLength * state.sliderPos.left) + 1,
-              Math.ceil(dataLength * state.sliderPos.right)
-            )
-          )
-        )
-    );
+
+    const highY = getExtremumY('max')
+    const lowY = getExtremumY('min')
 
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
     const valuesX = getBoundsX(state.extraScale, highX, lowX);
