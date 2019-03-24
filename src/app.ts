@@ -1,4 +1,4 @@
-import { getBounds } from "./axis";
+import { getBounds, getBoundsX } from "./axis";
 import { data, ChartDto } from "./chart_data";
 import {
   render,
@@ -186,12 +186,7 @@ const App: ComponentType = () => ({
     );
 
     const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
-    const { values: valuesX } = getBounds(
-      CHART_WIDTH * state.extraScale,
-      highX,
-      lowX,
-      50
-    );
+    const valuesX = getBoundsX( state.extraScale, highX, lowX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
     const scaleX = getScaleX(CHART_WIDTH, columns[0].length - 1);

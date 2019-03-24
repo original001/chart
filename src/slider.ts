@@ -128,6 +128,7 @@ export const Slider: ComponentType = () => ({
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME}(event)`,
             draggable: "true"
           }),
@@ -138,6 +139,7 @@ export const Slider: ComponentType = () => ({
             draggable: "true",
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_HANDLER_NAME}(event)`
           }),
           createElement("div", {
@@ -146,6 +148,7 @@ export const Slider: ComponentType = () => ({
             ondragstart: `${START_DRAG_HANDLER_NAME}(event)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME}()`,
             ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME}(event)`,
             draggable: "true"
           })

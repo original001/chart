@@ -49,7 +49,7 @@ export const Transition: ComponentType = () => ({
       setTimeout(() => {
         // inProccess = false;
         this.send({ type: "update" });
-      }, 1000);
+      }, 200);
     }
     if (prevState.status === "entering") {
       setTimeout(() => {

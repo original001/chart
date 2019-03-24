@@ -55,7 +55,7 @@ body {
   background-color: #777;
 }
 .transition {
-  transition: opacity 1s;
+  transition: opacity .2s;
   opacity: 1;
 }
 .transition.translate {

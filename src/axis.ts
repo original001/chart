@@ -1,3 +1,5 @@
+import { CHART_WIDTH } from "./constant";
+
 interface Bounds {
   scale: number;
   high: number;
@@ -162,4 +164,25 @@ export const getBounds = function(
   }
   bounds.values = values;
   return bounds;
+};
+
+export const getBoundsX = (scale: number, high: number, low: number) => {
+  let step = (high - low) / 5;
+  if (scale > 1.6) {
+    step = step / 2;
+  }
+  if (scale > 3.2) {
+    step = step / 2;
+  }
+  if (scale > 6.4) {
+    step = step / 2;
+  }
+
+  const numbers = [low];
+  let i = low;
+  while (i < high) {
+    i = i + step;
+    numbers.push(i);
+  }
+  return numbers;
 };
