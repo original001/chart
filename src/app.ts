@@ -91,6 +91,7 @@ export const getHighLow = (data: ChartDto) => {
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
+const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
 const App: ComponentType = () => ({
   ...componentMixin(),
@@ -100,12 +101,14 @@ const App: ComponentType = () => ({
     sliderPos: { left: 0.75, right: 1 },
     hiddenNames: [],
     touchEndTimestamp: 0,
-    mode: "day" // workaround
+    mode: "day", // workaround,
+    showPopupOn: null
   },
   reducer({ type, payload }, state) {
+    let scale;
     switch (type) {
       case "updateSlider":
-        const scale = 1 / (payload.right - payload.left);
+        scale = 1 / (payload.right - payload.left);
         return {
           ...state,
           extraScale: scale,
@@ -129,12 +132,37 @@ const App: ComponentType = () => ({
           ...state,
           mode: payload
         };
+      case "showPopup":
+        scale = 1 / (state.sliderPos.right - state.sliderPos.left);
+        return {
+          ...state,
+          // showPopupOn: payload + ((payload*state.extraScale - payload) + state.offset * CHART_WIDTH)/state.extraScale
+          showPopupOn: payload
+        };
+      case "hidePopup":
+        return {
+          ...state,
+          showPopupOn: null
+        };
     }
   },
   didMount() {
     const id = this.props.data.columns[1][1]
     window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
       this.send({ type: "toggle", payload: name });
+    };
+    window[TOGGLE_GRAPH_HANDLER_NAME + id] = (e: TouchEvent) => {
+      this.send({
+        type: "showPopup",
+        payload: e.targetTouches[0].clientX - 10
+      });
+      // const hideHandler = () => {
+      //   this.send({ type: "hidePopup" });
+      //   document.documentElement.removeEventListener("touchstart", hideHandler);
+      // };
+      // setTimeout(() => {
+      //   document.documentElement.addEventListener("touchstart", hideHandler);
+      // }, 0);
     };
     window[TOGGLE_DAY_HANDLER_NAME + id] = () => {
       const nextMode = this.state.mode === "day" ? "night" : "day";
@@ -197,22 +225,26 @@ const App: ComponentType = () => ({
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxYall, minYall);
 
     const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
-    const projectChartXForDots: (x: number) => string = x =>
-      (x * scaleX).toFixed(1);
+    const projectChartXForDots: (x: number) => string = x => (x * scaleX * state.extraScale - state.offset * CHART_WIDTH).toFixed(1);
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
-      { width: CHART_WIDTH, height: CHART_HEIGHT, overflow: "visible" },
+      {
+        width: CHART_WIDTH,
+        height: CHART_HEIGHT,
+        overflow: "visible",
+        ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
+      },
       [
         createElement(TransitionRuller, { values, scale: scaleY }),
         createElement(
           "g",
           {
-            style: `transform: translateX(-${state.offset *
-              CHART_WIDTH}px) scale(${state.extraScale},1);`
+            // style: `transform: translateX(-${state.offset *
+              // CHART_WIDTH}px) scale(${state.extraScale},1);`
           },
           [
             createElement(
@@ -229,8 +261,8 @@ const App: ComponentType = () => ({
                       createElement(
                         "g",
                         {
-                          // style: `transform: translateX(-${state.offset *
-                          //   CHART_WIDTH}px) scale(${state.extraScale},1);`
+                          style: `transform: translateX(-${state.offset *
+                            CHART_WIDTH}px) scale(${state.extraScale},1);`
                         },
                         children
                       )
@@ -256,7 +288,9 @@ const App: ComponentType = () => ({
               projectChartX: projectChartXForDots,
               projectChartY: projectChartYForDots,
               touchEndTimestamp: state.touchEndTimestamp,
-              scale: state.extraScale
+              scale: state.extraScale,
+              offset: state.offset,
+              showPopupOn: state.showPopupOn
             })
           ]
         )

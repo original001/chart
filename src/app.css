@@ -149,13 +149,6 @@ body.night {
   font-weight: 300;
 }
 
-.popup-rect > g {
-  /* display: none; */
-  visibility: hidden;
-}
-.popup-rect:hover > g {
-  visibility: visible;
-}
 
 .r-line {
   stroke-width: "1";
