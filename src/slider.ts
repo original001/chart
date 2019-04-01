@@ -22,8 +22,8 @@ export const Slider: ComponentType = () => ({
     let compensation;
     let compensationRight;
     const id = this.props.eventId;
-    const {left, right} = this.state;
     const makeCompensation = (clientX: number) => {
+      const {left, right} = this.state;
       beginClientX = clientX;
       beginLeft = left;
       beginRight = right;
