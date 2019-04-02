@@ -67,8 +67,8 @@ body.night {
   transition: opacity 0.2s;
 }
 .transition.translate {
-  transition: transform 0.2s, opacity 0.2s;
-  transform: translateY(0px);
+  transition: transform .5s, opacity .5s;
+  transform: scaleY(1);
 }
 .transition-d {
   transition: transform 0.5s;
@@ -80,20 +80,11 @@ body.night {
 .exited {
   opacity: 0;
 }
-.exiting.translate {
-  transform: translateY(-20px);
-}
 .entering {
   opacity: 0;
 }
-.entering.translate {
-  transform: translateY(20px);
-}
 .entered {
   opacity: 1;
-}
-.entered.translate {
-  transform: translateY(0px);
 }
 .buttons {
   margin-top: 20px;
@@ -153,6 +144,7 @@ body.night {
 .r-line {
   stroke-width: "1";
   stroke: rgba(115,153,178, .2);
+  vector-effect: non-scaling-stroke;
 }
 .r-text {
   fill: rgba(106,126,140,.8);
