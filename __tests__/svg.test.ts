@@ -1,21 +1,16 @@
 import {
   createPathAttr,
-  getChartsFromData,
   getScaleY,
   getHighLow
 } from "../src/app";
 import { getBounds } from "../src/axis";
 import { ChartDto } from "../src/chart_data";
 import {
-  Tree,
   render,
-  Component,
   createElement,
-  renderComponent,
   ComponentType,
   componentMixin
 } from "../src/reconciler";
-import { TransitionRuller } from "../src/ruller";
 import { Transition } from "../src/transition";
 import { TransitionGroup } from "../src/labels";
 import { zipDots as zipData } from "../src/utils";
@@ -23,10 +18,6 @@ import { zipDots as zipData } from "../src/utils";
 jest.useFakeTimers();
 
 describe("", () => {
-  // it("create path", () => {
-  //   const path = createPathAttr([[1, 1], [2, 2], [3, 3]], 100, 1);
-  //   expect(path).toBe("M0 1 L100 2 L200 3");
-  // });
   it("create path with offset", () => {
     const path = createPathAttr(
       [[10000, 100], [20000, 105], [30000, 110]],
@@ -57,7 +48,6 @@ describe("utils", () => {
   };
   it("zip data", () => {
     const dots = zipData([[1111, 1112], [1, 2], [2, 3], [4, 5]]);
-    const dots2 = zipData(data.columns);
     expect(dots).toEqual([[1111, 1, 2, 4], [1112, 2, 3, 5]]);
     // expect(dots2).toEqual([]);
   });
@@ -120,7 +110,7 @@ describe("render", () => {
       }
     }
   });
-  const ruler = (y, label) => {
+  const ruler = () => {
     return createElement("g", {}, [
       createElement("line", {
         stroke: "gray" //need col,
@@ -133,7 +123,7 @@ describe("render", () => {
     ]);
   };
   const body = document.body;
-  const tree = render(ruler(1, "1"), body);
+  const tree = render(ruler(), body);
   it("render", () => {
     expect(body.firstElementChild.tagName).toEqual("g");
     expect(body.firstElementChild.firstElementChild.tagName).toEqual("line");
@@ -157,128 +147,5 @@ describe("render", () => {
     expect(rullerElement.getAttribute("status")).toBe("ready");
     expect(innerComp.textContent).toBe("testwow");
     rullerInstance.send({ type: "update" });
-  });
-  xit("", () => {
-    const tree = render(ruler(1, "1"), document.body);
-    // expect(tree).toEqual({})
-    // Ruller.send('update');
-    expect(tree).toEqual({});
-  });
-  // xit("renderComponent", () => {
-  //   expect(
-  //     renderComponent(createElement(Ruller, { values: [1, 2, 3], scale: 1 }))
-  //   ).toEqual({});
-  // });
-
-  xit("createElement", () => {
-    expect(ruler(1, "1")).toBe({});
-  });
-});
-
-describe("animation", () => {
-  beforeEach(() => {
-    document.body.removeChild(document.body.firstChild);
-  });
-  xit("transition", () => {
-    const Helper: ComponentType = () => ({
-      ...componentMixin(),
-      state: "enter",
-      reducer(action, state) {
-        switch (action.type) {
-          case "1":
-            return "appear";
-          case "2":
-            return "exit";
-        }
-      },
-      render(props, state) {
-        // console.log(state)
-        return createElement(Transition, {
-          children: status => createElement("g", { status }),
-          in: state !== "appear"
-        });
-      }
-    });
-
-    const body = document.body;
-    const tree = render(createElement(Helper, {}), body);
-
-    const helperInst = tree._instance;
-    // expect(body.firstElementChild).toBe({});
-    expect(body.firstElementChild.tagName).toBe("g");
-    helperInst.send({ type: "1" });
-    expect(body.firstElementChild.getAttribute("status")).toBe("exiting");
-    jest.runOnlyPendingTimers();
-    expect(body.firstElementChild.tagName).toBe("notexisted");
-    helperInst.send({ type: "2" });
-    expect(body.firstElementChild.getAttribute("status")).toBe("entering");
-    jest.runOnlyPendingTimers();
-    expect(body.firstElementChild.getAttribute("status")).toBe("entered");
-    // expect(body.firstElementChild.getAttribute('status')).toBe('entered')
-  });
-  it("transition group", () => {
-    const Helper: ComponentType = () => ({
-      ...componentMixin(),
-      state: {
-        elements: [1, 2, 3],
-        data: "a"
-      },
-      reducer(action, state) {
-        switch (action.type) {
-          case "1":
-            return {
-              elements: [2, 3],
-              data: "b"
-            };
-          case "2":
-            return {
-              elements: [1, 2, 3],
-              data: "c"
-            };
-          case "3":
-            return {
-              elements: [1, 2, 3, 4],
-              data: "d"
-            };
-        }
-      },
-      render(props, state) {
-        // console.log(state)
-        const g = x =>
-          createElement(Transition, {
-            children: status =>
-              createElement("g", { status, key: x, data: state.data }),
-            key: x
-          });
-        return createElement(
-          TransitionGroup,
-          { wrapper: children => createElement("g", {}, children) },
-          state.elements.map(g)
-        );
-      }
-    });
-
-    const body = document.body;
-    const tree = render(createElement(Helper, {}), body);
-
-    const helperInst = tree._instance;
-    const root = body.firstElementChild;
-    expect(root.firstElementChild.tagName).toBe("g");
-    expect(root.firstElementChild.getAttribute("status")).toBe("entered");
-    helperInst.send({ type: "1" });
-    // expect(root).toBe({});
-    expect(root.firstElementChild.getAttribute("status")).toBe("exiting");
-    jest.runOnlyPendingTimers();
-    // expect(root).toBe({});
-    // expect(root.lastElementChild.tagName).toBe('notexisted');
-    helperInst.send({ type: "2" });
-    // expect(root).toBe({});
-    expect(root.firstElementChild.getAttribute("status")).toBe("entering");
-    jest.runOnlyPendingTimers(); //20
-    expect(root.firstElementChild.getAttribute("status")).toBe("entered");
-    helperInst.send({ type: "3" });
-    expect(root.lastElementChild.getAttribute("status")).toBe("entering");
-    jest.runOnlyPendingTimers(); //20
-    expect(root.lastElementChild.getAttribute("status")).toBe("entered");
   });
 });

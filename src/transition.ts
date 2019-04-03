@@ -9,15 +9,15 @@ interface Props {
   in: boolean;
   status: "enter" | "appear";
 }
-let inProccess = false;
-let counter = 0;
 export const Transition: ComponentType = () => ({
   ...componentMixin(),
   state: {
     status: "entered",
     in: null
   } as State,
+  timer: null,
   getDeriviedStateFromProps(props: Props, prevState: State): State {
+    const prevStatus = prevState.status;
     if (prevState.in === null) {
       return {
         ...prevState,
@@ -25,13 +25,21 @@ export const Transition: ComponentType = () => ({
         status: props.status === "enter" ? "entered" : "entering"
       };
     }
-    if (!props.in && prevState.in && prevState.status === "entered") {
+    if (
+      !props.in &&
+      prevState.in &&
+      (prevStatus === "entered" || prevStatus === "entering")
+    ) {
       return {
         in: props.in,
         status: "exiting"
       };
     }
-    if (props.in && !prevState.in && prevState.status === "exited") {
+    if (
+      props.in &&
+      !prevState.in &&
+      (prevStatus === "exited" || prevStatus === "exiting")
+    ) {
       return {
         in: props.in,
         status: "entering"
@@ -40,23 +48,19 @@ export const Transition: ComponentType = () => ({
     return prevState;
   },
   didUpdate() {
-    // console.log(this.state, counter++);
-    // if (inProccess) return;
-
     const prevState = this.state as State;
     if (prevState.status === "exiting") {
-      // inProccess = true;
-      setTimeout(() => {
-        // inProccess = false;
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
         this.send({ type: "update" });
       }, 200);
     }
     if (prevState.status === "entering") {
-      setTimeout(() => {
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
         this.send({ type: "entered" });
       }, 20);
     }
-
   },
   didMount() {
     const prevState = this.state as State;
@@ -67,8 +71,7 @@ export const Transition: ComponentType = () => ({
     }
   },
   render: (props, state: State) => {
-    // console.log(state, counter++);
-    return props.children(state.status)
+    return props.children(state.status);
   },
   reducer: (action, state: State): State => {
     switch (action.type) {

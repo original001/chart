@@ -1,8 +1,6 @@
-import { ComponentType, componentMixin, createElement } from "./reconciler";
-import { CHART_WIDTH } from "./constant";
+import { ComponentType, componentMixin } from "./reconciler";
 import {
   ChildMapping,
-  getChildMapping,
   getNextChildMapping,
   getInitialChildMapping
 } from "./childmapping";
