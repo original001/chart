@@ -179,61 +179,6 @@ describe("animation", () => {
   beforeEach(() => {
     document.body.removeChild(document.body.firstChild);
   });
-  it("ruller", () => {
-    const Helper: ComponentType = () => ({
-      ...componentMixin(),
-      state: { values: [1, 2, 3, 4] },
-      reducer(action, state) {
-        switch (action.type) {
-          case "1":
-            return { values: [1, 5, 7, 9] };
-          case "2":
-            return { values: [1, 1.5, 2, 2.5] };
-        }
-      },
-      render(props, state) {
-        return createElement(TransitionRuller, { values: state.values });
-      }
-    });
-
-    const body = document.body;
-    const tree = render(createElement(Helper, {}), body);
-
-    const helperInst = tree._instance;
-    const group = body.firstElementChild;
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "entered transition translate"
-    );
-    expect(group.firstElementChild.children.length).toBe(3);
-    helperInst.send({ type: "1" });
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "exiting transition translate"
-    );
-    expect(group.firstElementChild.children.length).toBe(3);
-    expect(group.firstElementChild.getAttribute("secondValue")).toBe("2");
-    jest.runOnlyPendingTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "entering transition translate"
-    );
-
-    jest.runOnlyPendingTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "entered transition translate"
-    );
-    expect(group.firstElementChild.getAttribute("secondValue")).toBe("5");
-    expect(group.firstElementChild.children.length).toBe(3);
-    helperInst.send({ type: "2" });
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "exiting transition translate"
-    );
-    expect(group.firstElementChild.children.length).toBe(3);
-    jest.runAllTimers();
-    expect(group.firstElementChild.getAttribute("class")).toBe(
-      "entered transition translate"
-    );
-    expect(group.firstElementChild.getAttribute("secondValue")).toBe("1.5");
-    expect(group.firstElementChild.children.length).toBe(3);
-  });
   xit("transition", () => {
     const Helper: ComponentType = () => ({
       ...componentMixin(),
