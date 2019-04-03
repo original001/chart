@@ -144,7 +144,6 @@ body.night {
 .r-line {
   stroke-width: "1";
   stroke: rgba(115,153,178, .2);
-  vector-effect: non-scaling-stroke;
 }
 .r-text {
   fill: rgba(106,126,140,.8);
