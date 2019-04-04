@@ -48,6 +48,7 @@ export const TransitionRuller: ComponentType = () => ({
       },
       props.values.slice(0, -1).map(y =>
         createElement(Transition, {
+          timeout: 500,
           key: y,
           children: status =>
             ruler(CHART_HEIGHT - y + props.values[0], y, props.scale, status)

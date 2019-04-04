@@ -53,7 +53,7 @@ export const Transition: ComponentType = () => ({
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         this.send({ type: "update" });
-      }, 200);
+      }, this.props.timeout || 200);
     }
     if (prevState.status === "entering") {
       clearTimeout(this.timer);

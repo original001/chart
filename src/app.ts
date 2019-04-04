@@ -272,6 +272,7 @@ const App: ComponentType = () => ({
               charts.map(({ chart, color }) =>
                 createElement(Transition, {
                   key: color,
+                  timeout: 500,
                   children: status =>
                     path(
                       createPathAttr(chart, projectChartX, projectChartY),
