@@ -211,13 +211,13 @@ const App: ComponentType = () => ({
     const lowY = getExtremumY("min");
     const highYall = getExtremumY("max", true);
     const lowYall = getExtremumY("min", true);
-    const { max: maxYall, min: minYall } = getBounds(
+    const { values, max: maxYall, min: minYall } = getBounds(
       CHART_HEIGHT,
       highYall,
       lowYall
     );
 
-    const { values, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
+    const { max, min } = getBounds(CHART_HEIGHT, highY, lowY);
     const valuesX = getBoundsX(state.extraScale, highX, lowX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
@@ -239,7 +239,7 @@ const App: ComponentType = () => ({
         ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
       },
       [
-        createElement(TransitionRuller, { values, scale: scaleY }),
+        createElement(TransitionRuller, { values, scale: scaleY, offset: min - minYall }),
         createElement(
           "g",
           {
@@ -254,7 +254,7 @@ const App: ComponentType = () => ({
                   createElement(
                     "g",
                     {
-                      style: `transform: scaleY(${scaleY}); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                      style: `transform: scaleY(${scaleY}) translateY(${(min - minYall)}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
                       class: "transition-d"
                     },
                     [

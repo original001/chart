@@ -39,9 +39,8 @@ export const TransitionRuller: ComponentType = () => ({
             "g",
             {
               class: "transition translate",
-              style: `transform: scaleY(${
-                props.scale
-              }); transform-origin: 0 ${CHART_HEIGHT}px`
+              //prettier-ignore
+              style: `transform: scaleY(${props.scale}) translateY(${props.offset}px); transform-origin: 0 ${CHART_HEIGHT}px`
             },
             children
           )
