@@ -147,7 +147,7 @@ const App: ComponentType = () => ({
     }
   },
   didMount() {
-    const id = this.props.data.columns[1][1]
+    const id = this.props.data.columns[1][1];
     window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
       this.send({ type: "toggle", payload: name });
     };
@@ -171,7 +171,7 @@ const App: ComponentType = () => ({
     };
   },
   render(props, state) {
-    const id = props.data.columns[1][1]
+    const id = props.data.columns[1][1];
     const data: ChartDto = props.data;
     const names = data.names;
     const columns = data.columns.filter(
@@ -217,7 +217,7 @@ const App: ComponentType = () => ({
       lowYall
     );
 
-    const { max, min } = getBounds(CHART_HEIGHT, highY, lowY);
+    const { values: valuesY, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
     const valuesX = getBoundsX(state.extraScale, highX, lowX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, max, min);
@@ -225,7 +225,8 @@ const App: ComponentType = () => ({
     const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxYall, minYall);
 
     const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
-    const projectChartXForDots: (x: number) => string = x => (x * scaleX * state.extraScale - state.offset * CHART_WIDTH).toFixed(1);
+    const projectChartXForDots: (x: number) => string = x =>
+      (x * scaleX * state.extraScale - state.offset * CHART_WIDTH).toFixed(1);
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
@@ -239,62 +240,59 @@ const App: ComponentType = () => ({
         ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
       },
       [
-        createElement(TransitionRuller, { values, scale: scaleY, offset: min - minYall }),
+        createElement(TransitionRuller, {
+          values: valuesY,
+          scale: scaleY,
+          offset: min - minYall
+        }),
+
         createElement(
-          "g",
+          TransitionGroup,
           {
-            // style: `transform: translateX(-${state.offset *
-              // CHART_WIDTH}px) scale(${state.extraScale},1);`
-          },
-          [
-            createElement(
-              TransitionGroup,
-              {
-                wrapper: children =>
+            wrapper: children =>
+              createElement(
+                "g",
+                {
+                  style: `transform: scaleY(${scaleY}) translateY(${min -
+                    minYall}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                  class: "transition-d"
+                },
+                [
                   createElement(
                     "g",
                     {
-                      style: `transform: scaleY(${scaleY}) translateY(${(min - minYall)}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
-                      class: "transition-d"
+                      style: `transform: translateX(-${state.offset *
+                        CHART_WIDTH}px) scale(${state.extraScale},1);`
                     },
-                    [
-                      createElement(
-                        "g",
-                        {
-                          style: `transform: translateX(-${state.offset *
-                            CHART_WIDTH}px) scale(${state.extraScale},1);`
-                        },
-                        children
-                      )
-                    ]
+                    children
                   )
-              },
-              charts.map(({ chart, color }) =>
-                createElement(Transition, {
-                  key: color,
-                  timeout: 500,
-                  children: status =>
-                    path(
-                      createPathAttr(chart, projectChartX, projectChartY),
-                      color,
-                      2,
-                      status
-                    )
-                })
+                ]
               )
-            ),
-            createElement(Dots, {
-              data,
-              columns,
-              projectChartX: projectChartXForDots,
-              projectChartY: projectChartYForDots,
-              touchEndTimestamp: state.touchEndTimestamp,
-              scale: state.extraScale,
-              offset: state.offset,
-              showPopupOn: state.showPopupOn
+          },
+          charts.map(({ chart, color }) =>
+            createElement(Transition, {
+              key: color,
+              timeout: 500,
+              children: status =>
+                path(
+                  createPathAttr(chart, projectChartX, projectChartY),
+                  color,
+                  2,
+                  status
+                )
             })
-          ]
-        )
+          )
+        ),
+        createElement(Dots, {
+          data,
+          columns,
+          projectChartX: projectChartXForDots,
+          projectChartY: projectChartYForDots,
+          touchEndTimestamp: state.touchEndTimestamp,
+          scale: state.extraScale,
+          offset: state.offset,
+          showPopupOn: state.showPopupOn
+        })
       ]
     );
     const sliderChart = createElement(
@@ -333,7 +331,8 @@ const App: ComponentType = () => ({
       [
         createElement(Slider, {
           onChange: payload => this.send({ type: "updateSlider", payload }),
-          onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
+          onTouchEnd: () =>
+            this.send({ type: "touchEnd", payload: Date.now() }),
           eventId: id
         }),
         sliderChart
@@ -371,7 +370,9 @@ const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${data.names[name]}")`
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${
+              data.names[name]
+            }")`
           },
           [
             createElement(

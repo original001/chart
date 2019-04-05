@@ -50,7 +50,7 @@ export const TransitionRuller: ComponentType = () => ({
           timeout: 500,
           key: y,
           children: status =>
-            ruler(CHART_HEIGHT - y + props.values[0], y, props.scale, status)
+            ruler(CHART_HEIGHT - y + props.values[0] - props.offset, y, props.scale, status)
         })
       )
     );
