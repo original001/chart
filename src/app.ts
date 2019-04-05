@@ -230,7 +230,7 @@ const App: ComponentType = () => ({
     const projectChartY: (y: number) => string = y =>
       (CHART_HEIGHT - (y - values[0])).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
-      (CHART_HEIGHT - (y - values[0]) * scaleY).toFixed(1);
+      (CHART_HEIGHT - (y - valuesY[0]) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
       {
