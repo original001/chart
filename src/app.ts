@@ -152,17 +152,20 @@ const App: ComponentType = () => ({
       this.send({ type: "toggle", payload: name });
     };
     window[TOGGLE_GRAPH_HANDLER_NAME + id] = (e: TouchEvent) => {
+      const currentTarget = e.currentTarget as Element;
       this.send({
         type: "showPopup",
         payload: e.targetTouches[0].clientX - 10
       });
-      // const hideHandler = () => {
-      //   this.send({ type: "hidePopup" });
-      //   document.documentElement.removeEventListener("touchstart", hideHandler);
-      // };
-      // setTimeout(() => {
-      //   document.documentElement.addEventListener("touchstart", hideHandler);
-      // }, 0);
+      const hideHandler = (_e: TouchEvent) => {
+        const target = _e.target as Element;
+        if (target === currentTarget || currentTarget.contains(target)) {
+        } else this.send({ type: "hidePopup" });
+        _e.currentTarget.removeEventListener("touchstart", hideHandler);
+      };
+      setTimeout(() => {
+        document.documentElement.addEventListener("touchstart", hideHandler);
+      }, 10);
     };
     window[TOGGLE_DAY_HANDLER_NAME + id] = () => {
       const nextMode = this.state.mode === "day" ? "night" : "day";
