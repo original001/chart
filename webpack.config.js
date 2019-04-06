@@ -1,22 +1,23 @@
 const path = require("path");
-const ClosureCompilerPlugin = require("webpack-closure-compiler");
-
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const OptimizeCSSAssetsPlugin = require("optimize-css-assets-webpack-plugin");
+const TerserPlugin = require('terser-webpack-plugin');
+
 
 module.exports = {
   entry: {
-    app: "./src/app"
+    app: "./src/app",
+    data: "./src/data"
   },
   output: {
-    filename: "bundle.js",
+    filename: "[name].js",
     publicPath: "/dist"
   },
   plugins: [
     new MiniCssExtractPlugin({
       filename: "[name].css",
       chunkFilename: "[id].css"
-    })
+    }),
   ],
   module: {
     rules: [
@@ -34,9 +35,22 @@ module.exports = {
 
   optimization: {
     minimizer: [
-      new ClosureCompilerPlugin({ mode: "AGGRESSIVE_BUNDLE" }, {}),
-      new OptimizeCSSAssetsPlugin({})
+      // new UglifyJsPlugin(),
+      new TerserPlugin(),
+      new OptimizeCSSAssetsPlugin({}),
+      // new ClosureCompilerPlugin({ mode: "AGGRESSIVE_BUNDLE" }, {}),
     ]
+  },
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        common: {
+          test: "data",
+          name: "data",
+          chunks: "all",
+        },
+      },
+    },
   },
   resolve: {
     extensions: [".js", ".ts"]
