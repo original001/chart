@@ -19,10 +19,82 @@ require("./app.css");
 type Dot = [number, number];
 type Chart = Dot[];
 interface ChartInfo {
-  chart: Chart;
+  chartPath: string;
+  sliderPath: string;
+  values: number[];
   name: string;
   color: string;
+  id: string;
+  min: number;
+  max: number;
 }
+
+export interface Props {
+  charts: ChartInfo[];
+  visibles: { [id: string]: boolean };
+  scaleX: number;
+  maxY: number;
+  minY: number;
+  minX: number;
+  maxX: number;
+  columns: ChartDto["columns"];
+}
+
+export const prepareData = (data: ChartDto): Props => {
+  const columns = data.columns;
+  const dataLength = data.columns[0].length;
+  const scaleX = getScaleX(CHART_WIDTH, dataLength - 1);
+  const xs = columns[0];
+  const chartInfos: ChartInfo[] = [];
+  const getExtremumY = (fn: string) =>
+    Math[fn].apply(
+      Math,
+      columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1)))
+    );
+  const extremum = (fn, from, to?) =>
+    fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
+  const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
+  const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
+  const maxY = getExtremumY("max");
+  const minY = getExtremumY("min");
+  const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
+  const projectChartX = (x: number) => (x * scaleX).toFixed(1);
+  const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
+  for (let values of columns.slice(1)) {
+    const name = values[0] as string;
+    values = values.slice(1);
+    const chartDots = values.map((y, i) => [xs[i + 1], y] as Dot);
+    const chartInfo: ChartInfo = {
+      name: data.names[name],
+      color: data.colors[name],
+      chartPath: createPathAttr(chartDots, projectChartX, projectChartY),
+      sliderPath: createPathAttr(
+        chartDots,
+        x => x * scaleX,
+        y => SLIDER_HEIGHT - (y - minY) * scaleYSlider
+      ),
+      max: Math.max.apply(Math, values),
+      min: Math.min.apply(Math, values),
+      id: name,
+      values: values as number[]
+    };
+    chartInfos.push(chartInfo);
+  }
+  const visibles = {};
+  for (let id in data.names) {
+    visibles[data.names[id]] = true;
+  }
+  return {
+    charts: chartInfos,
+    visibles,
+    maxY,
+    minY,
+    maxX,
+    minX,
+    scaleX,
+    columns
+  };
+};
 
 export const createPathAttr = (
   chart: Chart,
@@ -55,56 +127,38 @@ const flexLabel = (timestamp: number, offset: number, status: string) =>
     prettifyDate(timestamp)
   );
 
-export const getChartsFromData = (
-  data: ChartDto,
-  columns: ChartDto["columns"]
-): ChartInfo[] => {
-  const xs = columns[0];
-  const chartInfos: ChartInfo[] = [];
-  for (let values of columns.slice(1)) {
-    const name = values[0] as string;
-    const chart = values.slice(1).map((y, i) => [xs[i + 1], y] as Dot);
-    const chartInfo = {
-      name: data.names[name],
-      color: data.colors[name],
-      chart
-    };
-    chartInfos.push(chartInfo);
-  }
-  return chartInfos;
-};
-
 export const getScaleY = (length: number, max: number, min: number) =>
   length / (max - min);
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
-export const getHighLow = (data: ChartDto) => {
-  const extremum = (fn, from, to?) =>
-    fn(data.columns.slice(from, to).map(ys => fn(ys.slice(1))));
-  const highY = extremum(ar => Math.max.apply(Math, ar), 1);
-  const lowY = extremum(ar => Math.min.apply(Math, ar), 1);
-  const highX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
-  const lowX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
-  return [highY, lowY, highX, lowX];
-};
-
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
 const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
+interface State {
+  extraScale: number;
+  offset: number;
+  sliderPos: { left: number; right: number };
+  touchEndTimestamp: number;
+  mode: string;
+  showPopupOn: number;
+  visibles: { [id: string]: boolean };
+}
+
 const App: ComponentType = () => ({
   ...componentMixin(),
+  id: Date.now(),
   state: {
     extraScale: 4,
     offset: 3,
     sliderPos: { left: 0.75, right: 1 },
-    hiddenNames: [],
     touchEndTimestamp: 0,
     mode: "day", // workaround,
-    showPopupOn: null
-  },
-  reducer({ type, payload }, state) {
+    showPopupOn: null,
+    visibles: null
+  } as State,
+  reducer({ type, payload }, state: State) {
     let scale;
     switch (type) {
       case "updateSlider":
@@ -118,9 +172,10 @@ const App: ComponentType = () => ({
       case "toggle":
         return {
           ...state,
-          hiddenNames: state.hiddenNames.includes(payload)
-            ? state.hiddenNames.filter(name => name !== payload)
-            : state.hiddenNames.concat([payload])
+          visibles: {
+            ...state.visibles,
+            [payload]: !state.visibles[payload]
+          }
         };
       case "touchEnd":
         return {
@@ -136,7 +191,6 @@ const App: ComponentType = () => ({
         scale = 1 / (state.sliderPos.right - state.sliderPos.left);
         return {
           ...state,
-          // showPopupOn: payload + ((payload*state.extraScale - payload) + state.offset * CHART_WIDTH)/state.extraScale
           showPopupOn: payload
         };
       case "hidePopup":
@@ -147,7 +201,7 @@ const App: ComponentType = () => ({
     }
   },
   didMount() {
-    const id = this.props.data.columns[1][1];
+    const id = this.id;
     window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
       this.send({ type: "toggle", payload: name });
     };
@@ -173,67 +227,53 @@ const App: ComponentType = () => ({
       this.send({ type: "mode", payload: nextMode });
     };
   },
-  render(props, state) {
-    const id = props.data.columns[1][1];
-    const data: ChartDto = props.data;
-    const names = data.names;
-    const columns = data.columns.filter(
-      col => !state.hiddenNames.includes(data.names[col[0]])
-    );
-    const charts = getChartsFromData(data, columns);
-    // const [highY, lowY, highX, lowX] = getHighLow(data);
-
-    const extremum = (fn, from, to?) =>
-      fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
-    // const highY = extremum(ar => Math.max.apply(Math, ar), 1);
-    // const lowY = extremum(ar => Math.min.apply(Math, ar), 1);
-    const highX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
-    const lowX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
+  getDeriviedStateFromProps(props, prevState) {
+    if (!prevState.visibles) return { ...prevState, visibles: props.visibles };
+  },
+  render(props: Props, state: State) {
+    const id = this.id;
+    const { scaleX, maxX: maxX, minX: minX, columns } = props;
+    const {
+      visibles,
+      sliderPos: { left, right },
+      extraScale,
+      offset
+    } = state;
+    const charts = props.charts.filter(chart => visibles[chart.name]);
 
     const dataLength = columns[0].length;
 
-    const getExtremumY = (fn: string, all?: boolean) =>
+    const getExtremumY = (fn: string, left?: number, right?: number) =>
       Math[fn].apply(
         Math,
-        columns
-          .slice(1)
-          .map(ys =>
-            Math[fn].apply(
-              Math,
-              all
-                ? ys.slice(1)
-                : ys.slice(
-                    Math.floor(dataLength * state.sliderPos.left) + 1,
-                    Math.ceil(dataLength * state.sliderPos.right)
-                  )
+        charts.map(({ values: ys }) =>
+          Math[fn].apply(
+            Math,
+            ys.slice(
+              Math.floor(dataLength * left) + 1,
+              Math.ceil(dataLength * right)
             )
           )
+        )
       );
+    const localMinY = getExtremumY("min", left, right);
+    const localMaxY = getExtremumY("max", left, right);
 
-    const highY = getExtremumY("max");
-    const lowY = getExtremumY("min");
-    const highYall = getExtremumY("max", true);
-    const lowYall = getExtremumY("min", true);
-    const { values, max: maxYall, min: minYall } = getBounds(
+    const { values: valuesY, max: boundsMaxY, min: boundsMinY } = getBounds(
       CHART_HEIGHT,
-      highYall,
-      lowYall
+      localMaxY,
+      localMinY
     );
-
-    const { values: valuesY, max, min } = getBounds(CHART_HEIGHT, highY, lowY);
-    const valuesX = getBoundsX(state.extraScale, highX, lowX);
+    const valuesX = getBoundsX(extraScale, maxX, minX);
     // console.log(valuesX)
-    const scaleY = getScaleY(CHART_HEIGHT, max, min);
-    const scaleX = getScaleX(CHART_WIDTH, columns[0].length - 1);
-    const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxYall, minYall);
+    const scaleY = getScaleY(CHART_HEIGHT, boundsMaxY, boundsMinY);
+    const offsetY = localMinY;
+    // const offsetY = 0;
 
-    const projectChartX: (x: number) => string = x => (x * scaleX).toFixed(1);
     const projectChartXForDots: (x: number) => string = x =>
-      (x * scaleX * state.extraScale - state.offset * CHART_WIDTH).toFixed(1);
-    const projectChartY: (y: number) => string = y =>
-      (CHART_HEIGHT - (y - values[0])).toFixed(1);
+      (x * scaleX * extraScale - offset * CHART_WIDTH).toFixed(1);
     const projectChartYForDots: (y: number) => string = y =>
-      (CHART_HEIGHT - (y - valuesY[0]) * scaleY).toFixed(1);
+      (CHART_HEIGHT - (y - localMinY) * scaleY).toFixed(1);
     const chart = createElement(
       "svg",
       {
@@ -246,7 +286,7 @@ const App: ComponentType = () => ({
         createElement(TransitionRuller, {
           values: valuesY,
           scale: scaleY,
-          offset: min - minYall
+          offset: offsetY
         }),
 
         createElement(
@@ -256,33 +296,26 @@ const App: ComponentType = () => ({
               createElement(
                 "g",
                 {
-                  style: `transform: scaleY(${scaleY}) translateY(${min -
-                    minYall}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
+                  style: `transform: scaleY(${scaleY}) translateY(${offsetY}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
                   class: "transition-d"
                 },
                 [
                   createElement(
                     "g",
                     {
-                      style: `transform: translateX(-${state.offset *
-                        CHART_WIDTH}px) scale(${state.extraScale},1);`
+                      style: `transform: translateX(-${offset *
+                        CHART_WIDTH}px) scale(${extraScale},1);`
                     },
                     children
                   )
                 ]
               )
           },
-          charts.map(({ chart, color }) =>
+          charts.map(({ color, chartPath }) =>
             createElement(Transition, {
               key: color,
               timeout: 500,
-              children: status =>
-                path(
-                  createPathAttr(chart, projectChartX, projectChartY),
-                  color,
-                  2,
-                  status
-                )
+              children: status => path(chartPath, color, 2, status)
             })
           )
         ),
@@ -292,8 +325,8 @@ const App: ComponentType = () => ({
           projectChartX: projectChartXForDots,
           projectChartY: projectChartYForDots,
           touchEndTimestamp: state.touchEndTimestamp,
-          scale: state.extraScale,
-          offset: state.offset,
+          scale: extraScale,
+          offset: offset,
           showPopupOn: state.showPopupOn
         })
       ]
@@ -308,20 +341,10 @@ const App: ComponentType = () => ({
             children
           )
       },
-      charts.map(({ chart, color }) =>
+      charts.map(({ color, sliderPath }) =>
         createElement(Transition, {
           key: color,
-          children: status =>
-            path(
-              createPathAttr(
-                chart,
-                x => x * scaleX,
-                y => SLIDER_HEIGHT - (y - values[0]) * scaleYSlider
-              ),
-              color,
-              1,
-              status
-            )
+          children: status => path(sliderPath, color, 1, status)
         })
       )
     );
@@ -368,27 +391,23 @@ const App: ComponentType = () => ({
     const buttons = createElement(
       "div",
       { class: "buttons" },
-      Object.keys(names).map(name =>
+      Object.keys(visibles).map(name =>
         createElement(
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${
-              data.names[name]
-            }")`
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${name}")`
           },
           [
             createElement(
               "span",
               {
-                class: "button-label",
-                style: `background: ${data.colors[name]}`
+                class: "button-label"
+                // style: `background: ${data.colors[name]}`
               },
               [
                 createElement("span", {
-                  class: `button-icon ${
-                    state.hiddenNames.includes(data.names[name]) ? "active" : ""
-                  }`
+                  class: `button-icon ${visibles[name] ? "active" : ""}`
                 })
               ]
             ),
@@ -415,11 +434,11 @@ const App: ComponentType = () => ({
 const start = () => {
   render(
     createElement("div", {}, [
-      createElement(App, { data: data[0] }),
-      createElement(App, { data: data[1] }),
-      createElement(App, { data: data[2] }),
-      createElement(App, { data: data[3] }),
-      createElement(App, { data: data[4] })
+      createElement(App, prepareData(data[0])),
+      // createElement(App, prepareData(data[1])),
+      createElement(App, prepareData(data[2])),
+      // createElement(App, prepareData(data[3])),
+      createElement(App, prepareData(data[4]))
     ]),
     document.getElementById("main")
   );

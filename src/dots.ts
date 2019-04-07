@@ -21,7 +21,7 @@ interface Props {
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
   render(props: Props, state) {
-    const { columns, projectChartX, projectChartY, data } = props;
+    const { columns, projectChartX, projectChartY} = props;
     const zippedDots = zipDots(columns);
     const axises = zippedDots[0];
     const popupOffset = 30;
@@ -71,7 +71,7 @@ export const Dots: ComponentType = () => ({
               cx: 0,
               cy: projectChartY(dot[i + 1]),
               r: 4,
-              stroke: data.colors[axis],
+              // stroke: data.colors[axis],
               class: "n-fill",
               key: `circle${axis}`,
               ["stroke-width"]: 2
@@ -96,7 +96,7 @@ export const Dots: ComponentType = () => ({
               {
                 x: textOffset + i * 45,
                 y: 48,
-                fill: data.colors[axises[i + 1]],
+                // fill: data.colors[axises[i + 1]],
                 ["font-size"]: 16,
                 ["font-weight"]: 600,
                 key: `text${i}`
@@ -110,11 +110,11 @@ export const Dots: ComponentType = () => ({
               {
                 x: textOffset + i * 45,
                 y: 66,
-                fill: data.colors[axis],
+                // fill: data.colors[axis],
                 ["font-size"]: 13,
                 key: `caption${axis}`
               },
-              data.names[axis]
+              // data.names[axis]
             )
           )
         ])

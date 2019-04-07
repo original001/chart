@@ -1,7 +1,7 @@
 import {
   createPathAttr,
   getScaleY,
-  getHighLow
+  prepareData
 } from "../src/app";
 import { getBounds } from "../src/axis";
 import { ChartDto } from "../src/chart_data";
@@ -11,8 +11,6 @@ import {
   ComponentType,
   componentMixin
 } from "../src/reconciler";
-import { Transition } from "../src/transition";
-import { TransitionGroup } from "../src/labels";
 import { zipDots as zipData } from "../src/utils";
 
 jest.useFakeTimers();
@@ -39,8 +37,8 @@ describe("utils", () => {
         1551916800000,
         1552003200000
       ],
-      ["y1", 56, 142, 124, 114, 64],
-      ["y2", 22, 12, 30, 40, 33]
+      ["y0", 56, 142, 124, 114, 64],
+      ["y1", 22, 12, 30, 40, 33]
     ],
     types: { y0: "line", y1: "line", x: "x" },
     names: { y0: "#0", y1: "#1" },
@@ -52,10 +50,19 @@ describe("utils", () => {
     // expect(dots2).toEqual([]);
   });
 
-  it("getHighLow", () => {
-    const [high, low] = getHighLow(data);
-    expect([high, low]).toEqual([142, 12]);
-  });
+  it('prepare data', () => {
+    const d = prepareData(data);
+    const {min, max} = d.charts[0]
+    expect(d.charts.length).toBe(2)
+    expect([max, min]).toEqual([142, 56])
+    const {min: min2, max: max2} = d.charts[1]
+    expect([max2, min2]).toEqual([40, 12])
+    expect(d.visibles['#0']).toBe(true)
+    expect(d.visibles['#1']).toBe(true)
+    expect(d.maxY).toBe(142)
+    expect(d.minY).toBe(12)
+    expect(d.scaleX).toBe(-4)
+  })
 });
 
 describe("axis", () => {
