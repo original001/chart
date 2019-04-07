@@ -217,23 +217,21 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
         });
       return;
     }
-    // updating by index
-    for (let child of props.children) {
-      const childIndex = props.children.indexOf(child);
-      const prevChild = prevProps.children && prevProps.children[childIndex];
-      if (!(prevProps.children && prevChild)) {
-        render(child, host);
-        continue;
-      }
+    let length = Math.max(props.children.length, prevProps.children.length);
 
-      //todo: prevchild shoud have host
-      updateChildren(prevChild, child);
-    }
-    for (let prevChild of prevProps.children) {
-      const prevChildIndex = prevProps.children.indexOf(prevChild);
-      if (!props.children[prevChildIndex]) {
+    let i = 0;
+    while (i < length) {
+      const prevChild = prevProps.children[i];
+      const child = props.children[i];
+      if (!prevChild) {
+        render(child, host);
+      } else if (!child) {
         host.removeChild(prevChild.host);
+      } else {
+        //todo: prevchild shoud have host
+        updateChildren(prevChild, child);
       }
+      i++;
     }
   }
 };
