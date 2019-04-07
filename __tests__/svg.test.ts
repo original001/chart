@@ -57,8 +57,8 @@ describe("utils", () => {
     expect([max, min]).toEqual([142, 56])
     const {min: min2, max: max2} = d.charts[1]
     expect([max2, min2]).toEqual([40, 12])
-    expect(d.visibles['#0']).toBe(true)
-    expect(d.visibles['#1']).toBe(true)
+    expect(d.visibles['y0']).toBe(true)
+    expect(d.visibles['y1']).toBe(true)
     expect(d.maxY).toBe(142)
     expect(d.minY).toBe(12)
     expect(d.scaleX).toBe(-4)

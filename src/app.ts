@@ -18,7 +18,7 @@ require("./app.css");
 
 type Dot = [number, number];
 type Chart = Dot[];
-interface ChartInfo {
+export interface ChartInfo {
   chartPath: string;
   sliderPath: string;
   values: number[];
@@ -37,7 +37,7 @@ export interface Props {
   minY: number;
   minX: number;
   maxX: number;
-  columns: ChartDto["columns"];
+  data: ChartDto;
 }
 
 export const prepareData = (data: ChartDto): Props => {
@@ -82,7 +82,7 @@ export const prepareData = (data: ChartDto): Props => {
   }
   const visibles = {};
   for (let id in data.names) {
-    visibles[data.names[id]] = true;
+    visibles[id] = true;
   }
   return {
     charts: chartInfos,
@@ -92,7 +92,7 @@ export const prepareData = (data: ChartDto): Props => {
     maxX,
     minX,
     scaleX,
-    columns
+    data
   };
 };
 
@@ -232,14 +232,15 @@ const App: ComponentType = () => ({
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX: maxX, minX: minX, columns } = props;
+    const { scaleX, maxX: maxX, minX: minX, data } = props;
+    const columns = data.columns;
     const {
       visibles,
       sliderPos: { left, right },
       extraScale,
       offset
     } = state;
-    const charts = props.charts.filter(chart => visibles[chart.name]);
+    const charts = props.charts.filter(chart => visibles[chart.id]);
 
     const dataLength = columns[0].length;
 
@@ -321,7 +322,7 @@ const App: ComponentType = () => ({
         ),
         createElement(Dots, {
           data,
-          columns,
+          charts,
           projectChartX: projectChartXForDots,
           projectChartY: projectChartYForDots,
           touchEndTimestamp: state.touchEndTimestamp,
@@ -391,27 +392,27 @@ const App: ComponentType = () => ({
     const buttons = createElement(
       "div",
       { class: "buttons" },
-      Object.keys(visibles).map(name =>
+      Object.keys(visibles).map(chartId =>
         createElement(
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${name}")`
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
           },
           [
             createElement(
               "span",
               {
-                class: "button-label"
-                // style: `background: ${data.colors[name]}`
+                class: "button-label",
+                style: `background: ${data.colors[chartId]}`
               },
               [
                 createElement("span", {
-                  class: `button-icon ${visibles[name] ? "active" : ""}`
+                  class: `button-icon ${visibles[chartId] ? "" : "active"}`
                 })
               ]
             ),
-            createElement("span", { class: "button-text" }, name)
+            createElement("span", { class: "button-text" }, data.names[chartId])
           ]
         )
       )

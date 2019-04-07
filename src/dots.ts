@@ -4,8 +4,9 @@ import {
   componentMixin
 } from "./reconciler";
 import { ChartDto } from "./chart_data";
-import { zipDots, prettifyDate } from "./utils";
+import { prettifyDate } from "./utils";
 import { CHART_HEIGHT} from "./constant";
+import { ChartInfo } from "./app";
 
 interface Props {
   columns: (string | number)[][];
@@ -16,29 +17,29 @@ interface Props {
   offset: number;
   scale: number;
   showPopupOn: number;
+  charts: ChartInfo[]
 }
 
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
-  render(props: Props, state) {
-    const { columns, projectChartX, projectChartY} = props;
-    const zippedDots = zipDots(columns);
-    const axises = zippedDots[0];
+  render(props: Props) {
+    const { projectChartX, projectChartY, data, charts} = props;
     const popupOffset = 30;
     const textOffset = 15 - popupOffset;
 
     const showPopupOn = props.showPopupOn;
     if (!showPopupOn) return createElement("span", {});
 
-    const i = zippedDots
-      .slice(1)
+    const i = charts[0].values
       .findIndex(
         (dot, i) =>
           Number(projectChartX(i - 0.5)) <= showPopupOn &&
           Number(projectChartX(i + 0.5)) > showPopupOn
       );
 
-    const dot = zippedDots[i + 1];
+    const dot = charts.map(ch => ch.values[i])
+    const date = data.columns[0][i + 1] as number;
+    const axises = charts.map(ch => ch.id)
 
     const dots = createElement(
       "svg",
@@ -66,12 +67,12 @@ export const Dots: ComponentType = () => ({
             class: "r-line",
             key: "line"
           }),
-          ...axises.slice(1).map((axis, i) =>
+          ...axises.map((axis, i) =>
             createElement("circle", {
               cx: 0,
-              cy: projectChartY(dot[i + 1]),
+              cy: projectChartY(dot[i]),
               r: 4,
-              // stroke: data.colors[axis],
+              stroke: data.colors[axis],
               class: "n-fill",
               key: `circle${axis}`,
               ["stroke-width"]: 2
@@ -88,15 +89,15 @@ export const Dots: ComponentType = () => ({
           createElement(
             "text",
             { x: textOffset, y: 22, class: "n-text", key: "text" },
-            prettifyDate(dot[0], true)
+            prettifyDate(date, true)
           ),
-          ...dot.slice(1).map((count, i) =>
+          ...dot.map((count, i) =>
             createElement(
               "text",
               {
                 x: textOffset + i * 45,
                 y: 48,
-                // fill: data.colors[axises[i + 1]],
+                fill: data.colors[axises[i]],
                 ["font-size"]: 16,
                 ["font-weight"]: 600,
                 key: `text${i}`
@@ -104,17 +105,17 @@ export const Dots: ComponentType = () => ({
               count + ""
             )
           ),
-          ...axises.slice(1).map((axis, i) =>
+          ...axises.map((axis, i) =>
             createElement(
               "text",
               {
                 x: textOffset + i * 45,
                 y: 66,
-                // fill: data.colors[axis],
+                fill: data.colors[axis],
                 ["font-size"]: 13,
                 key: `caption${axis}`
               },
-              // data.names[axis]
+              data.names[axis]
             )
           )
         ])
