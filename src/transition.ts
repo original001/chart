@@ -9,6 +9,31 @@ interface Props {
   in: boolean;
   status: "enter" | "appear";
 }
+
+let timer;
+const cbs = [];
+let initialTick = true;
+const call = (cb, i) => {
+  cb();
+  delete cbs[i];
+};
+const accomodate = (cb, timeout?) => {
+  cbs.push(cb);
+  initialTick &&
+    Promise.resolve().then(() => {
+      initialTick = true;
+      clearTimeout(timer);
+      if (timeout != null) {
+        timer = setTimeout(() => {
+          cbs.forEach(call);
+        }, timeout);
+      } else {
+        cbs.forEach(call);
+      }
+    });
+  initialTick = false;
+};
+
 export const Transition: ComponentType = () => ({
   ...componentMixin(),
   state: {
@@ -50,16 +75,22 @@ export const Transition: ComponentType = () => ({
   didUpdate() {
     const prevState = this.state as State;
     if (prevState.status === "exiting") {
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => {
+      accomodate(() => {
         this.send({ type: "update" });
       }, this.props.timeout || 200);
+      // clearTimeout(this.timer);
+      // this.timer = setTimeout(() => {
+      //   this.send({ type: "update" });
+      // }, this.props.timeout || 200);
     }
     if (prevState.status === "entering") {
-      clearTimeout(this.timer);
-      this.timer = setTimeout(() => {
+      accomodate(() => {
         this.send({ type: "entered" });
-      }, 20);
+      });
+      // clearTimeout(this.timer);
+      // this.timer = setTimeout(() => {
+      // this.send({ type: "entered" });
+      // }, 20);
     }
   },
   didMount() {
