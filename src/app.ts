@@ -284,12 +284,6 @@ const App: ComponentType = () => ({
         ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
       },
       [
-        createElement(TransitionRuller, {
-          values: valuesY,
-          scale: scaleY,
-          offset: offsetY
-        }),
-
         createElement(
           TransitionGroup,
           {
@@ -422,7 +416,14 @@ const App: ComponentType = () => ({
       { class: "switch", ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()` },
       "Switch to Nigth Mode"
     );
-    return createElement("div", {}, [
+    const ruller = createElement(TransitionRuller, {
+      values: valuesY,
+      scale: scaleY,
+      offset: offsetY
+    });
+
+    return createElement("div", {class: 'rel'}, [
+      ruller,
       chart,
       labels,
       slider,

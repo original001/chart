@@ -5,27 +5,18 @@ import { Transition } from "./transition";
 
 const ruler = (projectY: number, y: number, scale: number, status: string) =>
   createElement(
-    "g",
+    "div",
     {
       key: y,
-      class: `${status} transition translate`,
-      style: `transform: scaleY(${1 / scale}); transform-origin: 0 ${projectY -
-        5}px`
+      class: `${status} transition translate abs fw r-line`,
+      style: `transform: scaleY(${(1 / scale).toFixed(1)}) translateY(${projectY}px); transform-origin: 0 ${projectY - 5}px`
+      //prettier-ignore
     },
-    [
-      createElement("line", {
-        x1: "0",
-        y1: projectY + "",
-        x2: "100%",
-        y2: projectY + "",
-        class: "r-line"
-      }),
-      createElement(
-        "text",
-        { x: 0, y: projectY - 5 + "", class: `r-text` },
-        y.toString()
-      )
-    ]
+    y.toString()
+    // [createElement('div', {
+    //   class: 'r-line abs fw',
+    //   style: `top: ${projectY}px`
+    // }, y.toString())]
   );
 
 export const TransitionRuller: ComponentType = () => ({
@@ -36,9 +27,9 @@ export const TransitionRuller: ComponentType = () => ({
       {
         wrapper: children =>
           createElement(
-            "g",
+            "div",
             {
-              class: "transition translate",
+              class: "transition translate rel w-ch-c",
               //prettier-ignore
               style: `transform: scaleY(${props.scale}) translateY(${props.offset}px); transform-origin: 0 ${CHART_HEIGHT}px`
             },
@@ -49,8 +40,7 @@ export const TransitionRuller: ComponentType = () => ({
         createElement(Transition, {
           timeout: 500,
           key: y,
-          children: status =>
-            ruler(CHART_HEIGHT - y, y, props.scale, status)
+          children: status => ruler(CHART_HEIGHT - y, y, props.scale, status)
         })
       )
     );

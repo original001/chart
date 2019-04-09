@@ -141,12 +141,18 @@ body.night {
 }
 
 
-.r-line {
-  stroke-width: "1";
-  stroke: rgba(115,153,178, .2);
+.rel {
+  position: relative;
 }
-.r-text {
-  fill: rgba(106,126,140,.8);
+.abs {
+  position: absolute;
+}
+.fw {
+  width: 100%;
+}
+.r-line {
+  border-bottom: 1px solid rgba(115,153,178, .2);
+  color: rgba(106,126,140,.8);
   font-size: 11px;
   font-weight: 300;
 }
