@@ -36,7 +36,7 @@ export const TransitionRuller: ComponentType = () => ({
             children
           )
       },
-      props.values.slice(0, -1).map(y =>
+      props.values.map(y =>
         createElement(Transition, {
           timeout: 500,
           key: y,

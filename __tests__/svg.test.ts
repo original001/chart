@@ -64,24 +64,6 @@ describe("utils", () => {
     expect(d.scaleX).toBe(-4)
   })
 });
-
-describe("axis", () => {
-  it("get bounds 19-191", () => {
-    const { values, min, max } = getBounds(200, 191, 19);
-    const scaleY = getScaleY(200, max, min);
-    expect(values).toEqual([0, 50, 100, 150, 200]);
-    expect(scaleY).toEqual(1);
-  });
-  it("get bounds 190-210", () => {
-    const { values } = getBounds(200, 210, 190);
-    expect(values).toEqual([190, 195, 200, 205, 210]);
-  });
-  it("get bounds 820900-1417200", () => {
-    const { values } = getBounds(200, 1417200, 820900);
-    expect(values).toEqual([800000, 1000000, 1200000, 1400000]);
-  });
-});
-
 describe("render", () => {
   const Inner: ComponentType = () => ({
     ...componentMixin(),
