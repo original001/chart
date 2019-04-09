@@ -99,6 +99,7 @@ export const Slider: ComponentType = () => ({
         createElement("div", { class: "slider" }, [
           createElement("div", {
             class: "sliderEdge sliderEdgeLeft",
+            // style: `transform: translateX(${state.left}px)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
@@ -114,6 +115,7 @@ export const Slider: ComponentType = () => ({
           }),
           createElement("div", {
             class: "sliderEdge sliderEdgeRight",
+            // style: `transform: translateX(${state.right}px)`,
             ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,

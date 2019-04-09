@@ -46,7 +46,7 @@ describe("animation", () => {
     expect(body.firstElementChild.getAttribute("status")).toBe("entered");
     // expect(body.firstElementChild.getAttribute('status')).toBe('entered')
   });
-  it("transition group", () => {
+  xit("transition group", () => {
     const Helper = () => ({
       ...componentMixin(),
       state: {

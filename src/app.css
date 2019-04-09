@@ -22,6 +22,7 @@ body.night {
   position: absolute;
   top: 0;
   border: 0 solid rgba(242, 251, 255, 0.8);
+  will-change: left, right, border;
 }
 .night .sliderWrapper {
 
@@ -72,6 +73,9 @@ body.night {
 }
 .transition-d {
   transition: transform 0.5s;
+}
+.transition-d-0 {
+  transition: transform 0.001s;
 }
 .transition-p {
   transition: opacity 0.5s, d 0.5s;
@@ -150,6 +154,15 @@ body.night {
 .fw {
   width: 100%;
 }
+.w-ch-c {
+  will-change:contents;
+}
+.w-ch {
+  will-change:transform;
+}
+.c-s {
+  contain: strict;
+}
 .r-line {
   border-bottom: 1px solid rgba(115,153,178, .2);
   color: rgba(106,126,140,.8);
@@ -161,6 +174,10 @@ body.night {
   display: flex;
   padding: 0 25px;
   justify-content: space-between;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 30px;
 }
 .flex-item {
@@ -188,4 +205,28 @@ body.night {
 }
 .night .n-fill, .night .n-bg {
   fill: #242F3E
+}
+.bench {
+  width: 100px;
+  height: 5px;
+  border-bottom: 1px solid #ddd;
+  background: #f1f1f1;
+  /* transition: transform .5s; */
+  /* pointer-events: none; */
+}
+.bench-wrapper {
+  /* position: absolute; */
+  /* top: 50px; */
+  /* left: 0; */
+  /* transition: opacity .5s; */
+  /* pointer-events: none; */
+  will-change: transform;
+}
+.bench-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+  background: rgba(0,0,0,.1);
 }

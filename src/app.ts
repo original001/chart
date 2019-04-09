@@ -12,7 +12,7 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate } from "./utils";
+import { prettifyDate, createRaf } from "./utils";
 import { Dots } from "./dots";
 require("./app.css");
 
@@ -62,7 +62,8 @@ export const prepareData = (data: ChartDto): Props => {
   const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
   for (let values of columns.slice(1)) {
     const name = values[0] as string;
-    values = values.slice(1);
+    values = (values as number[]).slice(1);
+    // .map(v => (v > 100000 ? Math.floor(v / 10000) : v));
     const chartDots = values.map((y, i) => [xs[i + 1], y] as Dot);
     const chartInfo: ChartInfo = {
       name: data.names[name],
@@ -280,8 +281,8 @@ const App: ComponentType = () => ({
       {
         width: CHART_WIDTH,
         height: CHART_HEIGHT,
-        overflow: "visible",
-        ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
+        ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`,
+        class: `w-ch`
       },
       [
         createElement(
@@ -291,15 +292,16 @@ const App: ComponentType = () => ({
               createElement(
                 "g",
                 {
-                  style: `transform: scaleY(${scaleY}) translateY(${offsetY}px); transform-origin: 0 ${CHART_HEIGHT}px;`,
-                  class: "transition-d"
+                  style: `transform: translateX(-${offset * CHART_WIDTH}px) scale(${extraScale},1);`,
+                  class: "transition-d-0 w-ch"
                 },
                 [
                   createElement(
                     "g",
                     {
-                      style: `transform: translateX(-${offset *
-                        CHART_WIDTH}px) scale(${extraScale},1);`
+                      transform: `scale(1, ${scaleY}) translate(0, ${offsetY})`,
+                      style: `transform-origin: 0 ${CHART_HEIGHT}px`,
+                      class: "transition-d"
                     },
                     children
                   )
@@ -365,15 +367,20 @@ const App: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
+        createElement('div', {class: 'rel w-ch-c', style: 'height: 50px'}, [
+
           createElement(
             "div",
             {
-              class: "flex-labels",
+              class: "flex-labels w-ch",
               //prettier-ignore
-              style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
+              // style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
+              style: `left: -${state.sliderPos.left * CHART_WIDTH * state.extraScale}px; right: ${(state.sliderPos.right - 1) * CHART_WIDTH * state.extraScale}px`
+
             },
             children
           )
+        ])
       },
       valuesX.map((x, i) =>
         createElement(Transition, {
@@ -428,7 +435,7 @@ const App: ComponentType = () => ({
       labels,
       slider,
       buttons,
-      nightButton
+      nightButton,
     ]);
   }
 });
@@ -509,6 +516,8 @@ const start = () => {
       createElement(App, prepareData(data[2])),
       // createElement(App, prepareData(data[3])),
       createElement(App, prepareData(data[4]))
+      // createElement(Benchmark, { id: 1 }),
+      // createElement(Benchmark, { id: 2 })
     ]),
     document.getElementById("main")
   );
