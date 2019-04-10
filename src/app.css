@@ -80,6 +80,18 @@ body.night {
 .transition-p {
   transition: opacity 0.5s, d 0.5s;
 }
+.transition-t-d {
+  transform: scaleY(0);
+  transition: transform 0.5s, d 0.5s;
+}
+.entering.transition-t-d,
+.exiting.transition-t-d,
+.exited.transition-t-d {
+  transform: scaleY(0)
+}
+.entered.transition-t-d {
+  transform: scaleY(1)
+}
 .exiting,
 .exited {
   opacity: 0;

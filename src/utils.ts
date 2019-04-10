@@ -1,3 +1,5 @@
+import { ChartInfo } from "./app";
+
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;
   return (...args) => {
@@ -36,6 +38,17 @@ export const shallowEqual = (prev: any[], next: any[]) => {
   }
   return true;
 }
+  export const getStackedMax = (from, to, charts: ChartInfo[]) => {
+    let max = -Infinity;
+    for (let i = from; i<to; i++) {
+      let sum = 0;
+      for (let j = 0; j < charts.length; j ++) {
+        sum += charts[j].values[i] as number
+        max = Math.max(sum, max)
+      }
+    }
+    return max
+  }
 
 export const prettifyDate = (timestamp: number, withDate?: boolean) => {
   const [date, month, day] = new Date(timestamp).toString().split(" ");

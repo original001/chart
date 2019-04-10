@@ -7,8 +7,10 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate, createRaf } from "./utils";
+import { prettifyDate, createRaf, getStackedMax } from "./utils";
 import { Dots } from "./dots";
+import { path, Chart, ChartProps } from "./chart";
+import { SliderChart, SliderChartProps } from "./sliderChart";
 require("./app.css");
 
 type Dot = [number, number];
@@ -33,12 +35,14 @@ export interface Props {
   minX: number;
   maxX: number;
   data: ChartDto;
+  stackedValues?: number[];
+  dataLength: number;
 }
 
 export const prepareData = (data: ChartDto): Props => {
   const columns = data.columns;
-  const dataLength = data.columns[0].length;
-  const scaleX = getScaleX(CHART_WIDTH, dataLength - 1);
+  const dataLength = data.columns[0].length - 1;
+  const scaleX = getScaleX(CHART_WIDTH, dataLength);
   const xs = columns[0];
   const chartInfos: ChartInfo[] = [];
   const getExtremumY = (fn: string) =>
@@ -47,27 +51,34 @@ export const prepareData = (data: ChartDto): Props => {
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   const maxY = getExtremumY("max");
-  const minY = getExtremumY("min");
+  const minY = data.stacked ? 0 : getExtremumY("min");
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
   const projectChartX = (x: number) => (x * scaleX).toFixed(1);
   const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
-  for (let values of columns.slice(1)) {
+  let stackedValues = Array(dataLength).fill(0);
+  let i = 1;
+  columns.sort((a, b) => (a[1] > b[1] ? -1 : a[1] === b[1] ? 0 : 1));
+  while (i < columns.length) {
+    let values = columns[i];
     const name = values[0] as string;
-    values = (values as number[]).slice(1).map(v => (v > 100000 ? Math.floor(v / 10000) : v));
+    values = values.slice(1);
+    //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
     if (data.y_scaled) {
       const max = Math.max.apply(Math, values);
       const min = Math.min.apply(Math, values);
       scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
     }
-    const chartDots = values.map((y, i) => [xs[i + 1], y] as Dot);
+    //todo: leave only values
+    const createPath = data.stacked ? createStackedPathAttr : createPathAttr;
     const chartInfo: ChartInfo = {
       name: data.names[name],
       color: data.colors[name],
-      chartPath: createPathAttr(chartDots, projectChartX, projectChartY),
-      sliderPath: createPathAttr(
-        chartDots,
+      chartPath: createPath(values as number[], projectChartX, projectChartY, stackedValues),
+      sliderPath: createPath(
+        values as number[],
         x => x * scaleX,
-        y => SLIDER_HEIGHT - (y - minY) * scaleYSlider
+        y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
+        stackedValues
       ),
       max: Math.max.apply(Math, values),
       min: Math.min.apply(Math, values),
@@ -75,6 +86,10 @@ export const prepareData = (data: ChartDto): Props => {
       values: values as number[]
     };
     chartInfos.push(chartInfo);
+    if (data.stacked) {
+      stackedValues = stackedValues.map((v, i) => v + values[i]);
+    }
+    i++;
   }
   const visibles = {};
   for (let id in data.names) {
@@ -88,29 +103,35 @@ export const prepareData = (data: ChartDto): Props => {
     maxX,
     minX,
     scaleX,
-    data
+    data,
+    stackedValues,
+    dataLength
   };
 };
 
 export const createPathAttr = (
-  chart: Chart,
+  values: number[],
   projectX: (x: number) => string | number,
-  projectY: (y: number) => string | number
+  projectY: (y: number) => string | number,
+  _: number[]
 ) =>
-  chart.reduce(
-    (acc, [x, y], i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
+  values.reduce(
+    (acc, y, i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
     ""
   );
-const path = (path: string, color: string, strokeWidth: number, status?) =>
-  createElement("path", {
-    d: path,
-    "stroke-width": strokeWidth,
-    stroke: color,
-    class: "transition-p" + " " + status,
-    "vector-effect": "non-scaling-stroke",
-    fill: "none",
-    key: color
-  });
+
+export const createStackedPathAttr = (
+  values: number[],
+  projectX: (x: number) => string | number,
+  projectY: (y: number) => string | number,
+  prevValues: number[]
+) =>
+  values.reduce(
+    (acc, y, i) =>
+      acc +
+      `M${projectX(i)} ${projectY(prevValues[i])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
+    ""
+  );
 
 const flexLabel = (timestamp: number, offset: number, status: string) =>
   createElement(
@@ -128,7 +149,6 @@ export const getScaleX = (width, dotsCount) => width / dotsCount;
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
-const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
 interface State {
   extraScale: number;
@@ -136,7 +156,6 @@ interface State {
   sliderPos: { left: number; right: number };
   touchEndTimestamp: number;
   mode: string;
-  showPopupOn: number;
   visibles: { [id: string]: boolean };
 }
 
@@ -181,17 +200,6 @@ const App: ComponentType = () => ({
           ...state,
           mode: payload
         };
-      case "showPopup":
-        scale = 1 / (state.sliderPos.right - state.sliderPos.left);
-        return {
-          ...state,
-          showPopupOn: payload
-        };
-      case "hidePopup":
-        return {
-          ...state,
-          showPopupOn: null
-        };
     }
   },
   didMount() {
@@ -199,22 +207,7 @@ const App: ComponentType = () => ({
     window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
       this.send({ type: "toggle", payload: name });
     };
-    window[TOGGLE_GRAPH_HANDLER_NAME + id] = (e: TouchEvent) => {
-      const currentTarget = e.currentTarget as Element;
-      this.send({
-        type: "showPopup",
-        payload: e.targetTouches[0].clientX - 10
-      });
-      const hideHandler = (_e: TouchEvent) => {
-        const target = _e.target as Element;
-        if (target === currentTarget || currentTarget.contains(target)) {
-        } else this.send({ type: "hidePopup" });
-        _e.currentTarget.removeEventListener("touchstart", hideHandler);
-      };
-      setTimeout(() => {
-        document.documentElement.addEventListener("touchstart", hideHandler);
-      }, 10);
-    };
+
     window[TOGGLE_DAY_HANDLER_NAME + id] = () => {
       const nextMode = this.state.mode === "day" ? "night" : "day";
       document.body.setAttribute("class", nextMode);
@@ -226,8 +219,7 @@ const App: ComponentType = () => ({
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX, minX, data } = props;
-    const columns = data.columns;
+    const { scaleX, maxX, minX, data, dataLength, minY } = props;
     const {
       visibles,
       sliderPos: { left, right },
@@ -235,8 +227,6 @@ const App: ComponentType = () => ({
       offset
     } = state;
     const charts = props.charts.filter(chart => visibles[chart.id]);
-
-    const dataLength = columns[0].length;
 
     const getExtremumY = (fn: string, left: number, right: number, charts: ChartInfo[]) =>
       Math[fn].apply(
@@ -252,6 +242,7 @@ const App: ComponentType = () => ({
     // if
 
     const isScaled = data.y_scaled;
+    const isStacked = data.stacked;
     let localMinY;
     let localMaxY;
     let localMinY2;
@@ -263,6 +254,13 @@ const App: ComponentType = () => ({
       const second = props.charts.filter(c => c.id === "y1");
       localMinY2 = getExtremumY("min", left, right, second);
       localMaxY2 = getExtremumY("max", left, right, second);
+    } else if (isStacked) {
+      localMinY = 0;
+      localMaxY = getStackedMax(
+        Math.floor(dataLength * left) + 1,
+        Math.ceil(dataLength * right),
+        charts
+      );
     } else {
       localMinY = getExtremumY("min", left, right, charts);
       localMaxY = getExtremumY("max", left, right, charts);
@@ -293,87 +291,22 @@ const App: ComponentType = () => ({
       (x * scaleX * extraScale - offset * CHART_WIDTH).toFixed(1);
     const projectChartYForDots = (y: number, isSecond: boolean) =>
       (CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond)).toFixed(1);
-    const chart = createElement(
-      "svg",
-      {
-        width: CHART_WIDTH,
-        height: CHART_HEIGHT,
-        ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`,
-        // class: `w-ch`
-      },
-      [
-        createElement(
-          TransitionGroup,
-          {
-            wrapper: children =>
-              createElement(
-                "g",
-                {
-                  style: `transform: translateX(-${offset *
-                    CHART_WIDTH}px) scale(${extraScale},1);`,
-                  class: "transition-d-0"
-                },
-                isScaled
-                  ? children
-                  : [
-                      createElement(
-                        "g",
-                        {
-                          //prettier-ignore
-                          transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
-                          style: `transform-origin: 0 ${CHART_HEIGHT}px`,
-                          class: "transition-d"
-                        },
-                        children
-                      )
-                    ]
-              )
-          },
-          charts.map(({ color, chartPath, id }) =>
-            createElement(Transition, {
-              key: color,
-              timeout: 500,
-              children: status =>
-                isScaled
-                  ? createElement(
-                      "g",
-                      {
-                        //prettier-ignore
-                        transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
-                        style: `transform-origin: 0 ${CHART_HEIGHT}px`,
-                        class: "transition-d"
-                      },
-                      [path(chartPath, color, 2, status)]
-                    )
-                  : path(chartPath, color, 2, status)
-            })
-          )
-        ),
-        createElement(Dots, {
-          data,
-          charts,
-          projectChartX: projectChartXForDots,
-          projectChartY: projectChartYForDots,
-          touchEndTimestamp: state.touchEndTimestamp,
-          scale: extraScale,
-          offset: offset,
-          showPopupOn: state.showPopupOn
-        })
-      ]
-    );
-    const sliderChart = createElement(
-      TransitionGroup,
-      {
-        wrapper: children =>
-          createElement("svg", { width: CHART_WIDTH, height: SLIDER_HEIGHT }, children)
-      },
-      charts.map(({ color, sliderPath }) =>
-        createElement(Transition, {
-          key: color,
-          children: status => path(sliderPath, color, 1, status)
-        })
-      )
-    );
+
+    const chart = createElement(Chart, {
+      charts,
+      data,
+      dataLength,
+      offsetY,
+      getScale,
+      getOffset,
+      offset,
+      extraScale,
+      id,
+      projectChartXForDots,
+      projectChartYForDots,
+      scaleY,
+      scaleX
+    } as ChartProps);
 
     const slider = createElement(
       "div",
@@ -386,7 +319,13 @@ const App: ComponentType = () => ({
           onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
           eventId: id
         }),
-        sliderChart
+        createElement(SliderChart, {
+          charts,
+          dataLength,
+          minY,
+          scaleX,
+          isStacked
+        } as SliderChartProps)
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
