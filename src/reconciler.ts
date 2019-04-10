@@ -158,6 +158,10 @@ export const updateChildren = (lastTree: Tree, nextTree: Tree) => {
     }
   }
   if (!props.children && prevProps.children) {
+    if (typeof prevProps.children === 'string') {
+      host.innerHTML = '';
+      return;
+    }
     for (let child of prevProps.children) {
       host.removeChild(child.host);
     }

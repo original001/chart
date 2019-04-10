@@ -1,12 +1,7 @@
 import { getBounds, getBoundsX } from "./axis";
 import { data, ChartDto } from "./chart_data";
-import {
-  render,
-  createElement,
-  ComponentType,
-  componentMixin
-} from "./reconciler";
-import { TransitionRuller } from "./ruller";
+import { render, createElement, ComponentType, componentMixin } from "./reconciler";
+import { TransitionRuller, RullerProps } from "./ruller";
 import { Slider } from "./slider";
 
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
@@ -47,23 +42,23 @@ export const prepareData = (data: ChartDto): Props => {
   const xs = columns[0];
   const chartInfos: ChartInfo[] = [];
   const getExtremumY = (fn: string) =>
-    Math[fn].apply(
-      Math,
-      columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1)))
-    );
-  const extremum = (fn, from, to?) =>
-    fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
+    Math[fn].apply(Math, columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1))));
+  const extremum = (fn, from, to?) => fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   const maxY = getExtremumY("max");
   const minY = getExtremumY("min");
-  const scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
+  let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
   const projectChartX = (x: number) => (x * scaleX).toFixed(1);
   const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
   for (let values of columns.slice(1)) {
     const name = values[0] as string;
-    values = (values as number[]).slice(1);
-    // .map(v => (v > 100000 ? Math.floor(v / 10000) : v));
+    values = (values as number[]).slice(1).map(v => (v > 100000 ? Math.floor(v / 10000) : v));
+    if (data.y_scaled) {
+      const max = Math.max.apply(Math, values);
+      const min = Math.min.apply(Math, values);
+      scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
+    }
     const chartDots = values.map((y, i) => [xs[i + 1], y] as Dot);
     const chartInfo: ChartInfo = {
       name: data.names[name],
@@ -103,8 +98,7 @@ export const createPathAttr = (
   projectY: (y: number) => string | number
 ) =>
   chart.reduce(
-    (acc, [x, y], i) =>
-      i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`,
+    (acc, [x, y], i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
     ""
   );
 const path = (path: string, color: string, strokeWidth: number, status?) =>
@@ -128,8 +122,7 @@ const flexLabel = (timestamp: number, offset: number, status: string) =>
     prettifyDate(timestamp)
   );
 
-export const getScaleY = (length: number, max: number, min: number) =>
-  length / (max - min);
+export const getScaleY = (length: number, max: number, min: number) => length / (max - min);
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
@@ -233,7 +226,7 @@ const App: ComponentType = () => ({
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX: maxX, minX: minX, data } = props;
+    const { scaleX, maxX, minX, data } = props;
     const columns = data.columns;
     const {
       visibles,
@@ -245,44 +238,68 @@ const App: ComponentType = () => ({
 
     const dataLength = columns[0].length;
 
-    const getExtremumY = (fn: string, left?: number, right?: number) =>
+    const getExtremumY = (fn: string, left: number, right: number, charts: ChartInfo[]) =>
       Math[fn].apply(
         Math,
         charts.map(({ values: ys }) =>
           Math[fn].apply(
             Math,
-            ys.slice(
-              Math.floor(dataLength * left) + 1,
-              Math.ceil(dataLength * right)
-            )
+            ys.slice(Math.floor(dataLength * left) + 1, Math.ceil(dataLength * right))
           )
         )
       );
-    const localMinY = getExtremumY("min", left, right);
-    const localMaxY = getExtremumY("max", left, right);
 
-    const { values: valuesY, max: boundsMaxY, min: boundsMinY } = getBounds(
+    // if
+
+    const isScaled = data.y_scaled;
+    let localMinY;
+    let localMaxY;
+    let localMinY2;
+    let localMaxY2;
+    if (isScaled) {
+      const first = props.charts.filter(c => c.id === "y0");
+      localMinY = getExtremumY("min", left, right, first);
+      localMaxY = getExtremumY("max", left, right, first);
+      const second = props.charts.filter(c => c.id === "y1");
+      localMinY2 = getExtremumY("min", left, right, second);
+      localMaxY2 = getExtremumY("max", left, right, second);
+    } else {
+      localMinY = getExtremumY("min", left, right, charts);
+      localMaxY = getExtremumY("max", left, right, charts);
+    }
+
+    let { values: valuesY, max: boundsMaxY, min: boundsMinY } = getBounds(
       CHART_HEIGHT,
       localMaxY,
       localMinY
     );
+    // valuesY = charts.some(c => c.id === 'y1') ? valuesY : null
+    const { values: valuesY2, max: boundsMaxY2, min: boundsMinY2 } = isScaled
+      ? getBounds(CHART_HEIGHT, localMaxY2, localMinY2)
+      : { values: null, max: 1, min: 1 };
+
     const valuesX = getBoundsX(extraScale, maxX, minX);
     // console.log(valuesX)
     const scaleY = getScaleY(CHART_HEIGHT, boundsMaxY, boundsMinY);
-    const offsetY = localMinY;
+    const scaleY2 = getScaleY(CHART_HEIGHT, boundsMaxY2, boundsMinY2);
+
+    const offsetY = boundsMinY;
+    const offsetY2 = boundsMinY2;
+    const getScale = (isSecond: boolean) => (isScaled && isSecond ? scaleY2 : scaleY);
+    const getOffset = (isSecond: boolean) => (isScaled && isSecond ? offsetY2 : offsetY);
     // const offsetY = 0;
 
     const projectChartXForDots: (x: number) => string = x =>
       (x * scaleX * extraScale - offset * CHART_WIDTH).toFixed(1);
-    const projectChartYForDots: (y: number) => string = y =>
-      (CHART_HEIGHT - (y - localMinY) * scaleY).toFixed(1);
+    const projectChartYForDots = (y: number, isSecond: boolean) =>
+      (CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond)).toFixed(1);
     const chart = createElement(
       "svg",
       {
         width: CHART_WIDTH,
         height: CHART_HEIGHT,
         ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`,
-        class: `w-ch`
+        // class: `w-ch`
       },
       [
         createElement(
@@ -292,27 +309,43 @@ const App: ComponentType = () => ({
               createElement(
                 "g",
                 {
-                  style: `transform: translateX(-${offset * CHART_WIDTH}px) scale(${extraScale},1);`,
-                  class: "transition-d-0 w-ch"
+                  style: `transform: translateX(-${offset *
+                    CHART_WIDTH}px) scale(${extraScale},1);`,
+                  class: "transition-d-0"
                 },
-                [
-                  createElement(
-                    "g",
-                    {
-                      transform: `scale(1, ${scaleY}) translate(0, ${offsetY})`,
-                      style: `transform-origin: 0 ${CHART_HEIGHT}px`,
-                      class: "transition-d"
-                    },
-                    children
-                  )
-                ]
+                isScaled
+                  ? children
+                  : [
+                      createElement(
+                        "g",
+                        {
+                          //prettier-ignore
+                          transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
+                          style: `transform-origin: 0 ${CHART_HEIGHT}px`,
+                          class: "transition-d"
+                        },
+                        children
+                      )
+                    ]
               )
           },
-          charts.map(({ color, chartPath }) =>
+          charts.map(({ color, chartPath, id }) =>
             createElement(Transition, {
               key: color,
               timeout: 500,
-              children: status => path(chartPath, color, 2, status)
+              children: status =>
+                isScaled
+                  ? createElement(
+                      "g",
+                      {
+                        //prettier-ignore
+                        transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
+                        style: `transform-origin: 0 ${CHART_HEIGHT}px`,
+                        class: "transition-d"
+                      },
+                      [path(chartPath, color, 2, status)]
+                    )
+                  : path(chartPath, color, 2, status)
             })
           )
         ),
@@ -332,11 +365,7 @@ const App: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
-          createElement(
-            "svg",
-            { width: CHART_WIDTH, height: SLIDER_HEIGHT },
-            children
-          )
+          createElement("svg", { width: CHART_WIDTH, height: SLIDER_HEIGHT }, children)
       },
       charts.map(({ color, sliderPath }) =>
         createElement(Transition, {
@@ -354,8 +383,7 @@ const App: ComponentType = () => ({
       [
         createElement(Slider, {
           onChange: payload => this.send({ type: "updateSlider", payload }),
-          onTouchEnd: () =>
-            this.send({ type: "touchEnd", payload: Date.now() }),
+          onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
           eventId: id
         }),
         sliderChart
@@ -367,25 +395,22 @@ const App: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
-        createElement('div', {class: 'rel w-ch-c', style: 'height: 50px'}, [
-
-          createElement(
-            "div",
-            {
-              class: "flex-labels w-ch",
-              //prettier-ignore
-              // style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
-              style: `left: -${state.sliderPos.left * CHART_WIDTH * state.extraScale}px; right: ${(state.sliderPos.right - 1) * CHART_WIDTH * state.extraScale}px`
-
-            },
-            children
-          )
-        ])
+          createElement("div", { class: "rel w-ch-c", style: "height: 50px" }, [
+            createElement(
+              "div",
+              {
+                class: "flex-labels w-ch",
+                //prettier-ignore
+                // style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
+                style: `left: -${state.sliderPos.left * CHART_WIDTH * state.extraScale}px; right: ${(state.sliderPos.right - 1) * CHART_WIDTH * state.extraScale}px`
+              },
+              children
+            )
+          ])
       },
       valuesX.map((x, i) =>
         createElement(Transition, {
-          children: status =>
-            flexLabel(x, (i * scaledWidth) / valuesX.length, status),
+          children: status => flexLabel(x, (i * scaledWidth) / valuesX.length, status),
           key: x
         })
       )
@@ -426,16 +451,18 @@ const App: ComponentType = () => ({
     const ruller = createElement(TransitionRuller, {
       values: valuesY,
       scale: scaleY,
-      offset: offsetY
-    });
+      offset: offsetY,
+      valuesY2,
+      charts
+    } as RullerProps);
 
-    return createElement("div", {class: 'rel'}, [
+    return createElement("div", { class: "rel" }, [
       ruller,
       chart,
       labels,
       slider,
       buttons,
-      nightButton,
+      nightButton
     ]);
   }
 });

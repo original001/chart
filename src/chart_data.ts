@@ -3,6 +3,7 @@ export interface ChartDto {
   types: { [id: string]: "line" | "x" };
   names: { [id: string]: string };
   colors: { [id: string]: string };
+  y_scaled?: boolean;
 }
 export const data: ChartDto[] = [
   {
@@ -355,7 +356,8 @@ export const data: ChartDto[] = [
     ],
     types: { y0: "line", y1: "line", x: "x" },
     names: { y0: "#0", y1: "#1" },
-    colors: { y0: "#3DC23F", y1: "#F34C44" }
+    colors: { y0: "#3DC23F", y1: "#F34C44" },
+    y_scaled: true
   },
   {
     columns: [

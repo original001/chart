@@ -11,7 +11,7 @@ import { ChartInfo } from "./app";
 interface Props {
   columns: (string | number)[][];
   projectChartX: (x: number) => string;
-  projectChartY: (y: number) => string;
+  projectChartY: (y: number, isSecond?: boolean) => string;
   data: ChartDto;
   touchEndTimestamp: number;
   offset: number;
@@ -70,7 +70,7 @@ export const Dots: ComponentType = () => ({
           ...axises.map((axis, i) =>
             createElement("circle", {
               cx: 0,
-              cy: projectChartY(dot[i]),
+              cy: projectChartY(dot[i], axis === 'y1'),
               r: 4,
               stroke: data.colors[axis],
               class: "n-fill",

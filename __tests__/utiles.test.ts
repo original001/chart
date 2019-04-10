@@ -1,5 +1,6 @@
 import { getBoundsX, getBounds } from "../src/axis";
 import { getScaleY } from "../src/app";
+import { shallowEqual } from "../src/utils";
 
 describe("dates values", () => {
   it("", () => {
@@ -38,5 +39,16 @@ describe("axis", () => {
     ]);
   });
 });
+
+describe('shallow equal', () => {
+  it('should true', () => {
+    const res = shallowEqual([1,2,3], [1,2,3])
+    expect(res).toBeTruthy()
+  })
+  it('should false', () => {
+    const res = shallowEqual([1,2,3], [1,3,3])
+    expect(res).toBeFalsy()
+  })
+})
 
 // describe('get bounds')

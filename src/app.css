@@ -85,7 +85,7 @@ body.night {
   opacity: 0;
 }
 .entering {
-  opacity: 0;
+  opacity: 1;
 }
 .entered {
   opacity: 1;
@@ -164,6 +164,8 @@ body.night {
   contain: strict;
 }
 .r-line {
+  display: flex;
+  justify-content: space-between;
   border-bottom: 1px solid rgba(115,153,178, .2);
   color: rgba(106,126,140,.8);
   font-size: 11px;
