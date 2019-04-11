@@ -409,7 +409,7 @@ const start = () => {
       createElement(App, prepareData(data[0])),
       createElement(App, prepareData(data[1])),
       createElement(App, prepareData(data[2])),
-      // createElement(App, prepareData(data[3])),
+      createElement(App, prepareData(data[3])),
       createElement(App, prepareData(data[4]))
       // createElement(Benchmark, { id: 1 }),
       // createElement(Benchmark, { id: 2 })
