@@ -2,9 +2,9 @@ import { ComponentType, componentMixin, createElement } from "./reconciler";
 import { CHART_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { ChartInfo } from "./app";
 import { shallowEqual } from "./utils";
 import { roundWithPrecision } from "./axis";
+import { ChartInfo } from "./prepareData";
 
 export interface RullerProps {
   values: number[];

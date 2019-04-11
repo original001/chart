@@ -1,5 +1,5 @@
 import { getBounds, getBoundsX, roundWithPrecision } from "./axis";
-import { data, ChartDto } from "./chart_data";
+import { data } from "./chart_data";
 import { render, createElement, ComponentType, componentMixin } from "./reconciler";
 import { TransitionRuller, RullerProps } from "./ruller";
 import { Slider } from "./slider";
@@ -8,116 +8,16 @@ import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant"
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { prettifyDate, createRaf, getStackedMax, createPathAttr } from "./utils";
-import { Dots } from "./dots";
+import { Dots, DotsProps } from "./dots";
 import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
+import { Props, ChartInfo, getScaleY, prepareData } from "./prepareData";
 require("./app.css");
 
 type Dot = [number, number];
 type Chart = Dot[];
-export interface ChartInfo {
-  chartPath: string;
-  sliderPath: string;
-  values: number[];
-  name: string;
-  color: string;
-  id: string;
-  min: number;
-  max: number;
-}
-
-export interface Props {
-  charts: ChartInfo[];
-  visibles: { [id: string]: boolean };
-  scaleX: number;
-  maxY: number;
-  minY: number;
-  minX: number;
-  maxX: number;
-  data: ChartDto;
-  stackedValues?: number[];
-  dataLength: number;
-  pow: 1 | 1000 | 1000000;
-}
 
 const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
-
-export const prepareData = (data: ChartDto): Props => {
-  const columns = data.columns;
-  const dataLength = data.columns[0].length - 1;
-  const scaleX = getScaleX(CHART_WIDTH, dataLength);
-  const xs = columns[0];
-  const chartInfos: ChartInfo[] = [];
-  const getExtremumY = (fn: string) =>
-    Math[fn].apply(Math, columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1))));
-  const extremum = (fn, from, to?) => fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
-  const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
-  const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
-  let maxY = getExtremumY("max");
-  const pow = maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
-  maxY = roundWithPrecision(maxY / pow, PRECISION);
-  const minY = data.stacked ? 0 : roundWithPrecision(getExtremumY("min") / pow, PRECISION);
-  let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
-  const projectChartX = (x: number) => (x * scaleX).toFixed(1);
-  const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
-  let stackedValues = Array(dataLength).fill(0);
-  let i = 1;
-  columns.sort((a, b) => (a[1] > b[1] ? -1 : a[1] === b[1] ? 0 : 1));
-  while (i < columns.length) {
-    let values = columns[i];
-    const name = values[0] as string;
-    values = values.slice(1).map(v => roundWithPrecision((v as number) / pow, PRECISION));
-    //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
-    const max = Math.max.apply(Math, values);
-    const min = Math.min.apply(Math, values);
-    // values = pow > 1 ? values : values;
-    if (data.y_scaled) {
-      scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
-    }
-    //todo: leave only values
-    const chartInfo: ChartInfo = {
-      name: data.names[name],
-      color: data.colors[name],
-      chartPath: data.stacked
-        ? null
-        : createPathAttr(values as number[], projectChartX, projectChartY, stackedValues),
-      sliderPath: data.stacked
-        ? null
-        : createPathAttr(
-            values as number[],
-            x => x * scaleX,
-            y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
-            stackedValues
-          ),
-      max,
-      min,
-      id: name,
-      values: values as number[]
-    };
-    chartInfos.push(chartInfo);
-    if (data.stacked) {
-      stackedValues = stackedValues.map((v, i) => v + values[i]);
-    }
-    i++;
-  }
-  const visibles = {};
-  for (let id in data.names) {
-    visibles[id] = true;
-  }
-  return {
-    charts: chartInfos,
-    visibles,
-    maxY,
-    minY,
-    maxX,
-    minX,
-    scaleX,
-    data,
-    stackedValues,
-    dataLength,
-    pow
-  } as Props;
-};
 
 const flexLabel = (timestamp: number, offset: number, status: string) =>
   createElement(
@@ -129,9 +29,6 @@ const flexLabel = (timestamp: number, offset: number, status: string) =>
     prettifyDate(timestamp)
   );
 
-export const getScaleY = (length: number, max: number, min: number) => length / (max - min);
-
-export const getScaleX = (width, dotsCount) => width / dotsCount;
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
@@ -300,16 +197,18 @@ const App: ComponentType = () => ({
     const getOffset = (isSecond: boolean) => (isScaled && isSecond ? offsetY2 : offsetY);
     // const offsetY = 0;
 
-    const projectChartXForDots: (x: number) => string = x =>
-      (x * scaleX * extraScale - offset * CHART_WIDTH).toFixed(1);
+    const projectChartXForDots = x =>
+      roundWithPrecision(x * scaleX * extraScale - offset * CHART_WIDTH, PRECISION);
     const projectChartYForDots = (y: number, isSecond: boolean) =>
-      (CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond)).toFixed(1);
+      roundWithPrecision(CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond), PRECISION);
 
     const overlay = createElement("div", {
       class: "abs fw",
       style: `height: ${CHART_HEIGHT}px; z-index: 10`,
-      ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
+      ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`,
+      ontouchmove: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
     });
+
 
     const chart = createElement(Chart, {
       charts,
@@ -321,12 +220,22 @@ const App: ComponentType = () => ({
       offset,
       extraScale,
       id,
-      projectChartXForDots,
-      projectChartYForDots,
       scaleY,
       scaleX,
       showPopupOn: state.showPopupOn
     } as ChartProps);
+
+    const dots = createElement(Dots, {
+      data,
+      charts,
+      projectChartX: projectChartXForDots,
+      projectChartY: projectChartYForDots,
+      extraScale,
+      offset,
+      showPopupOn: state.showPopupOn,
+      dataLength,
+      pow
+    } as DotsProps)
 
     const slider = createElement(
       "div",
@@ -413,6 +322,7 @@ const App: ComponentType = () => ({
 
     return createElement("div", { class: "rel" }, [
       overlay,
+      dots,
       ruller,
       chart,
       labels,

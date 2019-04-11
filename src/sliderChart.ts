@@ -2,8 +2,8 @@ import { ComponentType, componentMixin, createElement } from "./reconciler";
 import { TransitionGroup } from "./labels";
 import { CHART_WIDTH, SLIDER_HEIGHT, CHART_HEIGHT } from "./constant";
 import { Transition } from "./transition";
-import { ChartInfo, getScaleY } from "./app";
 import { getStackedMax, createStackedPathAttr, path } from "./utils";
+import { getScaleY, ChartInfo } from "./prepareData";
 
 export interface SliderChartProps {
   minY: number;

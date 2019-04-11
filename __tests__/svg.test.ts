@@ -1,7 +1,3 @@
-import {
-  prepareData,
-} from "../src/app";
-import { getBounds } from "../src/axis";
 import { ChartDto } from "../src/chart_data";
 import {
   render,
@@ -10,7 +6,7 @@ import {
   componentMixin
 } from "../src/reconciler";
 import { zipDots as zipData, createPathAttr, createStackedPathAttr} from "../src/utils";
-import { CHART_HEIGHT } from "../src/constant";
+import { prepareData } from "src/prepareData";
 
 jest.useFakeTimers();
 

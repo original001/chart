@@ -1,5 +1,5 @@
-import { ChartInfo } from "./app";
 import { createElement } from "./reconciler";
+import { ChartInfo } from "./prepareData";
 
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;

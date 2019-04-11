@@ -14,7 +14,7 @@ body.night {
   font-weight: 500;
 }
 .main {
-  padding: 0 10px;
+  padding: 20px 10px 0;
   overflow: hidden;
 }
 .sliderWrapper {
@@ -166,6 +166,9 @@ body.night {
 .fw {
   width: 100%;
 }
+.fh {
+  height: 315px;
+}
 .w-ch-c {
   will-change:contents;
 }
@@ -204,12 +207,33 @@ body.night {
   font-weight: 300;
 }
 .popup {
+  box-sizing: border-box;
+  font-size: 12px;
+  background: #fff;
+  padding: 7px 14px;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0,0,0,0.1), 0 0 1px rgba(0,0,0,0.05);;
+}
+.b {
+  font-weight: 600;
+}
+.p {
+  margin-bottom: 5px;
+}
+.top {
+  top :0;
+}
+.flex {
+  display: flex;
+  justify-content: space-between
+}
+/* .popup {
   width: 110px;
   height: 78px;
   fill: #fff;
   stroke: rgba(0,0,0,.1);
   stroke-width: 1px;
-}
+} */
 
 .night .n-text {
   fill: #fff

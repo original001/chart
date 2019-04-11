@@ -1,6 +1,6 @@
 import { getBoundsX, getBounds, roundWithPrecision } from "../src/axis";
-import { getScaleY, ChartInfo } from "../src/app";
 import { shallowEqual, getStackedMax } from "../src/utils";
+import { ChartInfo } from "src/prepareData";
 
 describe("dates values", () => {
   it("", () => {

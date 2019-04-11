@@ -3,9 +3,9 @@ import { CHART_WIDTH, CHART_HEIGHT } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { Dots, DotsProps } from "./dots";
-import { ChartInfo } from "./app";
 import { ChartDto } from "./chart_data";
 import { path, createStackedPathAttr } from "./utils";
+import { ChartInfo } from "./prepareData";
 
 
 export interface ChartProps {
@@ -20,8 +20,6 @@ export interface ChartProps {
   dataLength: number;
   getScale: (isScale: boolean) => number;
   getOffset: (isScale: boolean) => number;
-  projectChartXForDots: (x: number) => string;
-  projectChartYForDots: (y: number, isSecond?: boolean) => string;
   showPopupOn: number;
 }
 
@@ -58,9 +56,9 @@ export const Chart: ComponentType = () => ({
   },
   render(props: ChartProps, state: State) {
     const { charts, data, extraScale, offset, getOffset, getScale, id, scaleY, offsetY, showPopupOn } = props;
-    const { projectChartXForDots, projectChartYForDots, dataLength } = props;
+    const { dataLength } = props;
     const { y_scaled, stacked } = data;
-    const chartOpacity = showPopupOn && stacked ? .6 : 1
+    const chartOpacity = showPopupOn && stacked ? .5 : 1
     return createElement(
       "svg",
       {
@@ -121,16 +119,7 @@ export const Chart: ComponentType = () => ({
             })
           )
         ),
-        createElement(Dots, {
-          data,
-          charts,
-          projectChartX: projectChartXForDots,
-          projectChartY: projectChartYForDots,
-          extraScale,
-          offset,
-          showPopupOn: showPopupOn,
-          dataLength
-        } as DotsProps)
+
       ]
     );
   }
