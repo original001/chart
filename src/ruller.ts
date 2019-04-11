@@ -1,9 +1,10 @@
 import { ComponentType, componentMixin, createElement } from "./reconciler";
-import { CHART_HEIGHT } from "./constant";
+import { CHART_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { ChartInfo } from "./app";
 import { shallowEqual } from "./utils";
+import { roundWithPrecision } from "./axis";
 
 export interface RullerProps {
   values: number[];
@@ -11,6 +12,7 @@ export interface RullerProps {
   scale: number;
   offset: number;
   charts: ChartInfo[];
+  pow: 1 | 1000 | 1000000
 }
 
 export const TransitionRuller: ComponentType = () => ({
@@ -20,7 +22,18 @@ export const TransitionRuller: ComponentType = () => ({
     return !shallowEqual(nextProps.values, this.props.values)
   },
   render: (props: RullerProps, state) => {
-    const { values, valuesY2, charts } = props;
+    const { values, valuesY2, charts, pow } = props;
+    const powToNumber = (v, pow) => {
+      if (v === 0) return v + '';
+      switch (pow) {
+        case 1:
+          return v;
+        case 1000:
+          return `${v}K`
+        case 1000000:
+          return `${v}M`
+      }
+    }
     let color1;
     let color2;
     if (valuesY2) {
@@ -60,17 +73,15 @@ export const TransitionRuller: ComponentType = () => ({
                   "div",
                   {
                     class: `r-line abs fw`,
-                    style: `transform: scaleY(${(1 / props.scale).toFixed(
-                      1
-                    )}) translateY(${CHART_HEIGHT - v}px); transform-origin: 0 ${CHART_HEIGHT -
+                    style: `transform: scaleY(${roundWithPrecision(1 / props.scale, PRECISION)}) translateY(${CHART_HEIGHT - v}px); transform-origin: 0 ${CHART_HEIGHT -
                       v}px`
                   },
                   //prettier-ignore
                   !valuesY2
-                    ? `${v}`
+                    ? powToNumber(v, pow)
                     : [
-                        createElement("span", { style: `color: ${color1}`, class: `${!color1 ? 'exited' : 'entered'} transition` }, `${v}`),
-                        createElement("span", { style: `color: ${color2}`, class: `${!color2 ? 'exited' : 'entered'} transition`  }, `${valuesY2[i]}`)
+                        createElement("span", { style: `color: ${color1}`, class: `${!color1 ? 'exited' : 'entered'} transition` }, powToNumber(v, pow)),
+                        createElement("span", { style: `color: ${color2}`, class: `${!color2 ? 'exited' : 'entered'} transition`  }, powToNumber(valuesY2[i], pow))
                       ]
                 )
               )

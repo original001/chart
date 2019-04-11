@@ -1,10 +1,10 @@
-import { getBounds, getBoundsX } from "./axis";
+import { getBounds, getBoundsX, roundWithPrecision } from "./axis";
 import { data, ChartDto } from "./chart_data";
 import { render, createElement, ComponentType, componentMixin } from "./reconciler";
 import { TransitionRuller, RullerProps } from "./ruller";
 import { Slider } from "./slider";
 
-import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT } from "./constant";
+import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { prettifyDate, createRaf, getStackedMax } from "./utils";
@@ -37,7 +37,9 @@ export interface Props {
   data: ChartDto;
   stackedValues?: number[];
   dataLength: number;
+  pow: 1 | 1000 | 1000000
 }
+
 
 export const prepareData = (data: ChartDto): Props => {
   const columns = data.columns;
@@ -50,8 +52,10 @@ export const prepareData = (data: ChartDto): Props => {
   const extremum = (fn, from, to?) => fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
-  const maxY = getExtremumY("max");
-  const minY = data.stacked ? 0 : getExtremumY("min");
+  let maxY = getExtremumY("max");
+  const pow = maxY / 1000 > 1 ? maxY / 1000000 > 1 ? 1000000 : 1000 : 1;
+  maxY = roundWithPrecision(maxY / pow, PRECISION);
+  const minY = data.stacked ? 0 : roundWithPrecision(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
   const projectChartX = (x: number) => (x * scaleX).toFixed(1);
   const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
@@ -61,27 +65,27 @@ export const prepareData = (data: ChartDto): Props => {
   while (i < columns.length) {
     let values = columns[i];
     const name = values[0] as string;
-    values = values.slice(1);
+    values = values.slice(1).map(v => roundWithPrecision(v as number / pow, PRECISION));
     //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
+    const max = Math.max.apply(Math, values);
+    const min = Math.min.apply(Math, values);
+    // values = pow > 1 ? values : values;
     if (data.y_scaled) {
-      const max = Math.max.apply(Math, values);
-      const min = Math.min.apply(Math, values);
       scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
     }
     //todo: leave only values
-    const createPath = data.stacked ? createStackedPathAttr : createPathAttr;
     const chartInfo: ChartInfo = {
       name: data.names[name],
       color: data.colors[name],
-      chartPath: createPath(values as number[], projectChartX, projectChartY, stackedValues),
-      sliderPath: createPath(
+      chartPath: data.stacked ? null : createPathAttr(values as number[], projectChartX, projectChartY, stackedValues),
+      sliderPath: data.stacked ? null : createPathAttr(
         values as number[],
         x => x * scaleX,
         y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
         stackedValues
       ),
-      max: Math.max.apply(Math, values),
-      min: Math.min.apply(Math, values),
+      max,
+      min,
       id: name,
       values: values as number[]
     };
@@ -105,8 +109,9 @@ export const prepareData = (data: ChartDto): Props => {
     scaleX,
     data,
     stackedValues,
-    dataLength
-  };
+    dataLength,
+    pow
+  } as Props;
 };
 
 export const createPathAttr = (
@@ -167,7 +172,7 @@ const App: ComponentType = () => ({
     offset: 3,
     sliderPos: { left: 0.75, right: 1 },
     touchEndTimestamp: 0,
-    mode: "day", // workaround,
+    mode: "night", // workaround,
     showPopupOn: null,
     visibles: null
   } as State,
@@ -219,7 +224,7 @@ const App: ComponentType = () => ({
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX, minX, data, dataLength, minY } = props;
+    const { scaleX, maxX, minX, data, dataLength, minY, pow } = props;
     const {
       visibles,
       sliderPos: { left, right },
@@ -392,7 +397,8 @@ const App: ComponentType = () => ({
       scale: scaleY,
       offset: offsetY,
       valuesY2,
-      charts
+      charts,
+      pow,
     } as RullerProps);
 
     return createElement("div", { class: "rel" }, [

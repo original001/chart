@@ -1,4 +1,4 @@
-import { getBoundsX, getBounds } from "../src/axis";
+import { getBoundsX, getBounds, roundWithPrecision } from "../src/axis";
 import { getScaleY, ChartInfo } from "../src/app";
 import { shallowEqual, getStackedMax } from "../src/utils";
 
@@ -32,6 +32,13 @@ describe("axis", () => {
     expect(values).toEqual([800000, 940000, 1080000, 1220000, 1360000, 1500000]);
   });
 });
+
+describe('precision', () => {
+  it ("", () => {
+    const res = roundWithPrecision(11111.11111, 1)
+    expect(res).toBe(11111.1)
+  })
+})
 
 describe("shallow equal", () => {
   it("should true", () => {

@@ -18,6 +18,11 @@ const orderOfMagnitude = function(value) {
   return Math.floor(Math.log(Math.abs(value)) / Math.LN10);
 };
 
+export const roundWithPrecision = function(value, digits) {
+  var precision = Math.pow(10, digits);
+  return Math.round(value * precision) / precision;
+};
+
 export const getBounds = function(_: number, high: number, low: number) {
   var bounds = {
     high,
