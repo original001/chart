@@ -3,6 +3,7 @@ import { ChartDto } from "./chart_data";
 import { prettifyDate, path, createStackedPathAttr } from "./utils";
 import { CHART_HEIGHT, CHART_WIDTH } from "./constant";
 import { ChartInfo } from "./prepareData";
+import { round } from "./axis";
 
 export interface DotsProps {
   projectChartX: (x: number) => number;
@@ -15,11 +16,53 @@ export interface DotsProps {
   dataLength: number;
   pow: number;
 }
+interface State {
+  charts: ChartInfo[];
+}
 
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
-  render(props: DotsProps) {
-    const { projectChartX, projectChartY, data, charts, dataLength, extraScale, pow } = props;
+  state: {
+    charts: null
+  } as State,
+  getDeriviedStateFromProps(props: DotsProps, prevState: State) {
+    const { charts, data, showPopupOn } = props;
+    if (!prevState.charts) return {charts};
+    if (
+      data.stacked &&
+      data.percentage &&
+      charts.length !== prevState.charts.length &&
+      showPopupOn
+    ) {
+      console.log('run calculus')
+      let stackedValues = Array(props.dataLength).fill(0);
+      const chartsLength = props.charts.length;
+      const sumValues = [];
+
+      for (let i = 0; i < props.dataLength; i++) {
+        let sum = 0;
+        for (let j = 0; j < chartsLength; j++) {
+          sum += props.charts[j].values[i];
+        }
+        sumValues.push(sum);
+      }
+
+      return {
+        charts: charts.map(chart => {
+          const values = chart.values.map((v, i) => round((v / sumValues[i]) * 100, 0));
+          stackedValues = stackedValues.map((v, i) => v + values[i]);
+          return {
+            ...chart,
+            values
+          };
+        })
+      };
+    }
+    return prevState;
+  },
+  render(props: DotsProps, state: State) {
+    const { projectChartX, projectChartY, data, dataLength, extraScale, pow } = props;
+    const { charts } = state;
     const popupOffset = 15;
     const textOffset = 15 - popupOffset;
 
@@ -46,7 +89,7 @@ export const Dots: ComponentType = () => ({
     const popup = createElement(
       "div",
       {
-        class: "popup abs",
+        class: "popup abs n-bg",
         style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`
       },
       [
@@ -58,22 +101,23 @@ export const Dots: ComponentType = () => ({
               {},
               data.percentage
                 ? [
-                  createElement("span", { class: "b proc" }, `${values[i]}%`),
-                  createElement("span", {}, `${name}`)
-                ]
+                    createElement("span", { class: "b proc" }, `${values[i]}%`),
+                    createElement("span", {}, `${name}`)
+                  ]
                 : name
             ),
             createElement("span", { class: "b", style: `color: ${color}` }, originalValues[i] + "")
           ])
         ),
-        !data.percentage && createElement("div", { class: "flex p" }, [
-          createElement("span", {}, "All"),
-          createElement(
-            "span",
-            { class: "b" },
-            getStack(charts.map(c => c.originalValues[i]), dot.length) + ""
-          )
-        ])
+        data.stacked && !data.percentage && charts.length !== 1 &&
+          createElement("div", { class: "flex p" }, [
+            createElement("span", {}, "All"),
+            createElement(
+              "span",
+              { class: "b" },
+              getStack(charts.map(c => c.originalValues[i]), dot.length) + ""
+            )
+          ])
       ]
     );
 

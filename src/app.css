@@ -246,9 +246,11 @@ body.night {
 .n-fill {
   fill: #fff;
 }
-.night .n-fill,
-.night .n-bg {
+.night .n-fill {
   fill: #242f3e;
+}
+.night .n-bg {
+  background: #242f3e;
 }
 .bench {
   width: 100px;
