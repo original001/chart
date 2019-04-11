@@ -1,6 +1,6 @@
 import { ChartDto } from "./chart_data";
 import { CHART_WIDTH, PRECISION, SLIDER_HEIGHT, CHART_HEIGHT } from "./constant";
-import { roundWithPrecision } from "./axis";
+import { round } from "./axis";
 import { createPathAttr } from "./utils";
 
 export interface ChartInfo {
@@ -46,8 +46,8 @@ export const prepareData = (data: ChartDto): Props => {
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   let maxY = getExtremumY("max");
   const pow = maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
-  maxY = roundWithPrecision(maxY / pow, PRECISION);
-  const minY = data.stacked ? 0 : roundWithPrecision(getExtremumY("min") / pow, PRECISION);
+  maxY = round(maxY / pow, PRECISION);
+  const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
   const projectChartX = (x: number) => (x * scaleX).toFixed(1);
   const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
@@ -59,7 +59,7 @@ export const prepareData = (data: ChartDto): Props => {
     const name = values[0] as string;
     values = values.slice(1)
     const originalValues = values as number[];
-    values = values.map(v => roundWithPrecision((v as number) / pow, PRECISION));
+    values = values.map(v => round((v as number) / pow, PRECISION));
     //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
     const max = Math.max.apply(Math, values);
     const min = Math.min.apply(Math, values);

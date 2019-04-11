@@ -4,9 +4,9 @@ import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { Dots, DotsProps } from "./dots";
 import { ChartDto } from "./chart_data";
-import { path, createStackedPathAttr } from "./utils";
+import { path, createStackedPathAttr, createPercentagePathAttr } from "./utils";
 import { ChartInfo } from "./prepareData";
-
+import { round as round } from "./axis";
 
 export interface ChartProps {
   id: number;
@@ -38,32 +38,66 @@ export const Chart: ComponentType = () => ({
       const projectChartX = (x: number) => (x * props.scaleX).toFixed(1);
       const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
 
-      let stackedValues = Array(props.dataLength).fill(0);
-      let nextState: State = { ...prevState, chartPathes: [] };
-      for (let chart of props.charts) {
-        const path = createStackedPathAttr(
-          chart.values,
-          projectChartX,
-          projectChartY,
-          stackedValues
-        );
-        nextState.chartPathes.push(path);
-        stackedValues = stackedValues.map((v, i) => v + chart.values[i]);
+      if (props.data.percentage) {
+        let stackedValues = Array(props.dataLength).fill(0);
+        const chartsLength = props.charts.length;
+        const sumValues = [];
+        let nextState: State = { ...prevState, chartPathes: [] };
+        for (let i = 0; i < props.dataLength; i++) {
+          let sum = 0;
+          for (let j = 0; j < chartsLength; j++) {
+            sum += props.charts[j].values[i];
+          }
+          sumValues.push(sum);
+        }
+
+        for (let chart of props.charts) {
+          const values = chart.values.map((v, i) => round((v / sumValues[i]) * 100, 1));
+          const path = createPercentagePathAttr(
+            values,
+            projectChartX,
+            projectChartY,
+            stackedValues
+          );
+          nextState.chartPathes.push(path);
+          stackedValues = stackedValues.map((v, i) => v + values[i]);
+        }
+        return nextState;
+      } else {
+        let stackedValues = Array(props.dataLength).fill(0);
+        let nextState: State = { ...prevState, chartPathes: [] };
+        const createPath = props.data.percentage ? createPercentagePathAttr : createStackedPathAttr;
+        for (let chart of props.charts) {
+          const path = createPath(chart.values, projectChartX, projectChartY, stackedValues);
+          nextState.chartPathes.push(path);
+          stackedValues = stackedValues.map((v, i) => v + chart.values[i]);
+        }
+        return nextState;
       }
-      return nextState;
     }
     return prevState;
   },
   render(props: ChartProps, state: State) {
-    const { charts, data, extraScale, offset, getOffset, getScale, id, scaleY, offsetY, showPopupOn } = props;
+    const {
+      charts,
+      data,
+      extraScale,
+      offset,
+      getOffset,
+      getScale,
+      id,
+      scaleY,
+      offsetY,
+      showPopupOn
+    } = props;
     const { dataLength } = props;
-    const { y_scaled, stacked } = data;
-    const chartOpacity = showPopupOn && stacked ? .5 : 1
+    const { y_scaled, stacked, percentage } = data;
+    const chartOpacity = showPopupOn && stacked ? 0.5 : 1;
     return createElement(
       "svg",
       {
         width: CHART_WIDTH,
-        height: CHART_HEIGHT,
+        height: CHART_HEIGHT
         // class: `w-ch`
       },
       [
@@ -93,33 +127,36 @@ export const Chart: ComponentType = () => ({
                     ]
               )
           },
-          charts.map(({ color, chartPath, id }, i) =>
-            createElement(Transition, {
-              key: color,
-              timeout: 500,
-              children: status =>
-                y_scaled
-                  ? createElement(
-                      "g",
-                      {
-                        //prettier-ignore
-                        transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
-                        style: `transform-origin: 0 ${CHART_HEIGHT}px`,
-                        class: "transition-d"
-                      },
-                      [path(chartPath, color, 2, status)]
-                    )
-                  : path(
-                      stacked ? state.chartPathes[i] : chartPath,
-                      color,
-                      stacked ? CHART_WIDTH / dataLength + 0.05 : 2,
-                      status,
-                      stacked
-                    )
-            })
-          )
-        ),
-
+          charts
+            .slice(0)
+            .reverse()
+            .map(({ color, chartPath, id }, i) =>
+              createElement(Transition, {
+                key: color,
+                timeout: 500,
+                children: status =>
+                  y_scaled
+                    ? createElement(
+                        "g",
+                        {
+                          //prettier-ignore
+                          transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
+                          style: `transform-origin: 0 ${CHART_HEIGHT}px`,
+                          class: "transition-d"
+                        },
+                        [path(chartPath, color, 2, status)]
+                      )
+                    : path(
+                        stacked ? state.chartPathes[charts.length - 1 - i] : chartPath,
+                        color,
+                        stacked ? CHART_WIDTH / dataLength + 0.05 : 2,
+                        status,
+                        stacked,
+                        percentage
+                      )
+              })
+            )
+        )
       ]
     );
   }

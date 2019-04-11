@@ -13,8 +13,7 @@ export const createRaf = (fn: (...args) => void) => {
     }
   };
 };
-export const values =
-  Object.values || (obj => Object.keys(obj).map(k => obj[k]));
+export const values = Object.values || (obj => Object.keys(obj).map(k => obj[k]));
 
 export const zipDots = (array: any[][]) => {
   const n = array[0].length;
@@ -33,23 +32,23 @@ export const shallowEqual = (prev: any[], next: any[]) => {
   let i = 0;
   while (i < prev.length) {
     if (prev[i] !== next[i]) {
-      return false
+      return false;
     }
     i++;
   }
   return true;
-}
-  export const getStackedMax = (from, to, charts: ChartInfo[]) => {
-    let max = -Infinity;
-    for (let i = from; i<to; i++) {
-      let sum = 0;
-      for (let j = 0; j < charts.length; j ++) {
-        sum += charts[j].values[i] as number
-        max = Math.max(sum, max)
-      }
+};
+export const getStackedMax = (from, to, charts: ChartInfo[]) => {
+  let max = -Infinity;
+  for (let i = from; i < to; i++) {
+    let sum = 0;
+    for (let j = 0; j < charts.length; j++) {
+      sum += charts[j].values[i] as number;
+      max = Math.max(sum, max);
     }
-    return max
   }
+  return max;
+};
 
 export const prettifyDate = (timestamp: number, withDate?: boolean) => {
   const [date, month, day] = new Date(timestamp).toString().split(" ");
@@ -61,7 +60,8 @@ export const path = (
   color: string,
   strokeWidth: number,
   status?,
-  isStacked?: boolean
+  isStacked?: boolean,
+  isPercentage?: boolean
 ) =>
   createElement("path", {
     d: path,
@@ -69,7 +69,8 @@ export const path = (
     stroke: color,
     class: `transition-p ${status}`,
     "vector-effect": !isStacked ? "non-scaling-stroke" : "",
-    fill: "none",
+    fill: isPercentage ? color : "none",
+    // fill: "none",
     key: color
   });
 
@@ -97,14 +98,13 @@ export const createStackedPathAttr = (
     ""
   );
 
-// export const createStackedPathAttrForDot = (
-//   values: number[],
-//   projectX: (x: number) => string | number,
-//   projectY: (y: number) => string | number,
-// ) => 
-//   values.reduce(
-//     (acc, y, i, arr) =>
-//       acc +
-//       `M${projectX(i)} ${projectY(arr[i-1])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
-//     ""
-//   );
+export const createPercentagePathAttr = (
+  values: number[],
+  projectX: (x: number) => string | number,
+  projectY: (y: number) => string | number,
+  prevValues: number[]
+) =>
+  values.reduce(
+    (acc, y, i) => acc + `L${projectX(i)} ${projectY(y + prevValues[i])}`,
+    `M0 ${projectY(0)}`
+  ) + `L${projectX(values.length - 1)} ${projectY(0)}Z`;

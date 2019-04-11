@@ -1,4 +1,4 @@
-import { getBounds, getBoundsX, roundWithPrecision } from "./axis";
+import { getBounds, getBoundsX, round } from "./axis";
 import { data } from "./chart_data";
 import { render, createElement, ComponentType, componentMixin } from "./reconciler";
 import { TransitionRuller, RullerProps } from "./ruller";
@@ -28,7 +28,6 @@ const flexLabel = (timestamp: number, offset: number, status: string) =>
     },
     prettifyDate(timestamp)
   );
-
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
@@ -166,11 +165,15 @@ const App: ComponentType = () => ({
       localMaxY2 = getExtremumY("max", left, right, second);
     } else if (isStacked) {
       localMinY = 0;
-      localMaxY = getStackedMax(
-        Math.floor(dataLength * left) + 1,
-        Math.ceil(dataLength * right),
-        charts
-      );
+      if (data.percentage) {
+        localMaxY = 100;
+      } else {
+        localMaxY = getStackedMax(
+          Math.floor(dataLength * left) + 1,
+          Math.ceil(dataLength * right),
+          charts
+        );
+      }
     } else {
       localMinY = getExtremumY("min", left, right, charts);
       localMaxY = getExtremumY("max", left, right, charts);
@@ -198,9 +201,9 @@ const App: ComponentType = () => ({
     // const offsetY = 0;
 
     const projectChartXForDots = x =>
-      roundWithPrecision(x * scaleX * extraScale - offset * CHART_WIDTH, PRECISION);
+      round(x * scaleX * extraScale - offset * CHART_WIDTH, PRECISION);
     const projectChartYForDots = (y: number, isSecond: boolean) =>
-      roundWithPrecision(CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond), PRECISION);
+      round(CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond), PRECISION);
 
     const overlay = createElement("div", {
       class: "abs fw",
@@ -208,7 +211,6 @@ const App: ComponentType = () => ({
       ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`,
       ontouchmove: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
     });
-
 
     const chart = createElement(Chart, {
       charts,
@@ -235,7 +237,7 @@ const App: ComponentType = () => ({
       showPopupOn: state.showPopupOn,
       dataLength,
       pow
-    } as DotsProps)
+    } as DotsProps);
 
     const slider = createElement(
       "div",
@@ -249,7 +251,7 @@ const App: ComponentType = () => ({
           eventId: id
         }),
         //prettier-ignore
-        createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked } as SliderChartProps)
+        createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked, data } as SliderChartProps)
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
@@ -405,7 +407,7 @@ const start = () => {
   render(
     createElement("div", {}, [
       createElement(App, prepareData(data[0])),
-      // createElement(App, prepareData(data[1])),
+      createElement(App, prepareData(data[1])),
       createElement(App, prepareData(data[2])),
       // createElement(App, prepareData(data[3])),
       createElement(App, prepareData(data[4]))

@@ -3,7 +3,7 @@ import { CHART_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { shallowEqual } from "./utils";
-import { roundWithPrecision } from "./axis";
+import { round } from "./axis";
 import { ChartInfo } from "./prepareData";
 
 export interface RullerProps {
@@ -73,7 +73,7 @@ export const TransitionRuller: ComponentType = () => ({
                   "div",
                   {
                     class: `r-line abs fw`,
-                    style: `transform: scaleY(${roundWithPrecision(1 / props.scale, PRECISION)}) translateY(${CHART_HEIGHT - v}px); transform-origin: 0 ${CHART_HEIGHT -
+                    style: `transform: scaleY(${round(1 / props.scale, PRECISION)}) translateY(${CHART_HEIGHT - v}px); transform-origin: 0 ${CHART_HEIGHT -
                       v}px`
                   },
                   //prettier-ignore

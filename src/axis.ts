@@ -1,4 +1,4 @@
-import { CHART_WIDTH } from "./constant";
+import { CHART_WIDTH, PRECISION } from "./constant";
 
 interface Bounds {
   scale: number;
@@ -18,7 +18,7 @@ const orderOfMagnitude = function(value) {
   return Math.floor(Math.log(Math.abs(value)) / Math.LN10);
 };
 
-export const roundWithPrecision = function(value, digits) {
+export const round = function(value, digits) {
   var precision = Math.pow(10, digits);
   return Math.round(value * precision) / precision;
 };
@@ -40,7 +40,7 @@ export const getBounds = function(_: number, high: number, low: number) {
   const step = bounds.range / 5;
   const values2 = [];
   for (let i = 0; i < 6; i++) {
-    values2.push(bounds.min + i * step);
+    values2.push(round(bounds.min + i * step,PRECISION));
   }
   bounds.values = values2;
   return bounds;

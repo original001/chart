@@ -5,8 +5,8 @@ import {
   ComponentType,
   componentMixin
 } from "../src/reconciler";
-import { zipDots as zipData, createPathAttr, createStackedPathAttr} from "../src/utils";
-import { prepareData } from "src/prepareData";
+import { zipDots as zipData, createPathAttr, createStackedPathAttr, createPercentagePathAttr} from "../src/utils";
+import { prepareData } from "../src/prepareData";
 
 jest.useFakeTimers();
 
@@ -28,14 +28,24 @@ describe("pathes", () => {
     )
     expect(path).toBe(`M0 10L0 11M100 20L100 23M200 15L200 17`)
   });
-  // it("create stacked path for dot", () => {
-  //   const path = createStackedPathAttrForDot(
-  //     [1,3,2],
-  //     x => x * 100,
-  //     y => y,
-  //   )
-  //   expect(path).toBe(`M0 0L0 1L0 4L0 6`)
-  // });
+  it("create stacked path with offset", () => {
+    const path = createPercentagePathAttr(
+      [1,3,2],
+      x => x * 100,
+      y => y  + 1,
+      [10, 20, 15]
+    )
+    expect(path).toBe(`M0 1L0 12L100 24L200 18L200 1Z`)
+  });
+  it("create stacked path with offset", () => {
+    const path = createPercentagePathAttr(
+      [1,3,2],
+      x => x * 100,
+      y => y  + 1,
+      [0, 0, 0]
+    )
+    expect(path).toBe(`M0 1L0 2L100 4L200 3L200 1Z`)
+  });
 });
 
 describe("utils", () => {

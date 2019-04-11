@@ -1,4 +1,4 @@
-import { getBoundsX, getBounds, roundWithPrecision } from "../src/axis";
+import { getBoundsX, getBounds, round } from "../src/axis";
 import { shallowEqual, getStackedMax } from "../src/utils";
 import { ChartInfo } from "src/prepareData";
 
@@ -35,7 +35,7 @@ describe("axis", () => {
 
 describe('precision', () => {
   it ("", () => {
-    const res = roundWithPrecision(11111.11111, 1)
+    const res = round(11111.11111, 1)
     expect(res).toBe(11111.1)
   })
 })
