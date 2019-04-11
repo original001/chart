@@ -1,45 +1,61 @@
-import {
-  createElement,
-  ComponentType,
-  componentMixin
-} from "./reconciler";
+import { createElement, ComponentType, componentMixin } from "./reconciler";
 import { ChartDto } from "./chart_data";
-import { prettifyDate } from "./utils";
-import { CHART_HEIGHT} from "./constant";
+import { prettifyDate, path, createStackedPathAttr } from "./utils";
+import { CHART_HEIGHT, CHART_WIDTH } from "./constant";
 import { ChartInfo } from "./app";
 
-interface Props {
-  columns: (string | number)[][];
+export interface DotsProps {
   projectChartX: (x: number) => string;
   projectChartY: (y: number, isSecond?: boolean) => string;
   data: ChartDto;
-  touchEndTimestamp: number;
   offset: number;
-  scale: number;
+  extraScale: number;
   showPopupOn: number;
-  charts: ChartInfo[]
+  charts: ChartInfo[];
+  dataLength: number;
 }
 
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
-  render(props: Props) {
-    const { projectChartX, projectChartY, data, charts} = props;
+  render(props: DotsProps) {
+    const { projectChartX, projectChartY, data, charts, dataLength, extraScale } = props;
     const popupOffset = 30;
     const textOffset = 15 - popupOffset;
 
     const showPopupOn = props.showPopupOn;
     if (!showPopupOn) return createElement("span", {});
 
-    const i = charts[0].values
-      .findIndex(
-        (dot, i) =>
-          Number(projectChartX(i - 0.5)) <= showPopupOn &&
-          Number(projectChartX(i + 0.5)) > showPopupOn
-      );
+    const i = charts[0].values.findIndex(
+      (dot, i) =>
+        Number(projectChartX(i - 0.5)) <= showPopupOn &&
+        Number(projectChartX(i + 0.5)) > showPopupOn
+    );
 
-    const dot = charts.map(ch => ch.values[i])
+    const dot = charts.map(ch => ch.values[i]);
     const date = data.columns[0][i + 1] as number;
-    const axises = charts.map(ch => ch.id)
+    const axises = charts.map(ch => ch.id);
+
+    const getStack = (ar: number[], i: number) =>
+      ar.reduce((acc, v, curI) => (curI >= i ? acc : acc + v), 0);
+
+    const stackeddots = createElement(
+      "svg",
+      {
+        x: projectChartX(i),
+        y: 0,
+        overflow: "visible",
+        key: i
+      },
+      dot.map((v, i, ar) =>
+        path(
+          createStackedPathAttr([v], x => 0, projectChartY, [getStack(ar, i)]),
+          data.colors[axises[i]],
+          CHART_WIDTH * extraScale / dataLength + 0.05,
+          '',
+          true,
+        )
+      )
+    );
 
     const dots = createElement(
       "svg",
@@ -47,8 +63,8 @@ export const Dots: ComponentType = () => ({
         x: projectChartX(i),
         y: 0,
         overflow: "visible",
-        class: "popup-rect",
-        onclick: ""
+        class: "popup-rect"
+        // onclick: ""
       },
       [
         createElement("rect", {
@@ -70,7 +86,7 @@ export const Dots: ComponentType = () => ({
           ...axises.map((axis, i) =>
             createElement("circle", {
               cx: 0,
-              cy: projectChartY(dot[i], axis === 'y1'),
+              cy: projectChartY(dot[i], axis === "y1"),
               r: 4,
               stroke: data.colors[axis],
               class: "n-fill",
@@ -122,6 +138,6 @@ export const Dots: ComponentType = () => ({
       ]
     );
 
-    return createElement("g", {}, [dots]);
+    return createElement("g", {}, data.stacked ? [stackeddots] : [dots]);
   }
 });

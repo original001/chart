@@ -2,12 +2,11 @@ import { ComponentType, componentMixin, createElement } from "./reconciler";
 import { CHART_WIDTH, CHART_HEIGHT } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { Dots } from "./dots";
-import { ChartInfo, createStackedPathAttr } from "./app";
+import { Dots, DotsProps } from "./dots";
+import { ChartInfo } from "./app";
 import { ChartDto } from "./chart_data";
-import { statement } from "@babel/template";
+import { path, createStackedPathAttr } from "./utils";
 
-const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
 export interface ChartProps {
   id: number;
@@ -23,68 +22,18 @@ export interface ChartProps {
   getOffset: (isScale: boolean) => number;
   projectChartXForDots: (x: number) => string;
   projectChartYForDots: (y: number, isSecond?: boolean) => string;
+  showPopupOn: number;
 }
 
 interface State {
-  showPopupOn: boolean;
   chartPathes: string[];
 }
-
-export const path = (
-  path: string,
-  color: string,
-  strokeWidth: number,
-  status?,
-  isStacked?: boolean
-) =>
-  createElement("path", {
-    d: path,
-    "stroke-width": strokeWidth.toFixed(1),
-    stroke: color,
-    class: `transition-p ${status}`,
-    "vector-effect": !isStacked ? "non-scaling-stroke" : "",
-    fill: "none",
-    key: color
-  });
 
 export const Chart: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    showPopupOn: null,
     chartPathes: null
   } as State,
-  reducer(action, state: State) {
-    switch (action.type) {
-      case "showPopup":
-        return {
-          ...state,
-          showPopupOn: action.payload
-        };
-      case "hidePopup":
-        return {
-          ...state,
-          showPopupOn: null
-        };
-    }
-  },
-  didMount() {
-    window[TOGGLE_GRAPH_HANDLER_NAME + this.props.id] = (e: TouchEvent) => {
-      const currentTarget = e.currentTarget as Element;
-      this.send({
-        type: "showPopup",
-        payload: e.targetTouches[0].clientX - 10
-      });
-      const hideHandler = (_e: TouchEvent) => {
-        const target = _e.target as Element;
-        if (target === currentTarget || currentTarget.contains(target)) {
-        } else this.send({ type: "hidePopup" });
-        _e.currentTarget.removeEventListener("touchstart", hideHandler);
-      };
-      setTimeout(() => {
-        document.documentElement.addEventListener("touchstart", hideHandler);
-      }, 10);
-    };
-  },
   getDeriviedStateFromProps(props: ChartProps, prevState: State) {
     if (!props.data.stacked) return prevState;
     if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length) {
@@ -108,15 +57,15 @@ export const Chart: ComponentType = () => ({
     return prevState;
   },
   render(props: ChartProps, state: State) {
-    const { charts, data, extraScale, offset, getOffset, getScale, id, scaleY, offsetY } = props;
+    const { charts, data, extraScale, offset, getOffset, getScale, id, scaleY, offsetY, showPopupOn } = props;
     const { projectChartXForDots, projectChartYForDots, dataLength } = props;
     const { y_scaled, stacked } = data;
+    const chartOpacity = showPopupOn && stacked ? .6 : 1
     return createElement(
       "svg",
       {
         width: CHART_WIDTH,
         height: CHART_HEIGHT,
-        ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
         // class: `w-ch`
       },
       [
@@ -138,7 +87,7 @@ export const Chart: ComponentType = () => ({
                         "g",
                         {
                           //prettier-ignore
-                          style: `transform: scale(1, ${scaleY}) translate(0, ${offsetY}px); transform-origin: 0 ${CHART_HEIGHT}px`,
+                          style: `transform: scale(1, ${scaleY}) translate(0, ${offsetY}px); transform-origin: 0 ${CHART_HEIGHT}px; opacity: ${chartOpacity}`,
                           class: "transition-d"
                         },
                         children
@@ -177,10 +126,11 @@ export const Chart: ComponentType = () => ({
           charts,
           projectChartX: projectChartXForDots,
           projectChartY: projectChartYForDots,
-          scale: extraScale,
-          offset: offset,
-          showPopupOn: state.showPopupOn
-        })
+          extraScale,
+          offset,
+          showPopupOn: showPopupOn,
+          dataLength
+        } as DotsProps)
       ]
     );
   }

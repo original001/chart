@@ -1,8 +1,5 @@
 import {
-  createPathAttr,
-  getScaleY,
   prepareData,
-  createStackedPathAttr
 } from "../src/app";
 import { getBounds } from "../src/axis";
 import { ChartDto } from "../src/chart_data";
@@ -12,7 +9,7 @@ import {
   ComponentType,
   componentMixin
 } from "../src/reconciler";
-import { zipDots as zipData } from "../src/utils";
+import { zipDots as zipData, createPathAttr, createStackedPathAttr} from "../src/utils";
 import { CHART_HEIGHT } from "../src/constant";
 
 jest.useFakeTimers();
@@ -27,12 +24,6 @@ describe("pathes", () => {
     expect(path).toBe("M0 200 L100 100 L200 0");
   });
   it("create stacked path with offset", () => {
-    // const path = createStackedPathAttr(
-    //   [[10000, 100], [20000, 105], [30000, 110]],
-    //   x => x * 100,
-    //   y => 200 - (y - 100) * 20
-    // );
-    // expect(path).toBe("M0 0 L0 100 M100 0 L100 200");
     const path = createStackedPathAttr(
       [1,3,2],
       x => x * 100,
@@ -41,6 +32,14 @@ describe("pathes", () => {
     )
     expect(path).toBe(`M0 10L0 11M100 20L100 23M200 15L200 17`)
   });
+  // it("create stacked path for dot", () => {
+  //   const path = createStackedPathAttrForDot(
+  //     [1,3,2],
+  //     x => x * 100,
+  //     y => y,
+  //   )
+  //   expect(path).toBe(`M0 0L0 1L0 4L0 6`)
+  // });
 });
 
 describe("utils", () => {

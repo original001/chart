@@ -7,9 +7,9 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate, createRaf, getStackedMax } from "./utils";
+import { prettifyDate, createRaf, getStackedMax, createPathAttr } from "./utils";
 import { Dots } from "./dots";
-import { path, Chart, ChartProps } from "./chart";
+import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
 require("./app.css");
 
@@ -37,9 +37,10 @@ export interface Props {
   data: ChartDto;
   stackedValues?: number[];
   dataLength: number;
-  pow: 1 | 1000 | 1000000
+  pow: 1 | 1000 | 1000000;
 }
 
+const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
 export const prepareData = (data: ChartDto): Props => {
   const columns = data.columns;
@@ -53,7 +54,7 @@ export const prepareData = (data: ChartDto): Props => {
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   let maxY = getExtremumY("max");
-  const pow = maxY / 1000 > 1 ? maxY / 1000000 > 1 ? 1000000 : 1000 : 1;
+  const pow = maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
   maxY = roundWithPrecision(maxY / pow, PRECISION);
   const minY = data.stacked ? 0 : roundWithPrecision(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
@@ -65,7 +66,7 @@ export const prepareData = (data: ChartDto): Props => {
   while (i < columns.length) {
     let values = columns[i];
     const name = values[0] as string;
-    values = values.slice(1).map(v => roundWithPrecision(v as number / pow, PRECISION));
+    values = values.slice(1).map(v => roundWithPrecision((v as number) / pow, PRECISION));
     //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
     const max = Math.max.apply(Math, values);
     const min = Math.min.apply(Math, values);
@@ -77,13 +78,17 @@ export const prepareData = (data: ChartDto): Props => {
     const chartInfo: ChartInfo = {
       name: data.names[name],
       color: data.colors[name],
-      chartPath: data.stacked ? null : createPathAttr(values as number[], projectChartX, projectChartY, stackedValues),
-      sliderPath: data.stacked ? null : createPathAttr(
-        values as number[],
-        x => x * scaleX,
-        y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
-        stackedValues
-      ),
+      chartPath: data.stacked
+        ? null
+        : createPathAttr(values as number[], projectChartX, projectChartY, stackedValues),
+      sliderPath: data.stacked
+        ? null
+        : createPathAttr(
+            values as number[],
+            x => x * scaleX,
+            y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
+            stackedValues
+          ),
       max,
       min,
       id: name,
@@ -114,30 +119,6 @@ export const prepareData = (data: ChartDto): Props => {
   } as Props;
 };
 
-export const createPathAttr = (
-  values: number[],
-  projectX: (x: number) => string | number,
-  projectY: (y: number) => string | number,
-  _: number[]
-) =>
-  values.reduce(
-    (acc, y, i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
-    ""
-  );
-
-export const createStackedPathAttr = (
-  values: number[],
-  projectX: (x: number) => string | number,
-  projectY: (y: number) => string | number,
-  prevValues: number[]
-) =>
-  values.reduce(
-    (acc, y, i) =>
-      acc +
-      `M${projectX(i)} ${projectY(prevValues[i])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
-    ""
-  );
-
 const flexLabel = (timestamp: number, offset: number, status: string) =>
   createElement(
     "span",
@@ -162,6 +143,7 @@ interface State {
   touchEndTimestamp: number;
   mode: string;
   visibles: { [id: string]: boolean };
+  showPopupOn: number;
 }
 
 const App: ComponentType = () => ({
@@ -205,6 +187,16 @@ const App: ComponentType = () => ({
           ...state,
           mode: payload
         };
+      case "showPopup":
+        return {
+          ...state,
+          showPopupOn: payload
+        };
+      case "hidePopup":
+        return {
+          ...state,
+          showPopupOn: null
+        };
     }
   },
   didMount() {
@@ -217,6 +209,22 @@ const App: ComponentType = () => ({
       const nextMode = this.state.mode === "day" ? "night" : "day";
       document.body.setAttribute("class", nextMode);
       this.send({ type: "mode", payload: nextMode });
+    };
+    window[TOGGLE_GRAPH_HANDLER_NAME + id] = (e: TouchEvent) => {
+      const currentTarget = e.currentTarget as Element;
+      this.send({
+        type: "showPopup",
+        payload: e.targetTouches[0].clientX - 10
+      });
+      const hideHandler = (_e: TouchEvent) => {
+        const target = _e.target as Element;
+        if (target === currentTarget || currentTarget.contains(target)) {
+        } else this.send({ type: "hidePopup" });
+        _e.currentTarget.removeEventListener("touchstart", hideHandler);
+      };
+      setTimeout(() => {
+        document.documentElement.addEventListener("touchstart", hideHandler);
+      }, 10);
     };
   },
   getDeriviedStateFromProps(props, prevState) {
@@ -297,6 +305,12 @@ const App: ComponentType = () => ({
     const projectChartYForDots = (y: number, isSecond: boolean) =>
       (CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond)).toFixed(1);
 
+    const overlay = createElement("div", {
+      class: "abs fw",
+      style: `height: ${CHART_HEIGHT}px; z-index: 10`,
+      ontouchstart: `${TOGGLE_GRAPH_HANDLER_NAME + id}(event)`
+    });
+
     const chart = createElement(Chart, {
       charts,
       data,
@@ -310,7 +324,8 @@ const App: ComponentType = () => ({
       projectChartXForDots,
       projectChartYForDots,
       scaleY,
-      scaleX
+      scaleX,
+      showPopupOn: state.showPopupOn
     } as ChartProps);
 
     const slider = createElement(
@@ -324,13 +339,8 @@ const App: ComponentType = () => ({
           onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
           eventId: id
         }),
-        createElement(SliderChart, {
-          charts,
-          dataLength,
-          minY,
-          scaleX,
-          isStacked
-        } as SliderChartProps)
+        //prettier-ignore
+        createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked } as SliderChartProps)
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
@@ -398,10 +408,11 @@ const App: ComponentType = () => ({
       offset: offsetY,
       valuesY2,
       charts,
-      pow,
+      pow
     } as RullerProps);
 
     return createElement("div", { class: "rel" }, [
+      overlay,
       ruller,
       chart,
       labels,

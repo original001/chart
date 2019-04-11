@@ -1,4 +1,5 @@
 import { ChartInfo } from "./app";
+import { createElement } from "./reconciler";
 
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;
@@ -55,3 +56,55 @@ export const prettifyDate = (timestamp: number, withDate?: boolean) => {
   return withDate ? `${date}, ${month} ${day}` : `${month} ${day}`;
 };
 
+export const path = (
+  path: string,
+  color: string,
+  strokeWidth: number,
+  status?,
+  isStacked?: boolean
+) =>
+  createElement("path", {
+    d: path,
+    "stroke-width": strokeWidth.toFixed(1),
+    stroke: color,
+    class: `transition-p ${status}`,
+    "vector-effect": !isStacked ? "non-scaling-stroke" : "",
+    fill: "none",
+    key: color
+  });
+
+export const createPathAttr = (
+  values: number[],
+  projectX: (x: number) => string | number,
+  projectY: (y: number) => string | number,
+  _: number[]
+) =>
+  values.reduce(
+    (acc, y, i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
+    ""
+  );
+
+export const createStackedPathAttr = (
+  values: number[],
+  projectX: (x: number) => string | number,
+  projectY: (y: number) => string | number,
+  prevValues: number[]
+) =>
+  values.reduce(
+    (acc, y, i) =>
+      acc +
+      `M${projectX(i)} ${projectY(prevValues[i])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
+    ""
+  );
+
+// export const createStackedPathAttrForDot = (
+//   values: number[],
+//   projectX: (x: number) => string | number,
+//   projectY: (y: number) => string | number,
+// ) => 
+//   values.reduce(
+//     (acc, y, i, arr) =>
+//       acc +
+//       `M${projectX(i)} ${projectY(arr[i-1])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
+//     ""
+//   );
