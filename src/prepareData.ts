@@ -27,13 +27,14 @@ export interface Props {
   stackedValues?: number[];
   dataLength: number;
   pow: 1 | 1000 | 1000000;
+  onZoom: (date) => void;
 }
 
 export const getScaleY = (length: number, max: number, min: number) => length / (max - min);
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
-export const prepareData = (data: ChartDto): Props => {
+export const prepareData = (data: ChartDto, onZoom: (date) => void): Props => {
   const columns = data.columns;
   const dataLength = data.columns[0].length - 1;
   const scaleX = getScaleX(CHART_WIDTH, dataLength);
@@ -67,10 +68,10 @@ export const prepareData = (data: ChartDto): Props => {
   while (i < columns.length) {
     let values = columns[i];
     const name = values[0] as string;
-    values = values.slice(1)
+    values = values.slice(1);
     const originalValues = values as number[];
     if (data.percentage) {
-      values = values.map((v, i) => round((v as number / sumValues[i]) * 100, 0));
+      values = values.map((v, i) => round(((v as number) / sumValues[i]) * 100, 0));
     } else {
       values = values.map(v => round((v as number) / pow, PRECISION));
     }
@@ -123,6 +124,7 @@ export const prepareData = (data: ChartDto): Props => {
     data,
     stackedValues,
     dataLength,
-    pow
+    pow,
+    onZoom
   } as Props;
 };

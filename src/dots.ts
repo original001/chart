@@ -15,10 +15,14 @@ export interface DotsProps {
   charts: ChartInfo[];
   dataLength: number;
   pow: number;
+  onZoom: (date) => void;
+  id: number;
 }
 interface State {
   charts: ChartInfo[];
 }
+
+const POPUP_CLICK_HANDLER = 'popupClickHandler';
 
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
@@ -60,8 +64,13 @@ export const Dots: ComponentType = () => ({
     }
     return prevState;
   },
+  didMount() {
+    window[POPUP_CLICK_HANDLER + this.props.id] = date => {
+      this.props.onZoom(date)
+    }
+  },
   render(props: DotsProps, state: State) {
-    const { projectChartX, projectChartY, data, dataLength, extraScale, pow } = props;
+    const { projectChartX, projectChartY, data, dataLength, extraScale, id } = props;
     const { charts } = state;
     const popupOffset = 15;
     const textOffset = 15 - popupOffset;
@@ -90,7 +99,8 @@ export const Dots: ComponentType = () => ({
       "div",
       {
         class: "popup abs n-bg",
-        style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`
+        style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`,
+        ontouchstart: `${POPUP_CLICK_HANDLER + id}(${date})`
       },
       [
         createElement("div", { class: "b p" }, prettifyDate(date, true)),

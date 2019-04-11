@@ -123,12 +123,17 @@ const App: ComponentType = () => ({
       }, 10);
     };
   },
-  getDeriviedStateFromProps(props, prevState) {
+  getDeriviedStateFromProps(props: Props, prevState) {
     if (!prevState.visibles) return { ...prevState, visibles: props.visibles };
+    const visibles = {}
+    props.charts.forEach(c => {
+      visibles[c.id] = prevState.visibles[c.id] != null ? prevState.visibles[c.id] : true
+    })
+    return {...prevState, visibles}
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX, minX, data, dataLength, minY, pow } = props;
+    const { scaleX, maxX, minX, data, dataLength, minY, pow, onZoom } = props;
     const {
       visibles,
       sliderPos: { left, right },
@@ -236,7 +241,9 @@ const App: ComponentType = () => ({
       offset,
       showPopupOn: state.showPopupOn,
       dataLength,
-      pow
+      pow,
+      onZoom,
+      id
     } as DotsProps);
 
     const slider = createElement(
@@ -403,14 +410,45 @@ const Benchmark: ComponentType = () => ({
   }
 });
 
+const AppWrapper: ComponentType = () => ({
+  ...componentMixin(),
+  state: {
+    data: null
+  },
+  reducer(action, prevState) {
+    switch (action.type) {
+      case "zoom":
+        return {data: action.payload};
+    }
+  },
+  getDeriviedStateFromProps(props, prevState) {
+    if (!prevState.data) return { data: props.data[props.index] };
+  },
+  render(props, state) {
+    return createElement(
+      App,
+      prepareData(state.data, this.zoom.bind(this))
+    );
+  },
+  zoom(timestamp) {
+    const [year, month, day] = new Date(timestamp).toISOString().split('T')[0].split('-');
+    const request = `data/${this.props.index + 1}/${year}-${month}/${day}.json`
+    fetch(request).then(data => {
+      return data.json()
+    }).then(data => {
+      this.send({ type: "zoom", payload: data })
+    })
+  }
+});
+
 const start = () => {
   render(
     createElement("div", {}, [
-      createElement(App, prepareData(data[0])),
-      createElement(App, prepareData(data[1])),
-      createElement(App, prepareData(data[2])),
-      createElement(App, prepareData(data[3])),
-      createElement(App, prepareData(data[4]))
+      createElement(AppWrapper, {data, index: 0}),
+      createElement(AppWrapper, {data, index: 1}),
+      createElement(AppWrapper, {data, index: 2}),
+      createElement(AppWrapper, {data, index: 3}),
+      createElement(AppWrapper, {data, index: 4})
       // createElement(Benchmark, { id: 1 }),
       // createElement(Benchmark, { id: 2 })
     ]),

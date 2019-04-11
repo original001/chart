@@ -73,7 +73,7 @@ describe("utils", () => {
   });
 
   it('prepare data', () => {
-    const d = prepareData(data);
+    const d = prepareData(data, () => {});
     const {min, max} = d.charts[0]
     expect(d.charts.length).toBe(2)
     expect([max, min]).toEqual([142, 56])
