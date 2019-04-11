@@ -47,17 +47,26 @@ export const Dots: ComponentType = () => ({
       "div",
       {
         class: "popup abs",
-        style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`,
+        style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`
       },
       [
         createElement("div", { class: "b p" }, prettifyDate(date, true)),
         ...charts.map(({ values, color, name, originalValues }) =>
           createElement("div", { class: "flex p" }, [
-            createElement("span", {}, name),
+            createElement(
+              "span",
+              {},
+              data.percentage
+                ? [
+                  createElement("span", { class: "b proc" }, `${values[i]}%`),
+                  createElement("span", {}, `${name}`)
+                ]
+                : name
+            ),
             createElement("span", { class: "b", style: `color: ${color}` }, originalValues[i] + "")
           ])
         ),
-        createElement("div", { class: "flex p" }, [
+        !data.percentage && createElement("div", { class: "flex p" }, [
           createElement("span", {}, "All"),
           createElement(
             "span",
@@ -86,7 +95,6 @@ export const Dots: ComponentType = () => ({
         )
       )
     );
-
     const dots = createElement("svg", { overflow: "visible", class: "popup-rect" }, [
       createElement(
         "svg",
@@ -107,17 +115,19 @@ export const Dots: ComponentType = () => ({
             stroke: "rgba(115,153,178, .2)",
             key: "line"
           }),
-          ...axises.map((axis, i) =>
-            createElement("circle", {
-              cx: 0,
-              cy: projectChartY(dot[i], axis === "y1"),
-              r: 4,
-              stroke: data.colors[axis],
-              class: "n-fill",
-              key: `circle${axis}`,
-              ["stroke-width"]: 2
-            })
-          )
+          ...(data.percentage
+            ? []
+            : axises.map((axis, i) =>
+                createElement("circle", {
+                  cx: 0,
+                  cy: projectChartY(dot[i], axis === "y1"),
+                  r: 4,
+                  stroke: data.colors[axis],
+                  class: "n-fill",
+                  key: `circle${axis}`,
+                  ["stroke-width"]: 2
+                })
+              ))
         ]
       )
     ]);
@@ -125,7 +135,7 @@ export const Dots: ComponentType = () => ({
     return createElement(
       "div",
       { class: "abs fw fh top" },
-      data.stacked ? [stackeddots, popup] : [dots, popup]
+      data.stacked && !data.percentage ? [stackeddots, popup] : [dots, popup]
     );
   }
 });

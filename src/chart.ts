@@ -40,9 +40,9 @@ export const Chart: ComponentType = () => ({
 
       if (props.data.percentage) {
         let stackedValues = Array(props.dataLength).fill(0);
+        const chartPathes = [];
         const chartsLength = props.charts.length;
         const sumValues = [];
-        let nextState: State = { ...prevState, chartPathes: [] };
         for (let i = 0; i < props.dataLength; i++) {
           let sum = 0;
           for (let j = 0; j < chartsLength; j++) {
@@ -59,10 +59,10 @@ export const Chart: ComponentType = () => ({
             projectChartY,
             stackedValues
           );
-          nextState.chartPathes.push(path);
+          chartPathes.push(path);
           stackedValues = stackedValues.map((v, i) => v + values[i]);
         }
-        return nextState;
+        return {...prevState, chartPathes};
       } else {
         let stackedValues = Array(props.dataLength).fill(0);
         let nextState: State = { ...prevState, chartPathes: [] };
@@ -92,7 +92,7 @@ export const Chart: ComponentType = () => ({
     } = props;
     const { dataLength } = props;
     const { y_scaled, stacked, percentage } = data;
-    const chartOpacity = showPopupOn && stacked ? 0.5 : 1;
+    const chartOpacity = showPopupOn && stacked && !percentage ? 0.5 : 1;
     return createElement(
       "svg",
       {

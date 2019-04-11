@@ -44,7 +44,7 @@ export const prepareData = (data: ChartDto): Props => {
   const extremum = (fn, from, to?) => fn(columns.slice(from, to).map(ys => fn(ys.slice(1))));
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
-  let maxY = getExtremumY("max");
+  let maxY = data.percentage ? 100 : getExtremumY("max");
   const pow = maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
   maxY = round(maxY / pow, PRECISION);
   const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
@@ -54,12 +54,26 @@ export const prepareData = (data: ChartDto): Props => {
   let stackedValues = Array(dataLength).fill(0);
   let i = 1;
   columns.sort((a, b) => (a[1] > b[1] ? -1 : a[1] === b[1] ? 0 : 1));
+
+  const sumValues = [];
+  for (let i = 0; i < dataLength; i++) {
+    let sum = 0;
+    for (let j = 1; j < columns.length; j++) {
+      sum += columns[j][i + 1] as number;
+    }
+    sumValues.push(sum);
+  }
+
   while (i < columns.length) {
     let values = columns[i];
     const name = values[0] as string;
     values = values.slice(1)
     const originalValues = values as number[];
-    values = values.map(v => round((v as number) / pow, PRECISION));
+    if (data.percentage) {
+      values = values.map((v, i) => round((v as number / sumValues[i]) * 100, 0));
+    } else {
+      values = values.map(v => round((v as number) / pow, PRECISION));
+    }
     //.map(v => (v > 1000 ? Math.floor(v / 1000) : v));
     const max = Math.max.apply(Math, values);
     const min = Math.min.apply(Math, values);

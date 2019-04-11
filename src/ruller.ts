@@ -27,7 +27,7 @@ export const TransitionRuller: ComponentType = () => ({
       if (v === 0) return v + '';
       switch (pow) {
         case 1:
-          return v;
+          return v + '';
         case 1000:
           return `${v}K`
         case 1000000:

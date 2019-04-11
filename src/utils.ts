@@ -51,8 +51,8 @@ export const getStackedMax = (from, to, charts: ChartInfo[]) => {
 };
 
 export const prettifyDate = (timestamp: number, withDate?: boolean) => {
-  const [date, month, day] = new Date(timestamp).toString().split(" ");
-  return withDate ? `${date}, ${month} ${day}` : `${month} ${day}`;
+  const [date, month, day, year] = new Date(timestamp).toString().split(" ");
+  return withDate ? `${date}, ${day} ${month} ${year}` : `${month} ${day}`;
 };
 
 export const path = (

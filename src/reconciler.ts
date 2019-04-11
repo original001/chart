@@ -42,7 +42,7 @@ export const createElement = (
     props: children
       ? {
           ...props,
-          children
+          children: children.filter ? children.filter(c => c) : children
         }
       : props
   };
