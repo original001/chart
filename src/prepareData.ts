@@ -93,7 +93,7 @@ export const prepareData = (data: ChartDto): Props => {
         : createPathAttr(
             values as number[],
             x => x * scaleX,
-            y => SLIDER_HEIGHT - (y - minY) * scaleYSlider,
+            y => SLIDER_HEIGHT - (y - (data.y_scaled ? min : minY)) * scaleYSlider,
             stackedValues
           ),
       max,
