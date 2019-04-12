@@ -6,7 +6,7 @@ import { Dots, DotsProps } from "./dots";
 import { ChartDto } from "./chart_data";
 import { path, createStackedPathAttr, createPercentagePathAttr } from "./utils";
 import { ChartInfo } from "./prepareData";
-import { round as round } from "./axis";
+import { round } from "./axis";
 
 export interface ChartProps {
   id: number;
@@ -62,7 +62,7 @@ export const Chart: ComponentType = () => ({
           chartPathes.push(path);
           stackedValues = stackedValues.map((v, i) => v + values[i]);
         }
-        return {...prevState, chartPathes};
+        return { ...prevState, chartPathes };
       } else {
         let stackedValues = Array(props.dataLength).fill(0);
         let nextState: State = { ...prevState, chartPathes: [] };
@@ -140,8 +140,7 @@ export const Chart: ComponentType = () => ({
                         "g",
                         {
                           //prettier-ignore
-                          transform: `scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')})`,
-                          style: `transform-origin: 0 ${CHART_HEIGHT}px`,
+                          style: `transform: scale(1, ${getScale(id === 'y1')}) translate(0, ${getOffset(id === 'y1')}px); transform-origin: 0 ${CHART_HEIGHT}px; opacity: ${chartOpacity}`,
                           class: "transition-d"
                         },
                         [path(chartPath, color, 2, status)]
