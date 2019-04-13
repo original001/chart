@@ -1,6 +1,7 @@
 import { createElement } from "./reconciler";
 import { ChartInfo, Dot } from "./prepareData";
 import { ChartDto, Column } from "./chart_data";
+import { Animate } from "./animate";
 
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;
@@ -79,16 +80,20 @@ export const path = (
   isStacked?: boolean,
   isPercentage?: boolean
 ) =>
-  createElement("path", {
-    d: path,
-    "stroke-width": strokeWidth.toFixed(1),
-    stroke: color,
-    class: `transition-p ${status}`,
-    "vector-effect": !isStacked ? "non-scaling-stroke" : "",
-    fill: isPercentage ? color : "none",
-    // fill: "none",
-    key: color
-  });
+  createElement(
+    "path",
+    {
+      d: path,
+      "stroke-width": strokeWidth.toFixed(1),
+      stroke: color,
+      class: `transition-p ${status}`,
+      "vector-effect": !isStacked ? "non-scaling-stroke" : "",
+      fill: isPercentage ? color : "none",
+      // fill: "none",
+      key: color
+    },
+    [createElement(Animate, { value: path })]
+  );
 
 export const createPathAttr = (
   dots: Dot[],
