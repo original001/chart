@@ -1,5 +1,6 @@
 import { createElement } from "./reconciler";
 import { ChartInfo, Dot } from "./prepareData";
+import { ChartDto, Column } from "./chart_data";
 
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;
@@ -57,18 +58,18 @@ export const prettifyDate = (timestamp: number, withDate?: boolean) => {
 
 export const prettifyHours = (timestamp: number, withDate?: boolean) => {
   const time = new Date(timestamp);
-  const hours = time.getUTCHours()
-  const minutes = time.getUTCMinutes()
-  return  `${hours}:${minutes}`
+  const hours = time.getUTCHours();
+  const minutes = time.getUTCMinutes();
+  return `${hours}:${minutes}`;
 };
 
 export const repeat = <T>(count: number, value: T) => {
   const res = [] as T[];
-  for (let i = 0 ; i < count; i++ ) {
-    res.push(value)
+  for (let i = 0; i < count; i++) {
+    res.push(value);
   }
-  return res
-}
+  return res;
+};
 
 export const path = (
   path: string,
@@ -92,13 +93,11 @@ export const path = (
 export const createPathAttr = (
   dots: Dot[],
   projectX: (x: number) => string | number,
-  projectY: (y: number) => string | number,
+  projectY: (y: number) => string | number
 ) =>
-  dots.reduce(
-    (acc, [x, y], i) => {
-      return (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(x)} ${projectY(y)}`)},
-    ""
-  );
+  dots.reduce((acc, [x, y], i) => {
+    return i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(x)} ${projectY(y)}`;
+  }, "");
 
 export const createStackedPathAttr = (
   dots: Dot[],
@@ -123,3 +122,27 @@ export const createPercentagePathAttr = (
     (acc, [x, y], i) => acc + `L${projectX(x)} ${projectY(y + prevValues[i])}`,
     `M0 ${projectY(0)}`
   ) + `L${projectX(dots[dots.length - 1][0])} ${projectY(0)}Z`;
+
+export const max_ = <T>(ar: T[]): number => Math.max.apply(Math, ar);
+export const min_ = <T>(ar: T[]): number => Math.min.apply(Math, ar);
+export const last = <T>(ar: T[]) => ar[ar.length - 1];
+export const rest = <T>(ar: [any, ...T[]]) => {
+  const [_, ...rest] = ar;
+  return rest;
+};
+
+export const catValuesByDates = (
+  dates: Column,
+  values: number[],
+  left: number,
+  right: number,
+  min?: number,
+  max?: number
+) => {
+  const _max = max || max_(values);
+  const _min = min || min_(values);
+  const range = _max - _min;
+  return values.filter(
+    (_, i) => dates[i + 1] >= _min + range * left && dates[i + 1] <= _min + range * right
+  );
+};

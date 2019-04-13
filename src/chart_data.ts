@@ -1,5 +1,6 @@
+export type Column =  [string, ...number[]];
 export interface ChartDto {
-  columns: (number | string)[][];
+  columns: Column[],
   types: { [id: string]: "line" | "x" | "bar" | "area" };
   names: { [id: string]: string };
   colors: { [id: string]: string };

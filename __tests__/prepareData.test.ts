@@ -123,15 +123,19 @@ describe("localPrepare", () => {
   ];
   it("default", () => {
     const p = prepareData(data, () => {}, false);
-    const localData = localPrepare(p, { ...defaultAppState, visibles: p.visibles });
+    const localData = localPrepare(p, {
+      ...defaultAppState,
+      visibles: p.visibles,
+      sliderPos: { left: 0.5, right: 1 }
+    });
     expect(localData).toEqual({
       charts: p.charts,
       offsetY: 0,
       offsetY2: 1,
-      scaleY: 449.99999999999994,
+      scaleY: 157.5,
       scaleY2: 315,
       valuesX: expectedX,
-      valuesY: [0, 0.14, 0.28, 0.42, 0.56, 0.7],
+      valuesY: [0, 0.4, 0.8, 1.2, 1.6, 2],
       valuesY2: null
     });
   });
@@ -145,12 +149,12 @@ describe("localPrepare", () => {
     expect(localData).toEqual({
       charts: p.charts,
       offsetY: 0.6000000000000001,
-      offsetY2: 0.033,
-      scaleY: 524.9999999999999,
-      scaleY2: 45000.00000000001,
+      offsetY2: 0.03,
+      scaleY: 450.00000000000006,
+      scaleY2: 31499.999999999993,
       valuesX: expectedX,
-      valuesY: [0.6, 0.72, 0.84, 0.96, 1.08, 1.2],
-      valuesY2: [0.033, 0.0344, 0.0358, 0.0372, 0.0386, 0.04]
+      valuesY: [0.6, 0.74, 0.88, 1.02, 1.16, 1.3],
+      valuesY2: [0.03, 0.032, 0.034, 0.036, 0.038, 0.04]
     });
   });
 

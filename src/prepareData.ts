@@ -1,7 +1,7 @@
 import { ChartDto } from "./chart_data";
 import { CHART_WIDTH, PRECISION, SLIDER_HEIGHT, CHART_HEIGHT } from "./constant";
 import { round, getBounds, getBoundsX } from "./axis";
-import { createPathAttr, getStackedMax } from "./utils";
+import { createPathAttr, getStackedMax, catValuesByDates, last, rest, min_, max_ } from "./utils";
 import { AppState } from "./app";
 
 export interface ChartInfo {
@@ -40,14 +40,19 @@ export const getScaleY = (length: number, max: number, min: number) => length / 
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
-const powCache = {}
+const powCache = {};
 
-export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: boolean, index?: number): Props => {
+export const prepareData = (
+  data: ChartDto,
+  onZoom: (date) => void,
+  zoomed: boolean,
+  index?: number
+): Props => {
   const columns = data.columns;
-  const dates = columns[0] as number[];
+  const dates = columns[0];
   const dataLength = dates.length - 1;
   const firstDate = dates[1];
-  const scaleX = getScaleX(CHART_WIDTH, dates[dates.length - 1] - firstDate);
+  const scaleX = getScaleX(CHART_WIDTH, (last(dates) as number) - firstDate);
   const chartInfos: ChartInfo[] = [];
   const getExtremumY = (fn: string) =>
     Math[fn].apply(Math, columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1))));
@@ -55,8 +60,13 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: bool
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   let maxY = data.percentage ? 100 : getExtremumY("max");
-  const pow = index != null && powCache[index] || maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
-  powCache[index] = pow
+  const pow =
+    (index != null && powCache[index]) || maxY / 1000 > 1
+      ? maxY / 1000000 > 1
+        ? 1000000
+        : 1000
+      : 1;
+  powCache[index] = pow;
   maxY = round(maxY / pow, PRECISION);
   const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
@@ -75,10 +85,9 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: bool
   }
 
   while (i < columns.length) {
-    let values = columns[i];
-    const name = values[0] as string;
-    values = values.slice(1);
-    const originalValues = values as number[];
+    const name = columns[i][0];
+    let values = rest(columns[i]);
+    const originalValues = values;
     if (data.percentage) {
       values = values.map((v, i) => round(((v as number) / sumValues[i]) * 100, 0));
     } else {
@@ -155,16 +164,16 @@ export const localPrepare = (props: Props, state: AppState): LocalData => {
   } = state;
   const charts = props.charts.filter(chart => visibles[chart.id]);
 
-  const getExtremumY = (fn: string, left: number, right: number, charts: ChartInfo[]) =>
-    Math[fn].apply(
-      Math,
-      charts.map(({ values: ys }) =>
-        Math[fn].apply(
-          Math,
-          ys.slice(Math.floor(dataLength * left) + 1, Math.ceil(dataLength * right))
-        )
-      )
-    );
+  const cuttedCharts = charts.map(ch => ({
+    ...ch,
+    values: catValuesByDates(data.columns[0], ch.values, left, right, minX, maxX)
+  })
+  );
+
+  const extrY_ = (
+    f: (ar: number[]) => number,
+    charts: ChartInfo[]
+  ) => f(charts.map(({ values }) => f(values)));
 
   const isScaled = data.y_scaled;
   const isStacked = data.stacked;
@@ -173,12 +182,12 @@ export const localPrepare = (props: Props, state: AppState): LocalData => {
   let localMinY2;
   let localMaxY2;
   if (isScaled) {
-    const first = props.charts.filter(c => c.id === "y0");
-    localMinY = getExtremumY("min", left, right, first);
-    localMaxY = getExtremumY("max", left, right, first);
-    const second = props.charts.filter(c => c.id === "y1");
-    localMinY2 = getExtremumY("min", left, right, second);
-    localMaxY2 = getExtremumY("max", left, right, second);
+    const first = cuttedCharts.filter(c => c.id === "y0");
+    localMinY = extrY_(min_, first);
+    localMaxY = extrY_(max_, first);
+    const second = cuttedCharts.filter(c => c.id === "y1");
+    localMinY2 = extrY_(min_, second);
+    localMaxY2 = extrY_(max_, second);
   } else if (isStacked) {
     localMinY = 0;
     if (data.percentage) {
@@ -191,8 +200,8 @@ export const localPrepare = (props: Props, state: AppState): LocalData => {
       );
     }
   } else {
-    localMinY = getExtremumY("min", left, right, charts);
-    localMaxY = getExtremumY("max", left, right, charts);
+    localMinY = extrY_(min_, cuttedCharts);
+    localMaxY = extrY_(max_, cuttedCharts);
   }
 
   let { values: valuesY, max: boundsMaxY, min: boundsMinY } = getBounds(

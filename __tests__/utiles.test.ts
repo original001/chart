@@ -1,5 +1,5 @@
 import { getBoundsX, getBounds, round } from "../src/axis";
-import { shallowEqual, getStackedMax } from "../src/utils";
+import { shallowEqual, getStackedMax, catValuesByDates } from "../src/utils";
 import { ChartInfo } from "src/prepareData";
 
 describe("dates values", () => {
@@ -33,12 +33,12 @@ describe("axis", () => {
   });
 });
 
-describe('precision', () => {
-  it ("", () => {
-    const res = round(11111.11111, 1)
-    expect(res).toBe(11111.1)
-  })
-})
+describe("precision", () => {
+  it("", () => {
+    const res = round(11111.11111, 1);
+    expect(res).toBe(11111.1);
+  });
+});
 
 describe("shallow equal", () => {
   it("should true", () => {
@@ -59,6 +59,31 @@ describe("stacked", () => {
       { values: [100, 50, 50] } as ChartInfo
     ]);
     expect(res).toBe(111);
+  });
+});
+
+describe("cat", () => {
+  it("0 .. 0.25", () => {
+    const res = catValuesByDates(
+      ["x", 1, 2, 3, 4, 5, 5.1, 5.2, 6, 7, 8, 9],
+      [1, 2, 3, 10, 20, 40, 50, 60, 2, 3, 1],
+      0,
+      0.25,
+      1,
+      9
+    );
+    expect(res).toEqual([1, 2, 3]);
+  });
+  it("0.5 .. 0.75", () => {
+    const res = catValuesByDates(
+      ["x", 1, 2, 3, 4, 5, 5.1, 5.2, 6, 7, 8, 9],
+      [1, 2, 3, 10, 20, 40, 50, 60, 2, 3, 1],
+      0.5,
+      0.75,
+      1,
+      9
+    );
+    expect(res).toEqual([20, 40, 50, 60, 2]);
   });
 });
 

@@ -1,4 +1,4 @@
-import { ChartDto, data } from "./chart_data";
+import { ChartDto, data, Column } from "./chart_data";
 import { repeat } from "./utils";
 import { ComponentType, componentMixin, createElement, render } from "./reconciler";
 import { prepareData } from "./prepareData";
@@ -30,7 +30,7 @@ export const patchData2 = (data: ChartDto, nextData: ChartDto, timestamp) => {
           : nextData.columns[ci][1]
         : nextData.columns[ci][i + 1 - startIndex]
     )
-  );
+  ) as Column[];
   return {
     ...data,
     columns: nextColumns
