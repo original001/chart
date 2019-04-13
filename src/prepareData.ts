@@ -40,7 +40,9 @@ export const getScaleY = (length: number, max: number, min: number) => length / 
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
-export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: boolean): Props => {
+const powCache = {}
+
+export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: boolean, index?: number): Props => {
   const columns = data.columns;
   const dates = columns[0] as number[];
   const dataLength = dates.length - 1;
@@ -53,7 +55,8 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: bool
   const maxX = extremum(ar => Math.max.apply(Math, ar), 0, 1);
   const minX = extremum(ar => Math.min.apply(Math, ar), 0, 1);
   let maxY = data.percentage ? 100 : getExtremumY("max");
-  const pow = maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
+  const pow = index != null && powCache[index] || maxY / 1000 > 1 ? (maxY / 1000000 > 1 ? 1000000 : 1000) : 1;
+  powCache[index] = pow
   maxY = round(maxY / pow, PRECISION);
   const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
