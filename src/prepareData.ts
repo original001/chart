@@ -13,7 +13,11 @@ export interface ChartInfo {
   id: string;
   min: number;
   max: number;
+  dots: Dot[]
 }
+
+export type Dot = [number, number];
+type Chart = Dot[];
 
 export interface Props {
   charts: ChartInfo[];
@@ -24,21 +28,24 @@ export interface Props {
   minX: number;
   maxX: number;
   data: ChartDto;
-  stackedValues?: number[];
   dataLength: number;
   pow: 1 | 1000 | 1000000;
   onZoom: (date) => void;
+  zoomed: boolean;
+  scaledX_: (x: number) => number;
+  y__: (f: (y: number) => number) => (x: number) => number;
 }
 
 export const getScaleY = (length: number, max: number, min: number) => length / (max - min);
 
 export const getScaleX = (width, dotsCount) => width / dotsCount;
 
-export const prepareData = (data: ChartDto, onZoom: (date) => void): Props => {
+export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: boolean): Props => {
   const columns = data.columns;
-  const dataLength = data.columns[0].length - 1;
-  const scaleX = getScaleX(CHART_WIDTH, dataLength);
-  const xs = columns[0];
+  const dates = columns[0] as number[];
+  const dataLength = dates.length - 1;
+  const firstDate = dates[1];
+  const scaleX = getScaleX(CHART_WIDTH, dates[dates.length - 1] - firstDate);
   const chartInfos: ChartInfo[] = [];
   const getExtremumY = (fn: string) =>
     Math[fn].apply(Math, columns.slice(1).map(ys => Math[fn].apply(Math, ys.slice(1))));
@@ -50,9 +57,8 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void): Props => {
   maxY = round(maxY / pow, PRECISION);
   const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
-  const projectChartX = (x: number) => (x * scaleX).toFixed(1);
-  const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
-  let stackedValues = Array(dataLength).fill(0);
+  const scaledX_ = (x: number) => round((x - firstDate) * scaleX, 1);
+  const y__ = (f: (y: number) => number) => (y: number) => CHART_HEIGHT - f(y);
   let i = 1;
   columns.sort((a, b) => (a[1] > b[1] ? -1 : a[1] === b[1] ? 0 : 1));
 
@@ -83,30 +89,29 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void): Props => {
       scaleYSlider = getScaleY(SLIDER_HEIGHT, max, min);
     }
     //todo: leave only values
+    const chartDots = values.map((y, i) => [dates[i + 1], y] as Dot);
     const chartInfo: ChartInfo = {
       name: data.names[name],
       color: data.colors[name],
       chartPath: data.stacked
         ? null
-        : createPathAttr(values as number[], projectChartX, projectChartY, stackedValues),
+        : createPathAttr(chartDots, scaledX_, y__(y => y)),
       sliderPath: data.stacked
         ? null
         : createPathAttr(
-            values as number[],
-            x => x * scaleX,
-            y => SLIDER_HEIGHT - (y - (data.y_scaled ? min : minY)) * scaleYSlider,
-            stackedValues
+            chartDots,
+            scaledX_,
+            y => round(SLIDER_HEIGHT - (y - (data.y_scaled ? min : minY)) * scaleYSlider, 1)
           ),
       max,
       min,
       id: name,
       values: values as number[],
-      originalValues
+      originalValues,
+      dots: chartDots
     };
     chartInfos.push(chartInfo);
-    if (data.stacked) {
-      stackedValues = stackedValues.map((v, i) => v + values[i]);
-    }
+
     i++;
   }
   const visibles = {};
@@ -122,9 +127,11 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void): Props => {
     minX,
     scaleX,
     data,
-    stackedValues,
     dataLength,
     pow,
-    onZoom
+    onZoom,
+    zoomed,
+    scaledX_,
+    y__
   } as Props;
 };

@@ -2,7 +2,6 @@ import { ComponentType, componentMixin, createElement } from "./reconciler";
 import { CHART_WIDTH, CHART_HEIGHT } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { Dots, DotsProps } from "./dots";
 import { ChartDto } from "./chart_data";
 import { path, createStackedPathAttr, createPercentagePathAttr } from "./utils";
 import { ChartInfo } from "./prepareData";
@@ -21,22 +20,25 @@ export interface ChartProps {
   getScale: (isScale: boolean) => number;
   getOffset: (isScale: boolean) => number;
   showPopupOn: number;
+  zoomed: boolean
+  scaledX_: (x: number) => number;
+  y__:  (f:(y:number) => number) => (x: number) => number;
 }
 
 interface State {
   chartPathes: string[];
+  zoomed: boolean;
 }
 
 export const Chart: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    chartPathes: null
+    chartPathes: null,
+    zoomed: null
   } as State,
   getDeriviedStateFromProps(props: ChartProps, prevState: State) {
     if (!props.data.stacked) return prevState;
-    if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length) {
-      const projectChartX = (x: number) => (x * props.scaleX).toFixed(1);
-      const projectChartY = (y: number) => (CHART_HEIGHT - y).toFixed(1);
+    if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length || props.zoomed !== prevState.zoomed) {
 
       if (props.data.percentage) {
         let stackedValues = Array(props.dataLength).fill(0);
@@ -52,15 +54,15 @@ export const Chart: ComponentType = () => ({
         }
 
         for (let chart of props.charts) {
-          const values = chart.values.map((v, i) => round((v / sumValues[i]) * 100, 1));
+          const dots = chart.dots.map(([x, y], i) => [x, round((y / sumValues[i]) * 100, 1)] as [number, number]);
           const path = createPercentagePathAttr(
-            values,
-            projectChartX,
-            projectChartY,
+            dots,
+            props.scaledX_,
+            props.y__(y => y),
             stackedValues
           );
           chartPathes.push(path);
-          stackedValues = stackedValues.map((v, i) => v + values[i]);
+          stackedValues = stackedValues.map((v, i) => v + dots[i][1]);
         }
         return { ...prevState, chartPathes };
       } else {
@@ -68,7 +70,7 @@ export const Chart: ComponentType = () => ({
         let nextState: State = { ...prevState, chartPathes: [] };
         const createPath = props.data.percentage ? createPercentagePathAttr : createStackedPathAttr;
         for (let chart of props.charts) {
-          const path = createPath(chart.values, projectChartX, projectChartY, stackedValues);
+          const path = createPath(chart.dots, props.scaledX_, props.y__(y => y), stackedValues);
           nextState.chartPathes.push(path);
           stackedValues = stackedValues.map((v, i) => v + chart.values[i]);
         }
@@ -96,6 +98,7 @@ export const Chart: ComponentType = () => ({
     return createElement(
       "svg",
       {
+        // key: props.zoomed ? 1 : 0,
         width: CHART_WIDTH,
         height: CHART_HEIGHT
         // class: `w-ch`

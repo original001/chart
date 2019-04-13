@@ -1,5 +1,5 @@
 import { getBounds, getBoundsX, round } from "./axis";
-import { data } from "./chart_data";
+import { data, ChartDto } from "./chart_data";
 import { render, createElement, ComponentType, componentMixin } from "./reconciler";
 import { TransitionRuller, RullerProps } from "./ruller";
 import { Slider } from "./slider";
@@ -7,26 +7,30 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate, createRaf, getStackedMax, createPathAttr } from "./utils";
+import {
+  prettifyDate,
+  createRaf,
+  getStackedMax,
+  createPathAttr,
+  prettifyHours,
+  repeat
+} from "./utils";
 import { Dots, DotsProps } from "./dots";
 import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
 import { Props, ChartInfo, getScaleY, prepareData } from "./prepareData";
 require("./app.css");
 
-type Dot = [number, number];
-type Chart = Dot[];
-
 const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
 
-const flexLabel = (timestamp: number, offset: number, status: string) =>
+const flexLabel = (timestamp: number, offset: number, status: string, zoomed) =>
   createElement(
     "span",
     {
       class: status + " transition l-text flex-item",
       key: timestamp
     },
-    prettifyDate(timestamp)
+    zoomed ? prettifyHours(timestamp) : prettifyDate(timestamp)
   );
 
 const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
@@ -125,15 +129,16 @@ const App: ComponentType = () => ({
   },
   getDeriviedStateFromProps(props: Props, prevState) {
     if (!prevState.visibles) return { ...prevState, visibles: props.visibles };
-    const visibles = {}
+    const visibles = {};
     props.charts.forEach(c => {
-      visibles[c.id] = prevState.visibles[c.id] != null ? prevState.visibles[c.id] : true
-    })
-    return {...prevState, visibles}
+      visibles[c.id] = prevState.visibles[c.id] != null ? prevState.visibles[c.id] : true;
+    });
+    return { ...prevState, visibles };
   },
   render(props: Props, state: State) {
     const id = this.id;
-    const { scaleX, maxX, minX, data, dataLength, minY, pow, onZoom } = props;
+    //prettier-ignore
+    const { scaleX, maxX, minX, data, dataLength, minY, pow, onZoom, zoomed, scaledX_, y__ } = props;
     const {
       visibles,
       sliderPos: { left, right },
@@ -206,9 +211,9 @@ const App: ComponentType = () => ({
     // const offsetY = 0;
 
     const projectChartXForDots = x =>
-      round(x * scaleX * extraScale - offset * CHART_WIDTH, PRECISION);
+      round(scaledX_(x) * extraScale - offset * CHART_WIDTH, PRECISION);
     const projectChartYForDots = (y: number, isSecond: boolean) =>
-      round(CHART_HEIGHT - (y - getOffset(isSecond)) * getScale(isSecond), PRECISION);
+      round(y__(y => (y - getOffset(isSecond)) * getScale(isSecond))(y), PRECISION);
 
     const overlay = createElement("div", {
       class: "abs fw",
@@ -229,7 +234,10 @@ const App: ComponentType = () => ({
       id,
       scaleY,
       scaleX,
-      showPopupOn: state.showPopupOn
+      showPopupOn: state.showPopupOn,
+      zoomed,
+      scaledX_,
+      y__
     } as ChartProps);
 
     const dots = createElement(Dots, {
@@ -258,7 +266,7 @@ const App: ComponentType = () => ({
           eventId: id
         }),
         //prettier-ignore
-        createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked, data } as SliderChartProps)
+        createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked, data, scaledX_, y__, zoomed } as SliderChartProps)
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
@@ -273,7 +281,6 @@ const App: ComponentType = () => ({
               {
                 class: "flex-labels w-ch",
                 //prettier-ignore
-                // style: `transform: translateX(-${state.offset * CHART_WIDTH}px); width: ${scaledWidth}px`
                 style: `left: -${state.sliderPos.left * CHART_WIDTH * state.extraScale}px; right: ${(state.sliderPos.right - 1) * CHART_WIDTH * state.extraScale}px`
               },
               children
@@ -282,7 +289,7 @@ const App: ComponentType = () => ({
       },
       valuesX.map((x, i) =>
         createElement(Transition, {
-          children: status => flexLabel(x, (i * scaledWidth) / valuesX.length, status),
+          children: status => flexLabel(x, (i * scaledWidth) / valuesX.length, status, zoomed),
           key: x
         })
       )
@@ -410,45 +417,105 @@ const Benchmark: ComponentType = () => ({
   }
 });
 
+interface WrapperState {
+  data: ChartDto;
+  zoomedData: ChartDto;
+  zoomed: boolean;
+  zoomedOn: number;
+}
+
+export const patchData = (data: ChartDto, length, timestamp) => {
+  const startIndex = data.columns[0].findIndex(v => v === timestamp);
+  data.columns.forEach(c => c.splice(startIndex, 0, ...repeat(length, c[startIndex])));
+  return data;
+};
+export const patchData2 = (data: ChartDto, nextData: ChartDto, timestamp) => {
+  const startIndex = data.columns[0].findIndex(v => v === timestamp);
+  const nextColumns = data.columns.map((c, ci) =>
+    c.map((v, i, ar) =>
+      i == 0
+        ? v
+        : i <= startIndex || i >= startIndex + nextData.columns[0].length - 1
+        ? ci == 0
+          ? i <= startIndex
+            ? nextData.columns[ci][1]
+            : nextData.columns[ci][nextData.columns[0].length - 1]
+          : nextData.columns[ci][1]
+        : nextData.columns[ci][i + 1 - startIndex]
+    )
+  );
+  return {
+    ...data,
+    columns: nextColumns
+  };
+};
+let firstUpdate = true;
 const AppWrapper: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    data: null
-  },
-  reducer(action, prevState) {
-    switch (action.type) {
+    data: null,
+    zoomed: false,
+    zoomedData: null,
+    zoomedOn: null
+  } as WrapperState,
+  reducer({ type, payload: { data, timestamp } }, prevState: WrapperState): WrapperState {
+    switch (type) {
       case "zoom":
-        return {data: action.payload};
+        return {
+          data: patchData(this.props.data[this.props.index], data.columns[0].length, timestamp),
+          zoomedData: data,
+          zoomed: true,
+          zoomedOn: timestamp
+        };
+      case "zoom2":
+        return {
+          ...prevState,
+          data: patchData2(
+            this.props.data[this.props.index],
+            prevState.zoomedData,
+            prevState.zoomedOn
+          )
+        };
     }
   },
   getDeriviedStateFromProps(props, prevState) {
     if (!prevState.data) return { data: props.data[props.index] };
   },
+  didUpdate(prevProps, prevState) {
+    if (firstUpdate) {
+      firstUpdate = false;
+      setTimeout(() => {
+        this.send({ type: "zoom2", payload: {} });
+      }, 10);
+    }
+  },
   render(props, state) {
-    return createElement(
-      App,
-      prepareData(state.data, this.zoom.bind(this))
-    );
+    return createElement(App, prepareData(state.data, this.zoom.bind(this), state.zoomed));
   },
   zoom(timestamp) {
-    const [year, month, day] = new Date(timestamp).toISOString().split('T')[0].split('-');
-    const request = `data/${this.props.index + 1}/${year}-${month}/${day}.json`
-    fetch(request).then(data => {
-      return data.json()
-    }).then(data => {
-      this.send({ type: "zoom", payload: data })
-    })
+    const [year, month, day] = new Date(timestamp)
+      .toISOString()
+      .split("T")[0]
+      .split("-");
+    const request = `data/${this.props.index + 1}/${year}-${month}/${day}.json`;
+    fetch(request)
+      .then(data => {
+        return data.json();
+      })
+      .then(data => {
+        this.send({ type: "zoom", payload: { data, timestamp } });
+      });
   }
 });
 
 const start = () => {
   render(
     createElement("div", {}, [
-      createElement(AppWrapper, {data, index: 0}),
-      createElement(AppWrapper, {data, index: 1}),
-      createElement(AppWrapper, {data, index: 2}),
-      createElement(AppWrapper, {data, index: 3}),
-      createElement(AppWrapper, {data, index: 4})
+      createElement(AppWrapper, { data, index: 0 }),
+      createElement(AppWrapper, { data, index: 1 }),
+      createElement(AppWrapper, { data, index: 2 }),
+      createElement(AppWrapper, { data, index: 3 }),
+      createElement(AppWrapper, { data, index: 4 })
       // createElement(Benchmark, { id: 1 }),
       // createElement(Benchmark, { id: 2 })
     ]),

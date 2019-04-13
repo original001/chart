@@ -1,5 +1,5 @@
 import { createElement } from "./reconciler";
-import { ChartInfo } from "./prepareData";
+import { ChartInfo, Dot } from "./prepareData";
 
 export const createRaf = (fn: (...args) => void) => {
   let isRafAvailable = true;
@@ -55,6 +55,21 @@ export const prettifyDate = (timestamp: number, withDate?: boolean) => {
   return withDate ? `${date}, ${day} ${month} ${year}` : `${month} ${day}`;
 };
 
+export const prettifyHours = (timestamp: number, withDate?: boolean) => {
+  const time = new Date(timestamp);
+  const hours = time.getUTCHours()
+  const minutes = time.getUTCMinutes()
+  return  `${hours}:${minutes}`
+};
+
+export const repeat = <T>(count: number, value: T) => {
+  const res = [] as T[];
+  for (let i = 0 ; i < count; i++ ) {
+    res.push(value)
+  }
+  return res
+}
+
 export const path = (
   path: string,
   color: string,
@@ -75,36 +90,36 @@ export const path = (
   });
 
 export const createPathAttr = (
-  values: number[],
+  dots: Dot[],
   projectX: (x: number) => string | number,
   projectY: (y: number) => string | number,
-  _: number[]
 ) =>
-  values.reduce(
-    (acc, y, i) => (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(i)} ${projectY(y)}`),
+  dots.reduce(
+    (acc, [x, y], i) => {
+      return (i === 0 ? `M0 ${projectY(y)}` : acc + ` L${projectX(x)} ${projectY(y)}`)},
     ""
   );
 
 export const createStackedPathAttr = (
-  values: number[],
+  dots: Dot[],
   projectX: (x: number) => string | number,
   projectY: (y: number) => string | number,
   prevValues: number[]
 ) =>
-  values.reduce(
-    (acc, y, i) =>
+  dots.reduce(
+    (acc, [x, y], i) =>
       acc +
-      `M${projectX(i)} ${projectY(prevValues[i])}L${projectX(i)} ${projectY(y + prevValues[i])}`,
+      `M${projectX(x)} ${projectY(prevValues[i])}L${projectX(x)} ${projectY(y + prevValues[i])}`,
     ""
   );
 
 export const createPercentagePathAttr = (
-  values: number[],
+  dots: Dot[],
   projectX: (x: number) => string | number,
   projectY: (y: number) => string | number,
   prevValues: number[]
 ) =>
-  values.reduce(
-    (acc, y, i) => acc + `L${projectX(i)} ${projectY(y + prevValues[i])}`,
+  dots.reduce(
+    (acc, [x, y], i) => acc + `L${projectX(x)} ${projectY(y + prevValues[i])}`,
     `M0 ${projectY(0)}`
-  ) + `L${projectX(values.length - 1)} ${projectY(0)}Z`;
+  ) + `L${projectX(dots[dots.length - 1][0])} ${projectY(0)}Z`;

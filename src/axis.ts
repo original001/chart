@@ -18,7 +18,7 @@ const orderOfMagnitude = function(value) {
   return Math.floor(Math.log(Math.abs(value)) / Math.LN10);
 };
 
-export const round = function(value, digits) {
+export const round = function(value: number, digits: number) {
   var precision = Math.pow(10, digits);
   return Math.round(value * precision) / precision;
 };

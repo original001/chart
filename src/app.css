@@ -71,13 +71,13 @@ body.night {
   transform: scaleY(1);
 }
 .transition-d {
-  transition: transform 0.5s;
+  transition: transform 5s;
 }
 .transition-d-0 {
   transition: transform 0.001s;
 }
 .transition-p {
-  transition: opacity 0.5s, d 0.5s;
+  transition: opacity 5s, d 5s;
 }
 .transition-t-d {
   transform: scaleY(0);

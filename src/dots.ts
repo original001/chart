@@ -22,7 +22,7 @@ interface State {
   charts: ChartInfo[];
 }
 
-const POPUP_CLICK_HANDLER = 'popupClickHandler';
+const POPUP_CLICK_HANDLER = "popupClickHandler";
 
 export const Dots: ComponentType = () => ({
   ...componentMixin(),
@@ -31,14 +31,14 @@ export const Dots: ComponentType = () => ({
   } as State,
   getDeriviedStateFromProps(props: DotsProps, prevState: State) {
     const { charts, data, showPopupOn } = props;
-    if (!prevState.charts) return {charts};
     if (
       data.stacked &&
       data.percentage &&
+      prevState.charts &&
       charts.length !== prevState.charts.length &&
       showPopupOn
     ) {
-      console.log('run calculus')
+      console.log("run calculus");
       let stackedValues = Array(props.dataLength).fill(0);
       const chartsLength = props.charts.length;
       const sumValues = [];
@@ -62,12 +62,12 @@ export const Dots: ComponentType = () => ({
         })
       };
     }
-    return prevState;
+    return { charts };
   },
   didMount() {
     window[POPUP_CLICK_HANDLER + this.props.id] = date => {
-      this.props.onZoom(date)
-    }
+      this.props.onZoom(date);
+    };
   },
   render(props: DotsProps, state: State) {
     const { projectChartX, projectChartY, data, dataLength, extraScale, id } = props;
@@ -78,20 +78,23 @@ export const Dots: ComponentType = () => ({
     const showPopupOn = props.showPopupOn;
     if (!showPopupOn) return createElement("span", {});
 
-    const i = charts[0].values.findIndex(
-      (dot, i) =>
-        Number(projectChartX(i - 0.5)) <= showPopupOn &&
-        Number(projectChartX(i + 0.5)) > showPopupOn
+    const dates = data.columns[0] as number[];
+    const datesDiff = dates[2] - dates[1];
+    const i = (dates as number[]).findIndex(
+      (x, i, ar) =>
+        i > 1 &&
+        Number(projectChartX(x - 0.5 * datesDiff)) <= showPopupOn &&
+        Number(projectChartX(x + 0.5 * datesDiff)) > showPopupOn
     );
 
     const dot = charts.map(ch => ch.values[i]);
-    const date = data.columns[0][i + 1] as number;
+    const date = dates[i + 1];
     const axises = charts.map(ch => ch.id);
 
     const getStack = (ar: number[], i: number) =>
       ar.reduce((acc, v, curI) => (curI >= i ? acc : acc + v), 0);
 
-    const left = projectChartX(i);
+    const left = projectChartX(date);
     const isLeftSide = left < CHART_WIDTH / 2;
     const POPUP_WIDTH = 160;
     const popupPos = isLeftSide ? left + popupOffset : left - POPUP_WIDTH - popupOffset;
@@ -119,7 +122,9 @@ export const Dots: ComponentType = () => ({
             createElement("span", { class: "b", style: `color: ${color}` }, originalValues[i] + "")
           ])
         ),
-        data.stacked && !data.percentage && charts.length !== 1 &&
+        data.stacked &&
+          !data.percentage &&
+          charts.length !== 1 &&
           createElement("div", { class: "flex p" }, [
             createElement("span", {}, "All"),
             createElement(
@@ -141,7 +146,7 @@ export const Dots: ComponentType = () => ({
       },
       dot.map((v, _i, ar) =>
         path(
-          createStackedPathAttr([v], _ => left, projectChartY, [getStack(ar, _i)]),
+          createStackedPathAttr([[date, v]], _ => left, projectChartY, [getStack(ar, _i)]),
           data.colors[axises[_i]],
           (CHART_WIDTH * extraScale) / dataLength + 0.05,
           "",
