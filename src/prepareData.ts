@@ -1,7 +1,8 @@
 import { ChartDto } from "./chart_data";
 import { CHART_WIDTH, PRECISION, SLIDER_HEIGHT, CHART_HEIGHT } from "./constant";
-import { round } from "./axis";
-import { createPathAttr } from "./utils";
+import { round, getBounds, getBoundsX } from "./axis";
+import { createPathAttr, getStackedMax } from "./utils";
+import { AppState } from "./app";
 
 export interface ChartInfo {
   chartPath: string;
@@ -13,11 +14,10 @@ export interface ChartInfo {
   id: string;
   min: number;
   max: number;
-  dots: Dot[]
+  dots: Dot[];
 }
 
 export type Dot = [number, number];
-type Chart = Dot[];
 
 export interface Props {
   charts: ChartInfo[];
@@ -93,15 +93,11 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: bool
     const chartInfo: ChartInfo = {
       name: data.names[name],
       color: data.colors[name],
-      chartPath: data.stacked
-        ? null
-        : createPathAttr(chartDots, scaledX_, y__(y => y)),
+      chartPath: data.stacked ? null : createPathAttr(chartDots, scaledX_, y__(y => y)),
       sliderPath: data.stacked
         ? null
-        : createPathAttr(
-            chartDots,
-            scaledX_,
-            y => round(SLIDER_HEIGHT - (y - (data.y_scaled ? min : minY)) * scaleYSlider, 1)
+        : createPathAttr(chartDots, scaledX_, y =>
+            round(SLIDER_HEIGHT - (y - (data.y_scaled ? min : minY)) * scaleYSlider, 1)
           ),
       max,
       min,
@@ -134,4 +130,95 @@ export const prepareData = (data: ChartDto, onZoom: (date) => void, zoomed: bool
     scaledX_,
     y__
   } as Props;
+};
+
+interface LocalData {
+  offsetY: number;
+  offsetY2: number;
+  scaleY: number;
+  scaleY2: number;
+  valuesY2: number[];
+  valuesY: number[];
+  valuesX: number[];
+  charts: ChartInfo[];
+}
+
+export const localPrepare = (props: Props, state: AppState): LocalData => {
+  const { maxX, minX, data, dataLength } = props;
+  const {
+    visibles,
+    sliderPos: { left, right },
+    extraScale
+  } = state;
+  const charts = props.charts.filter(chart => visibles[chart.id]);
+
+  const getExtremumY = (fn: string, left: number, right: number, charts: ChartInfo[]) =>
+    Math[fn].apply(
+      Math,
+      charts.map(({ values: ys }) =>
+        Math[fn].apply(
+          Math,
+          ys.slice(Math.floor(dataLength * left) + 1, Math.ceil(dataLength * right))
+        )
+      )
+    );
+
+  const isScaled = data.y_scaled;
+  const isStacked = data.stacked;
+  let localMinY;
+  let localMaxY;
+  let localMinY2;
+  let localMaxY2;
+  if (isScaled) {
+    const first = props.charts.filter(c => c.id === "y0");
+    localMinY = getExtremumY("min", left, right, first);
+    localMaxY = getExtremumY("max", left, right, first);
+    const second = props.charts.filter(c => c.id === "y1");
+    localMinY2 = getExtremumY("min", left, right, second);
+    localMaxY2 = getExtremumY("max", left, right, second);
+  } else if (isStacked) {
+    localMinY = 0;
+    if (data.percentage) {
+      localMaxY = 100;
+    } else {
+      localMaxY = getStackedMax(
+        Math.floor(dataLength * left) + 1,
+        Math.ceil(dataLength * right),
+        charts
+      );
+    }
+  } else {
+    localMinY = getExtremumY("min", left, right, charts);
+    localMaxY = getExtremumY("max", left, right, charts);
+  }
+
+  let { values: valuesY, max: boundsMaxY, min: boundsMinY } = getBounds(
+    CHART_HEIGHT,
+    localMaxY,
+    localMinY
+  );
+  // valuesY = charts.some(c => c.id === 'y1') ? valuesY : null
+  const { values: valuesY2, max: boundsMaxY2, min: boundsMinY2 } = isScaled
+    ? getBounds(CHART_HEIGHT, localMaxY2, localMinY2)
+    : { values: null, max: 2, min: 1 };
+
+  const valuesX = getBoundsX(extraScale, maxX, minX);
+  // console.log(valuesX)
+  const scaleY = getScaleY(CHART_HEIGHT, boundsMaxY, boundsMinY);
+  const scaleY2 = getScaleY(CHART_HEIGHT, boundsMaxY2, boundsMinY2);
+
+  const offsetY = boundsMinY;
+  const offsetY2 = boundsMinY2;
+
+  const localData: LocalData = {
+    offsetY,
+    offsetY2,
+    scaleY,
+    scaleY2,
+    valuesY2,
+    valuesY,
+    charts,
+    valuesX
+  };
+  return localData;
 };

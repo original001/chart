@@ -16,23 +16,29 @@ export interface SliderChartProps {
   charts: ChartInfo[];
   data: ChartDto;
   scaledX_: (x: number) => number;
-  y__:  (f:(y:number) => number) => (x: number) => number;
+  y__: (f: (y: number) => number) => (x: number) => number;
 }
 
 interface State {
   showPopupOn: boolean;
   chartPathes: string[];
+  zoomed: boolean;
 }
 
 export const SliderChart: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    chartPathes: null
+    chartPathes: null,
+    zoomed: null
   } as State,
   getDeriviedStateFromProps(props: SliderChartProps, prevState: State) {
     if (!props.isStacked) return prevState;
-    if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length || props.zoomed !== prevState.zoomed) {
-        const { dataLength, charts, minY, scaleX, scaledX_, y__ } = props;
+    if (
+      !prevState.chartPathes ||
+      props.charts.length !== prevState.chartPathes.length ||
+      props.zoomed !== prevState.zoomed
+    ) {
+      const { dataLength, charts, minY, scaleX, scaledX_, y__ } = props;
       if (props.data.percentage) {
         const maxY = 100;
         let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
@@ -51,13 +57,10 @@ export const SliderChart: ComponentType = () => ({
         }
 
         for (let chart of props.charts) {
-          const dots = chart.dots.map(([x, y], i) => [x, round((y / sumValues[i]) * 100, 1)] as [number, number]);
-          const path = createPercentagePathAttr(
-            dots,
-            scaledX_,
-            projectChartY,
-            stackedValues
+          const dots = chart.dots.map(
+            ([x, y], i) => [x, round((y / sumValues[i]) * 100, 1)] as [number, number]
           );
+          const path = createPercentagePathAttr(dots, scaledX_, projectChartY, stackedValues);
           nextState.chartPathes.push(path);
           stackedValues = stackedValues.map((v, i) => v + dots[i][1]);
         }
@@ -69,12 +72,7 @@ export const SliderChart: ComponentType = () => ({
         let stackedValues = Array(dataLength).fill(0);
         let nextState: State = { ...prevState, chartPathes: [] };
         for (let chart of charts) {
-          const path = createStackedPathAttr(
-            chart.dots,
-            scaledX_,
-            projectChartY,
-            stackedValues
-          );
+          const path = createStackedPathAttr(chart.dots, scaledX_, projectChartY, stackedValues);
           nextState.chartPathes.push(path);
           stackedValues = stackedValues.map((v, i) => v + chart.values[i]);
         }
@@ -91,20 +89,23 @@ export const SliderChart: ComponentType = () => ({
         wrapper: children =>
           createElement("svg", { width: CHART_WIDTH, height: SLIDER_HEIGHT }, children)
       },
-      charts.slice(0).reverse().map(({ color, sliderPath }, i) =>
-        createElement(Transition, {
-          key: color,
-          children: status =>
-            path(
-              isStacked ? state.chartPathes[charts.length - 1 - i] : sliderPath,
-              color,
-              isStacked ? CHART_WIDTH / dataLength : 1,
-              status,
-              isStacked,
-              data.percentage
-            )
-        })
-      )
+      charts
+        .slice(0)
+        .reverse()
+        .map(({ color, sliderPath }, i) =>
+          createElement(Transition, {
+            key: color,
+            children: status =>
+              path(
+                isStacked ? state.chartPathes[charts.length - 1 - i] : sliderPath,
+                color,
+                isStacked ? CHART_WIDTH / dataLength : 1,
+                status,
+                isStacked,
+                data.percentage
+              )
+          })
+        )
     );
   }
 });

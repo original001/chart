@@ -6,7 +6,7 @@ const TerserPlugin = require('terser-webpack-plugin');
 
 module.exports = {
   entry: {
-    app: "./src/app",
+    app: "./src/appWrapper",
     data: "./src/data"
   },
   output: {
