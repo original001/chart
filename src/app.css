@@ -9,9 +9,12 @@ body.night {
   color: #fff;
 }
 .header {
-  font-size: 18px;
-  margin: 20px 15px 0;
+  font-size: 17px;
+  margin-bottom: 30px;
   font-weight: 500;
+}
+.zoomout {
+  color: #108be3;
 }
 .main {
   padding: 20px 10px 0;
@@ -77,7 +80,7 @@ body.night {
   transition: transform 0.001s;
 }
 .transition-p {
-  transition: opacity .5s;
+  transition: opacity 0.5s;
 }
 .transition-t-d {
   transform: scaleY(0);
@@ -213,6 +216,16 @@ body.night {
   box-shadow: 0 0 12px rgba(0, 0, 0, 0.1), 0 0 1px rgba(0, 0, 0, 0.05);
   z-index: 20;
 }
+.popup-arrow {
+  align-self: center;
+  height: 5px;
+  width: 5px;
+  margin-right: 2px;
+  border-right: 1px solid #d2d5d7;
+  border-top: 1px solid #d2d5d7;
+  transform: rotate(45deg);
+  opacity: 0.7;
+}
 .proc {
   display: inline-block;
   width: 25px;
@@ -226,7 +239,7 @@ body.night {
   margin-bottom: 5px;
 }
 .top {
-  top: 0;
+  top: 51px;
 }
 .flex {
   display: flex;

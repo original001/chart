@@ -19,7 +19,6 @@ describe("prepare data", () => {
     expect(d.charts.length).toBe(2);
     expect(d.visibles["y0"]).toBe(true);
     expect(d.visibles["y1"]).toBe(true);
-    expect(d.zoomed).toBe(false);
     expect(d.scaledX_(1551744000000)).toBe(25);
     expect(d.charts.length).toBe(2);
     expect(d.scaleX).toBe(CHART_WIDTH / (1552003200000 - 1551657600000));
@@ -44,7 +43,7 @@ describe("prepare data", () => {
   };
 
   it("default", () => {
-    const d = prepareData(data, () => {}, false);
+    const d = prepareData(data);
     expected(d);
     expect(d.charts[1].sliderPath).toBe("M0 44.7 L25 45 L50 44.4 L75 44.1 L100 44.3");
     expect(d.charts[0].sliderPath).toBe("M0 27.5 L25 0 L50 5.8 L75 8.9 L100 24.9");
@@ -54,7 +53,7 @@ describe("prepare data", () => {
   });
 
   it("y scaled", () => {
-    const d = prepareData({ ...data, y_scaled: true }, () => {}, false);
+    const d = prepareData({ ...data, y_scaled: true }, );
     expected(d);
     expect(d.charts[1].sliderPath).toBe("M0 28.9 L25 45 L50 16.1 L75 0 L100 11.3");
     expect(d.charts[0].sliderPath).toBe("M0 45 L25 0 L50 9.4 L75 14.7 L100 40.8");
@@ -63,7 +62,7 @@ describe("prepare data", () => {
     expect(d.minY).toBe(0.012);
   });
   it("stacked", () => {
-    const d = prepareData({ ...data, stacked: true }, () => {}, false);
+    const d = prepareData({ ...data, stacked: true }, );
     expected(d);
     expect(d.charts[1].sliderPath).toBe(null);
     expect(d.charts[0].sliderPath).toBe(null);
@@ -72,7 +71,7 @@ describe("prepare data", () => {
     expect(d.minY).toBe(0);
   });
   it("percentages", () => {
-    const d = prepareData({ ...data, stacked: true, percentage: true }, () => {}, false);
+    const d = prepareData({ ...data, stacked: true, percentage: true });
     expected(d, true);
     const { min, max, name, color } = d.charts[0];
     const { min: min2, max: max2, name: name2, color: color2 } = d.charts[1];
@@ -122,7 +121,7 @@ describe("localPrepare", () => {
     1552003200000
   ];
   it("default", () => {
-    const p = prepareData(data, () => {}, false);
+    const p = prepareData(data);
     const localData = localPrepare(p, {
       ...defaultAppState,
       visibles: p.visibles,
@@ -140,7 +139,7 @@ describe("localPrepare", () => {
     });
   });
   it("y_scaled", () => {
-    const p = prepareData({ ...data, y_scaled: true }, () => {}, false);
+    const p = prepareData({ ...data, y_scaled: true });
     const localData = localPrepare(p, {
       ...defaultAppState,
       visibles: p.visibles,
@@ -159,7 +158,7 @@ describe("localPrepare", () => {
   });
 
   it("stacked", () => {
-    const p = prepareData({ ...data, stacked: true }, () => {}, false);
+    const p = prepareData({ ...data, stacked: true });
     const localData = localPrepare(p, {
       ...defaultAppState,
       visibles: p.visibles,
@@ -177,7 +176,7 @@ describe("localPrepare", () => {
     });
   });
   it("stacked", () => {
-    const p = prepareData({ ...data, percentage: true }, () => {}, false);
+    const p = prepareData({ ...data, percentage: true });
     const localData = localPrepare(p, {
       ...defaultAppState,
       visibles: p.visibles,

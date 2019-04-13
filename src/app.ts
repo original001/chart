@@ -10,10 +10,13 @@ import { prettifyDate, prettifyHours } from "./utils";
 import { Dots, DotsProps } from "./dots";
 import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
-import { Props, localPrepare } from "./prepareData";
+import { PreparedData, localPrepare } from "./prepareData";
 require("./app.css");
 
 const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
+const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
+const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
+const UNZOOM_HANDLER_NAME = "unzoomHandler";
 
 const flexLabel = (timestamp: number, offset: number, status: string, zoomed) =>
   createElement(
@@ -24,9 +27,6 @@ const flexLabel = (timestamp: number, offset: number, status: string, zoomed) =>
     },
     zoomed ? prettifyHours(timestamp) : prettifyDate(timestamp)
   );
-
-const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
-const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
 
 export interface AppState {
   extraScale: number;
@@ -47,6 +47,12 @@ export const defaultAppState: AppState = {
   showPopupOn: null,
   visibles: null
 };
+
+export interface AppProps extends PreparedData {
+  onZoom: (date) => void;
+  onUnzoom: () => void;
+  zoomed: boolean;
+}
 
 export const App: ComponentType = () => ({
   ...componentMixin(),
@@ -87,6 +93,10 @@ export const App: ComponentType = () => ({
       this.send({ type: "toggle", payload: name });
     };
 
+    window[UNZOOM_HANDLER_NAME + id] = () => {
+      this.props.onUnzoom();
+    };
+
     window[TOGGLE_DAY_HANDLER_NAME + id] = () => {
       const nextMode = this.state.mode === "day" ? "night" : "day";
       document.body.setAttribute("class", nextMode);
@@ -109,7 +119,7 @@ export const App: ComponentType = () => ({
       }, 10);
     };
   },
-  getDeriviedStateFromProps(props: Props, prevState) {
+  getDeriviedStateFromProps(props: AppProps, prevState) {
     if (!prevState.visibles) return { ...prevState, visibles: props.visibles };
     const visibles = {};
     props.charts.forEach(c => {
@@ -117,7 +127,7 @@ export const App: ComponentType = () => ({
     });
     return { ...prevState, visibles };
   },
-  render(props: Props, state: AppState) {
+  render(props: AppProps, state: AppState) {
     const id = this.id;
     //prettier-ignore
     const { scaleX, data, dataLength, minY, pow, onZoom, zoomed, scaledX_, y__ } = props;
@@ -180,7 +190,8 @@ export const App: ComponentType = () => ({
       dataLength,
       pow,
       onZoom,
-      id
+      id,
+      zoomed
     } as DotsProps);
 
     const slider = createElement(
@@ -254,8 +265,16 @@ export const App: ComponentType = () => ({
       charts,
       pow
     } as RullerProps);
+    const header = zoomed
+      ? createElement(
+          "div",
+          { class: "header zoomout", ontouchstart: `${UNZOOM_HANDLER_NAME + id}()` },
+          "Zoom Out"
+        )
+      : createElement("div", { class: "header" }, "Followers");
 
     return createElement("div", { class: "rel" }, [
+      header,
       overlay,
       dots,
       ruller,

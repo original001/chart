@@ -19,7 +19,7 @@ export interface ChartInfo {
 
 export type Dot = [number, number];
 
-export interface Props {
+export interface PreparedData {
   charts: ChartInfo[];
   visibles: { [id: string]: boolean };
   scaleX: number;
@@ -30,8 +30,6 @@ export interface Props {
   data: ChartDto;
   dataLength: number;
   pow: 1 | 1000 | 1000000;
-  onZoom: (date) => void;
-  zoomed: boolean;
   scaledX_: (x: number) => number;
   y__: (f: (y: number) => number) => (x: number) => number;
 }
@@ -44,10 +42,8 @@ const powCache = {};
 
 export const prepareData = (
   data: ChartDto,
-  onZoom: (date) => void,
-  zoomed: boolean,
   index?: number
-): Props => {
+): PreparedData => {
   const columns = data.columns;
   const dates = columns[0];
   const dataLength = dates.length - 1;
@@ -137,11 +133,9 @@ export const prepareData = (
     data,
     dataLength,
     pow,
-    onZoom,
-    zoomed,
     scaledX_,
     y__
-  } as Props;
+  } as PreparedData;
 };
 
 interface LocalData {
@@ -155,7 +149,7 @@ interface LocalData {
   charts: ChartInfo[];
 }
 
-export const localPrepare = (props: Props, state: AppState): LocalData => {
+export const localPrepare = (props: PreparedData, state: AppState): LocalData => {
   const { maxX, minX, data, dataLength } = props;
   const {
     visibles,

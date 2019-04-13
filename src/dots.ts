@@ -17,6 +17,7 @@ export interface DotsProps {
   pow: number;
   onZoom: (date) => void;
   id: number;
+  zoomed: boolean;
 }
 interface State {
   charts: ChartInfo[];
@@ -70,21 +71,19 @@ export const Dots: ComponentType = () => ({
     };
   },
   render(props: DotsProps, state: State) {
-    const { projectChartX, projectChartY, data, dataLength, extraScale, id } = props;
+    const { projectChartX, projectChartY, data, dataLength, extraScale, id, zoomed } = props;
     const { charts } = state;
     const popupOffset = 15;
-    const textOffset = 15 - popupOffset;
 
     const showPopupOn = props.showPopupOn;
     if (!showPopupOn) return createElement("span", {});
 
     const dates = data.columns[0] as number[];
-    const datesDiff = dates[2] - dates[1];
     const i = (dates as number[]).findIndex(
       (x, i, ar) =>
         i > 1 &&
-        Number(projectChartX(x - 0.5 * datesDiff)) <= showPopupOn &&
-        Number(projectChartX(x + 0.5 * datesDiff)) > showPopupOn
+        Number(projectChartX((x + ar[i - 1]) / 2)) <= showPopupOn &&
+        Number(projectChartX((ar[i + 1] + x) / 2)) > showPopupOn
     );
 
     const dot = charts.map(ch => ch.values[i]);
@@ -103,10 +102,13 @@ export const Dots: ComponentType = () => ({
       {
         class: "popup abs n-bg",
         style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`,
-        ontouchstart: `${POPUP_CLICK_HANDLER + id}(${date})`
+        ontouchstart: zoomed ? '' : `${POPUP_CLICK_HANDLER + id}(${date})`
       },
       [
-        createElement("div", { class: "b p" }, prettifyDate(date, true)),
+        createElement('div', {class: 'flex p'}, [
+          createElement("span", { class: "b" }, prettifyDate(date, true)),
+          !zoomed && createElement("span", { class: "popup-arrow" }),
+        ]),
         ...charts.map(({ values, color, name, originalValues }) =>
           createElement("div", { class: "flex p" }, [
             createElement(
