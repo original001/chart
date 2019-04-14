@@ -144,12 +144,12 @@ const AppWrapper: ComponentType = () => ({
 
 const start = () => {
   render(
-    createElement("div", {}, [
+    createElement("div", {}, [,
       createElement(AppWrapper, { data, index: 0 }),
-      createElement(AppWrapper, { data, index: 1 }),
-      createElement(AppWrapper, { data, index: 2 }),
-      createElement(AppWrapper, { data, index: 3 }),
-      createElement(AppWrapper, { data, index: 4 })
+      // createElement(AppWrapper, { data, index: 1 }),
+      // createElement(AppWrapper, { data, index: 2 }),
+      // createElement(AppWrapper, { data, index: 3 }),
+      // createElement(AppWrapper, { data, index: 4 })
       // createElement(Benchmark, { id: 1 }),
       // createElement(Benchmark, { id: 2 })
     ]),

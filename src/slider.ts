@@ -50,6 +50,7 @@ export const Slider: ComponentType = () => ({
       });
     });
     window[START_TOUCH_HANDLER_NAME + id] = (e: TouchEvent) => {
+      e.preventDefault();
       makeCompensation(e.targetTouches[0].clientX);
     };
     window[TOUCH_END_HANDLER_NAME + id] = () => {

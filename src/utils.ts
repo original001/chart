@@ -52,8 +52,16 @@ export const getStackedMax = (from, to, charts: ChartInfo[]) => {
   return max;
 };
 
+// setTimeout(() => alert(time), 3000)
+var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const prettifyDate = (timestamp: number, withDate?: boolean) => {
-  const [date, month, day, year] = new Date(timestamp).toString().split(" ");
+  const d =new Date(timestamp);
+  const date = DAY_NAMES[d.getDay()];
+  const day = d.getDate();
+  const month = MONTH_NAMES[d.getMonth()];
+  const year = d.getFullYear();
+  // const [date, month, day, year] = new Date(timestamp).toString().split(" ");
   return withDate ? `${date}, ${day} ${month} ${year}` : `${month} ${day}`;
 };
 

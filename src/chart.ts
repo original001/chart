@@ -98,7 +98,6 @@ export const Chart: ComponentType = () => ({
     return createElement(
       "svg",
       {
-        // key: props.zoomed ? 1 : 0,
         width: CHART_WIDTH,
         height: CHART_HEIGHT,
         class: `w-ch`
@@ -113,7 +112,6 @@ export const Chart: ComponentType = () => ({
                 {
                   style: `transform: translateX(-${offset *
                     CHART_WIDTH}px) scale(${extraScale},1);`,
-                  class: "transition-d-0"
                 },
                 y_scaled
                   ? children

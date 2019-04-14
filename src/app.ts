@@ -54,6 +54,27 @@ export interface AppProps extends PreparedData {
   zoomed: boolean;
 }
 
+const times = [];
+let averageFps;
+let fps;
+
+// setTimeout(() => alert(averageFps), 5000)
+
+function refreshLoop() {
+  window.requestAnimationFrame(() => {
+    const now = performance.now();
+    while (times.length > 0 && times[0] <= now - 1000) {
+      times.shift();
+    }
+    times.push(now);
+    fps = times.length;
+    averageFps = averageFps ? Math.round((averageFps + fps) / 2) : fps
+    refreshLoop();
+  });
+}
+
+refreshLoop();
+
 export const App: ComponentType = () => ({
   ...componentMixin(),
   id: Date.now(),
@@ -240,7 +261,11 @@ export const App: ComponentType = () => ({
       Object.keys(visibles).map(chartId =>
         createElement(
           "span",
-          { class: "button", ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")` },
+          {
+            class: "button",
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`,
+            // onmousedown: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
+          },
           [
             createElement(
               "span",
@@ -254,7 +279,11 @@ export const App: ComponentType = () => ({
     );
     const nightButton = createElement(
       "div",
-      { class: "switch", ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()` },
+      {
+        class: "switch",
+        ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()`,
+        // onmousedown: `${TOGGLE_DAY_HANDLER_NAME + id}()`
+      },
       "Switch to Nigth Mode"
     );
     const ruller = createElement(TransitionRuller, {

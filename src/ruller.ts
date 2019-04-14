@@ -52,7 +52,7 @@ export const TransitionRuller: ComponentType = () => ({
             {
               class: "transition translate rel w-ch-c",
               //prettier-ignore
-              style: `transform: scaleY(${props.scale}) translateY(${props.offset - 12.5 / props.scale}px); transform-origin: 0 ${CHART_HEIGHT}px`
+              style: `transform: scale(1, ${props.scale}) translate(0, ${props.offset - 12.5 / props.scale}px) ; transform-origin: 0 ${CHART_HEIGHT}px`
             },
             children
           )
@@ -66,14 +66,14 @@ export const TransitionRuller: ComponentType = () => ({
               "div",
               {
                 key,
-                class: `${status} transition abs fw`
+                class: `${status} transition abs fw w-ch-o`,
               },
               values.map((v, i) =>
                 createElement(
                   "div",
                   {
-                    class: `r-line abs fw`,
-                    style: `transform: scaleY(${round(1 / props.scale, PRECISION)}) translateY(${CHART_HEIGHT - v}px); transform-origin: 0 ${CHART_HEIGHT -
+                    class: `r-line abs fw w-ch`,
+                    style: `transform: scale(1, ${round(1 / props.scale, PRECISION)}) translate(0, ${CHART_HEIGHT - v}px) ; transform-origin: 0 ${CHART_HEIGHT -
                       v}px`
                   },
                   //prettier-ignore

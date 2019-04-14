@@ -170,6 +170,9 @@ body.night {
 .w-ch {
   will-change: transform;
 }
+.w-ch-o {
+  will-change: opacity;
+}
 .c-s {
   contain: strict;
 }
