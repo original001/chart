@@ -85,6 +85,7 @@ export const Dots: ComponentType = () => ({
         Number(projectChartX((x + ar[i - 1]) / 2)) <= showPopupOn &&
         Number(projectChartX((ar[i + 1] + x) / 2)) > showPopupOn
     );
+    if (i === -1) return createElement("span", {});
 
     const dot = charts.map(ch => ch.values[i]);
     const date = dates[i + 1];

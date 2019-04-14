@@ -100,7 +100,8 @@ export const Chart: ComponentType = () => ({
       {
         width: CHART_WIDTH,
         height: CHART_HEIGHT,
-        class: `w-ch`
+        class: `w-ch-c`,
+        overflow: 'visible'
       },
       [
         createElement(
@@ -121,7 +122,7 @@ export const Chart: ComponentType = () => ({
                         {
                           //prettier-ignore
                           style: `transform: scale(1, ${scaleY}) translate(0, ${offsetY}px); transform-origin: 0 ${CHART_HEIGHT}px; opacity: ${chartOpacity}`,
-                          class: "transition-d"
+                          class: "transition-d",
                         },
                         children
                       )

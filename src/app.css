@@ -161,6 +161,11 @@ body.night {
 .fw {
   width: 100%;
 }
+.fw-wrapper {
+  margin: 0 -10px;
+  padding: 0 10px;
+  overflow: hidden;
+}
 .fh {
   height: 315px;
 }
@@ -172,6 +177,12 @@ body.night {
 }
 .w-ch-o {
   will-change: opacity;
+}
+.w-ch-ot {
+  will-change: transform, opacity;
+}
+.w-ch-lr {
+  will-change: left, right;
 }
 .c-s {
   contain: strict;

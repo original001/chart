@@ -228,6 +228,8 @@ export const App: ComponentType = () => ({
       y__
     } as ChartProps);
 
+    const chartWrapper = createElement('div', {class: 'fw-wrapper w-ch'}, [chart])
+
     const dots = createElement(Dots, {
       data,
       charts,
@@ -343,7 +345,7 @@ export const App: ComponentType = () => ({
       overlay,
       dots,
       ruller,
-      chart,
+      chartWrapper,
       labels,
       slider,
       buttons,
