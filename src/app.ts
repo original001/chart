@@ -14,7 +14,8 @@ import { PreparedData, localPrepare } from "./prepareData";
 require("./app.css");
 
 const TOGGLE_GRAPH_HANDLER_NAME = "toggleGraphHandler";
-const TOGGLE_CHART_HANDLER_NAME = "toggleChartHandler";
+const TOGGLE_PRESS_CHART_HANDLER_NAME = "togglePressChartHandler";
+const TOGGLE_UNPRESS_CHART_HANDLER_NAME = "toggleUnPressChartHandler";
 const TOGGLE_DAY_HANDLER_NAME = "toggleDayHandler";
 const UNZOOM_HANDLER_NAME = "unzoomHandler";
 
@@ -98,6 +99,19 @@ export const App: ComponentType = () => ({
             [payload]: !state.visibles[payload]
           }
         };
+      case "toggleAll":
+        const nextVisibles = {}
+        Object.keys(state.visibles).forEach(key => {
+          if (key === payload) {
+            nextVisibles[key] = true
+          } else {
+            nextVisibles[key] = false
+          }
+        })
+        return {
+          ...state,
+          visibles: nextVisibles
+        };
       case "touchEnd":
         return { ...state, touchEndTimestamp: payload };
       case "mode":
@@ -110,9 +124,23 @@ export const App: ComponentType = () => ({
   },
   didMount() {
     const id = this.id;
-    window[TOGGLE_CHART_HANDLER_NAME + id] = name => {
-      this.send({ type: "toggle", payload: name });
+    let pressed = false
+    let timer;
+    window[TOGGLE_PRESS_CHART_HANDLER_NAME + id] = (name, e) => {
+      e.preventDefault()
+      pressed = true
+      timer = setTimeout(() => {
+        pressed = false
+        this.send({ type: "toggleAll", payload: name });
+      }, 500)
     };
+
+    window[TOGGLE_UNPRESS_CHART_HANDLER_NAME + id] = name => {
+      if (pressed) {
+        clearTimeout(timer)
+        this.send({ type: "toggle", payload: name });
+      }
+    }
 
     window[UNZOOM_HANDLER_NAME + id] = () => {
       this.props.onUnzoom();
@@ -263,7 +291,8 @@ export const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
+            ontouchstart: `${TOGGLE_PRESS_CHART_HANDLER_NAME + id}("${chartId}", event)`,
+            ontouchend: `${TOGGLE_UNPRESS_CHART_HANDLER_NAME + id}("${chartId}")`
             // onmousedown: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
           },
           [
