@@ -238,16 +238,17 @@ body.night {
 .night .l-text {
   color: rgba(163, 177, 194, 0.6);
 }
+.flex-labels-wrapper {
+  position: absolute;
+  top: 0;
+  height: 30px;
+}
 .flex-labels {
   box-sizing: border-box;
   display: flex;
   padding: 0 25px;
   justify-content: space-between;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 30px;
 }
 .flex-item {
   margin: 0 -16px;

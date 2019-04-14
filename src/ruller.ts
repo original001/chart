@@ -58,7 +58,7 @@ export const TransitionRuller: ComponentType = () => ({
           )
       },
       [
-        createElement(Transition, {
+        charts.length > 0 && createElement(Transition, {
           timeout: 500,
           key: key,
           children: status =>

@@ -102,8 +102,8 @@ export const path = (
       stroke: color,
       class: `transition-p ${status}`,
       "vector-effect": !isStacked ? "non-scaling-stroke" : "",
+      "stroke-linejoin": !isStacked ? "round" : "",
       fill: isPercentage ? color : "none",
-      // fill: "none",
       key: color
     },
     [createElement(Animate, { value: path })]

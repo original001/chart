@@ -23,7 +23,7 @@ const flexLabel = (timestamp: number, offset: number, status: string, zoomed) =>
   createElement(
     "span",
     {
-      class: status + " transition l-text flex-item",
+      class: "l-text flex-item",
       key: timestamp
     },
     prettifyDate(timestamp, zoomed ? "h:m" : "m d")
@@ -248,7 +248,7 @@ export const App: ComponentType = () => ({
     const slider = createElement(
       "div",
       {
-        class: 'sliderWrapper',
+        class: "sliderWrapper",
         style: `height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
       },
       [
@@ -267,24 +267,28 @@ export const App: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
-          createElement("div", { class: "rel w-ch-c", style: "height: 50px" }, [
+          createElement("div", { class: "rel", style: "height: 30px" }, [
             createElement(
               "div",
               {
-                class: "flex-labels w-ch",
                 //prettier-ignore
-                style: `left: -${left * CHART_WIDTH * state.extraScale}px; right: ${(right - 1) * CHART_WIDTH * state.extraScale}px`
+                class: 'flex-labels-wrapper w-ch',
+                // style: `left: -${left * CHART_WIDTH * state.extraScale}px; right: ${(right - 1) * CHART_WIDTH * state.extraScale}px`
+                style: `width: ${CHART_WIDTH * state.extraScale}px; transform: translateX(${- CHART_WIDTH * state.offset}px)`
               },
               children
             )
           ])
       },
-      valuesX.map((x, i) =>
-        createElement(Transition, {
-          children: status => flexLabel(x, (i * scaledWidth) / valuesX.length, status, zoomed),
-          key: x
-        })
-      )
+      [createElement(Transition, {
+        children: status =>
+          createElement(
+            "div",
+            { class: `flex-labels fw fh ${status} transition` },
+            valuesX.map((x, i) => flexLabel(x, (i * scaledWidth) / valuesX.length, status, zoomed))
+          ),
+        key: valuesX.length
+      })]
     );
     const buttons = createElement(
       "div",

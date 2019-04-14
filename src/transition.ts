@@ -75,22 +75,22 @@ export const Transition: ComponentType = () => ({
   didUpdate() {
     const prevState = this.state as State;
     if (prevState.status === "exiting") {
-      accomodate(() => {
-        this.send({ type: "update" });
-      }, this.props.timeout || 200);
-      // clearTimeout(this.timer);
-      // this.timer = setTimeout(() => {
+      // accomodate(() => {
       //   this.send({ type: "update" });
       // }, this.props.timeout || 200);
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+        this.send({ type: "update" });
+      }, this.props.timeout || 200);
     }
     if (prevState.status === "entering") {
-      accomodate(() => {
-        this.send({ type: "entered" });
-      });
-      // clearTimeout(this.timer);
-      // this.timer = setTimeout(() => {
-      // this.send({ type: "entered" });
-      // }, 20);
+      // accomodate(() => {
+      //   this.send({ type: "entered" });
+      // });
+      clearTimeout(this.timer);
+      this.timer = setTimeout(() => {
+      this.send({ type: "entered" });
+      }, 20);
     }
   },
   didMount() {

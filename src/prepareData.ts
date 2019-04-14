@@ -158,6 +158,21 @@ export const localPrepare = (props: PreparedData, state: AppState): LocalData =>
   } = state;
   const charts = props.charts.filter(chart => visibles[chart.id]);
 
+  const valuesX = getBoundsX(extraScale, maxX, minX);
+
+  if (charts.length === 0) {
+    return {
+      offsetY: 0,
+      offsetY2: null,
+      scaleY: 1,
+      scaleY2: null,
+      valuesY2: null,
+      valuesY: [0, 0, 0, 0, 0, 0],
+      charts,
+      valuesX
+    } as LocalData
+  }
+
   const cuttedCharts = charts.map(ch => ({
     ...ch,
     values: catValuesByDates(data.columns[0], ch.values, left, right, minX, maxX)
@@ -208,7 +223,6 @@ export const localPrepare = (props: PreparedData, state: AppState): LocalData =>
     ? getBounds(CHART_HEIGHT, localMaxY2, localMinY2)
     : { values: null, max: 2, min: 1 };
 
-  const valuesX = getBoundsX(extraScale, maxX, minX);
   // console.log(valuesX)
   const scaleY = getScaleY(CHART_HEIGHT, boundsMaxY, boundsMinY);
   const scaleY2 = getScaleY(CHART_HEIGHT, boundsMaxY2, boundsMinY2);
