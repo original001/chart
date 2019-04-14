@@ -56,7 +56,7 @@ export const getStackedMax = (from, to, charts: ChartInfo[]) => {
 //prettier-ignore
 var MONTH_NAMES = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
 var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d m y" | "h:m") => {
+export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d m y" | "h:m" | "dr m y") => {
   const d = new Date(timestamp);
   const date = DAY_NAMES[d.getDay()];
   const day = d.getDate();
@@ -65,6 +65,8 @@ export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d
   switch (format) {
     case "d m y":
       return `${day} ${month} ${year}`;
+    case "dr m y":
+      return `${month} ${year}`;
     case "dt, d m y":
       return `${date}, ${day} ${month} ${year}`;
     case "m d":

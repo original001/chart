@@ -6,7 +6,7 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate, prettifyHours, catValues, rest, last } from "./utils";
+import { prettifyDate, catValues, rest, last } from "./utils";
 import { Dots, DotsProps } from "./dots";
 import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
@@ -295,8 +295,8 @@ export const App: ComponentType = () => ({
       pow
     } as RullerProps);
     const cuttedDates = catValues(rest(data.columns[0]), left, right, minX, maxX);
-    const firstDate = prettifyDate(cuttedDates[0], "d m y");
-    const lastDate = prettifyDate(last(cuttedDates), "d m y");
+    const firstDate = prettifyDate(cuttedDates[0], "dr m y");
+    const lastDate = prettifyDate(last(cuttedDates), "dr m y");
     const midDate = prettifyDate(cuttedDates[Math.floor(cuttedDates.length / 2)], "dt, d m y");
     const headerWrapper = createElement("div", { class: "flex" }, [
       zoomed
