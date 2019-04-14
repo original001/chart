@@ -86,13 +86,13 @@ export const Slider: ComponentType = () => ({
   },
   render: (props, state) => {
     const id = props.eventId;
-    return createElement("div", { class: "sliderWrapper abs fw" }, [
+    return createElement("div", { class: "fh abs fw" }, [
       createElement("div", {
         ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
         ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
         ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
         ontouchmove: `${TOUCH_HANDLER_NAME + id}(event)`,
-        class: "sliderWrapper abs fw"
+        class: "sliderCenter fh abs fw"
       }),
       createElement(
         "div",

@@ -101,7 +101,7 @@ export const Dots: ComponentType = () => ({
     const popup = createElement(
       "div",
       {
-        class: "popup abs n-bg",
+        class: "popup abs z-20",
         style: `width: ${POPUP_WIDTH}px; top: 10px; left:${popupPos}px`,
         ontouchstart: zoomed ? '' : `${POPUP_CLICK_HANDLER + id}(${date})`
       },
@@ -196,7 +196,7 @@ export const Dots: ComponentType = () => ({
 
     return createElement(
       "div",
-      { class: "abs fw fh top" },
+      { class: "abs fw top", style: `height: ${CHART_HEIGHT}` },
       data.stacked && !data.percentage ? [stackeddots, popup] : [dots, popup]
     );
   }

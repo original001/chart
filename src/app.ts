@@ -100,14 +100,14 @@ export const App: ComponentType = () => ({
           }
         };
       case "toggleAll":
-        const nextVisibles = {}
+        const nextVisibles = {};
         Object.keys(state.visibles).forEach(key => {
           if (key === payload) {
-            nextVisibles[key] = true
+            nextVisibles[key] = true;
           } else {
-            nextVisibles[key] = false
+            nextVisibles[key] = false;
           }
-        })
+        });
         return {
           ...state,
           visibles: nextVisibles
@@ -124,23 +124,23 @@ export const App: ComponentType = () => ({
   },
   didMount() {
     const id = this.id;
-    let pressed = false
+    let pressed = false;
     let timer;
     window[TOGGLE_PRESS_CHART_HANDLER_NAME + id] = (name, e) => {
-      e.preventDefault()
-      pressed = true
+      e.preventDefault();
+      pressed = true;
       timer = setTimeout(() => {
-        pressed = false
+        pressed = false;
         this.send({ type: "toggleAll", payload: name });
-      }, 500)
+      }, 500);
     };
 
     window[TOGGLE_UNPRESS_CHART_HANDLER_NAME + id] = name => {
       if (pressed) {
-        clearTimeout(timer)
+        clearTimeout(timer);
         this.send({ type: "toggle", payload: name });
       }
-    }
+    };
 
     window[UNZOOM_HANDLER_NAME + id] = () => {
       this.props.onUnzoom();
@@ -228,7 +228,7 @@ export const App: ComponentType = () => ({
       y__
     } as ChartProps);
 
-    const chartWrapper = createElement('div', {class: 'fw-wrapper w-ch'}, [chart])
+    const chartWrapper = createElement("div", { class: "fw-wrapper w-ch" }, [chart]);
 
     const dots = createElement(Dots, {
       data,
@@ -248,7 +248,8 @@ export const App: ComponentType = () => ({
     const slider = createElement(
       "div",
       {
-        style: `position: relative; overflow: hidden; height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
+        class: 'sliderWrapper',
+        style: `height: ${SLIDER_HEIGHT}px; width: ${CHART_WIDTH}px`
       },
       [
         createElement(Slider, {
@@ -292,18 +293,18 @@ export const App: ComponentType = () => ({
         createElement(
           "span",
           {
-            class: "button",
+            class: `button ${visibles[chartId] ? "active" : ""}`,
+            style: `border-color: ${data.colors[chartId]}; color: ${data.colors[chartId]}`,
             ontouchstart: `${TOGGLE_PRESS_CHART_HANDLER_NAME + id}("${chartId}", event)`,
             ontouchend: `${TOGGLE_UNPRESS_CHART_HANDLER_NAME + id}("${chartId}")`
-            // onmousedown: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
           },
           [
-            createElement(
-              "span",
-              { class: "button-label", style: `background: ${data.colors[chartId]}` },
-              [createElement("span", { class: `button-icon ${visibles[chartId] ? "" : "active"}` })]
-            ),
-            createElement("span", { class: "button-text" }, data.names[chartId])
+            createElement("span", {
+              class: `button-label ${visibles[chartId] ? "active" : ""}`,
+              style: `background: ${data.colors[chartId]}`
+            }),
+            visibles[chartId] && createElement("span", { class: `button-icon` }),
+            createElement("span", { class: "rel" }, data.names[chartId])
           ]
         )
       )
@@ -333,11 +334,11 @@ export const App: ComponentType = () => ({
       zoomed
         ? createElement(
             "div",
-            { class: "header zoomout", ontouchstart: `${UNZOOM_HANDLER_NAME + id}()` },
+            { class: "header zoomout rel z-20", ontouchstart: `${UNZOOM_HANDLER_NAME + id}()` },
             "Zoom Out"
           )
         : createElement("div", { class: "header" }, "Followers"),
-      createElement("div", { class: "b" }, zoomed ? `${midDate}`: `${firstDate} - ${lastDate}`)
+      createElement("div", { class: "b" }, zoomed ? `${midDate}` : `${firstDate} - ${lastDate}`)
     ]);
 
     return createElement("div", { class: "rel" }, [
