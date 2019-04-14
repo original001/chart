@@ -1,5 +1,5 @@
 body {
-  font: 14px "helvetica neue", helvetica;
+  font: 12px "helvetica neue", helvetica;
   color: #404040;
   padding: 0;
   margin: 0;
@@ -206,7 +206,6 @@ body.night {
 }
 .popup {
   box-sizing: border-box;
-  font-size: 12px;
   background: #fff;
   padding: 7px 14px;
   border-radius: 10px;

@@ -53,23 +53,27 @@ export const getStackedMax = (from, to, charts: ChartInfo[]) => {
 };
 
 // setTimeout(() => alert(time), 3000)
-var MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-var DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-export const prettifyDate = (timestamp: number, withDate?: boolean) => {
-  const d =new Date(timestamp);
+//prettier-ignore
+var MONTH_NAMES = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d m y" | "h:m") => {
+  const d = new Date(timestamp);
   const date = DAY_NAMES[d.getDay()];
   const day = d.getDate();
   const month = MONTH_NAMES[d.getMonth()];
   const year = d.getFullYear();
-  // const [date, month, day, year] = new Date(timestamp).toString().split(" ");
-  return withDate ? `${date}, ${day} ${month} ${year}` : `${month} ${day}`;
-};
-
-export const prettifyHours = (timestamp: number, withDate?: boolean) => {
-  const time = new Date(timestamp);
-  const hours = time.getUTCHours();
-  const minutes = time.getUTCMinutes();
-  return `${hours}:${minutes}`;
+  switch (format) {
+    case "d m y":
+      return `${day} ${month} ${year}`;
+    case "dt, d m y":
+      return `${date}, ${day} ${month} ${year}`;
+    case "m d":
+      return `${month} ${day}`;
+    case "h:m":
+      const hours = d.getUTCHours();
+      const minutes = d.getUTCMinutes();
+      return `${hours}:${minutes}`;
+  }
 };
 
 export const repeat = <T>(count: number, value: T) => {
@@ -158,4 +162,17 @@ export const catValuesByDates = (
   return values.filter(
     (_, i) => dates[i + 1] >= _min + range * left && dates[i + 1] <= _min + range * right
   );
+};
+
+export const catValues = (
+  values: number[],
+  left: number,
+  right: number,
+  min?: number,
+  max?: number
+) => {
+  const _max = max || max_(values);
+  const _min = min || min_(values);
+  const range = _max - _min;
+  return values.filter(v => v >= _min + range * left && v <= _min + range * right);
 };

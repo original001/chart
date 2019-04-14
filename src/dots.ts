@@ -106,7 +106,7 @@ export const Dots: ComponentType = () => ({
       },
       [
         createElement('div', {class: 'flex p'}, [
-          createElement("span", { class: "b" }, prettifyDate(date, true)),
+          createElement("span", { class: "b" }, prettifyDate(date, 'dt, d m y')),
           !zoomed && createElement("span", { class: "popup-arrow" }),
         ]),
         ...charts.map(({ values, color, name, originalValues }) =>

@@ -6,7 +6,7 @@ import { Slider } from "./slider";
 import { CHART_HEIGHT, CHART_WIDTH, SLIDER_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { prettifyDate, prettifyHours } from "./utils";
+import { prettifyDate, prettifyHours, catValues, rest, last } from "./utils";
 import { Dots, DotsProps } from "./dots";
 import { Chart, ChartProps } from "./chart";
 import { SliderChart, SliderChartProps } from "./sliderChart";
@@ -25,7 +25,7 @@ const flexLabel = (timestamp: number, offset: number, status: string, zoomed) =>
       class: status + " transition l-text flex-item",
       key: timestamp
     },
-    zoomed ? prettifyHours(timestamp) : prettifyDate(timestamp)
+    prettifyDate(timestamp, zoomed ? "h:m" : "m d")
   );
 
 export interface AppState {
@@ -68,7 +68,7 @@ function refreshLoop() {
     }
     times.push(now);
     fps = times.length;
-    averageFps = averageFps ? Math.round((averageFps + fps) / 2) : fps
+    averageFps = averageFps ? Math.round((averageFps + fps) / 2) : fps;
     refreshLoop();
   });
 }
@@ -151,7 +151,7 @@ export const App: ComponentType = () => ({
   render(props: AppProps, state: AppState) {
     const id = this.id;
     //prettier-ignore
-    const { scaleX, data, dataLength, minY, pow, onZoom, zoomed, scaledX_, y__ } = props;
+    const { scaleX, data, dataLength, minY, pow, onZoom, zoomed, scaledX_, y__, minX, maxX } = props;
     const {
       visibles,
       sliderPos: { left, right },
@@ -263,7 +263,7 @@ export const App: ComponentType = () => ({
           "span",
           {
             class: "button",
-            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`,
+            ontouchstart: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
             // onmousedown: `${TOGGLE_CHART_HANDLER_NAME + id}("${chartId}")`
           },
           [
@@ -281,7 +281,7 @@ export const App: ComponentType = () => ({
       "div",
       {
         class: "switch",
-        ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()`,
+        ontouchstart: `${TOGGLE_DAY_HANDLER_NAME + id}()`
         // onmousedown: `${TOGGLE_DAY_HANDLER_NAME + id}()`
       },
       "Switch to Nigth Mode"
@@ -294,16 +294,23 @@ export const App: ComponentType = () => ({
       charts,
       pow
     } as RullerProps);
-    const header = zoomed
-      ? createElement(
-          "div",
-          { class: "header zoomout", ontouchstart: `${UNZOOM_HANDLER_NAME + id}()` },
-          "Zoom Out"
-        )
-      : createElement("div", { class: "header" }, "Followers");
+    const cuttedDates = catValues(rest(data.columns[0]), left, right, minX, maxX);
+    const firstDate = prettifyDate(cuttedDates[0], "d m y");
+    const lastDate = prettifyDate(last(cuttedDates), "d m y");
+    const midDate = prettifyDate(cuttedDates[Math.floor(cuttedDates.length / 2)], "dt, d m y");
+    const headerWrapper = createElement("div", { class: "flex" }, [
+      zoomed
+        ? createElement(
+            "div",
+            { class: "header zoomout", ontouchstart: `${UNZOOM_HANDLER_NAME + id}()` },
+            "Zoom Out"
+          )
+        : createElement("div", { class: "header" }, "Followers"),
+      createElement("div", { class: "b" }, zoomed ? `${midDate}`: `${firstDate} - ${lastDate}`)
+    ]);
 
     return createElement("div", { class: "rel" }, [
-      header,
+      headerWrapper,
       overlay,
       dots,
       ruller,
