@@ -36,7 +36,7 @@ export const SliderChart: ComponentType = () => ({
     if (
       !prevState.chartPathes ||
       props.charts.length !== prevState.chartPathes.length ||
-      props.zoomed !== prevState.zoomed
+      props.zoomed != prevState.zoomed
     ) {
       const { dataLength, charts, minY, scaleX, scaledX_, y__ } = props;
       if (props.data.percentage) {

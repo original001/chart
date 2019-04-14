@@ -67,7 +67,7 @@ export const prepareData = (
   const minY = data.stacked ? 0 : round(getExtremumY("min") / pow, PRECISION);
   let scaleYSlider = getScaleY(SLIDER_HEIGHT, maxY, minY);
   const scaledX_ = (x: number) => round((x - firstDate) * scaleX, 1);
-  const y__ = (f: (y: number) => number) => (y: number) => CHART_HEIGHT - f(y);
+  const y__ = (f: (y: number) => number) => (y: number) => round(CHART_HEIGHT - f(y), PRECISION);
   let i = 1;
   columns.sort((a, b) => (a[1] > b[1] ? -1 : a[1] === b[1] ? 0 : 1));
 

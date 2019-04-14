@@ -38,7 +38,7 @@ export const Chart: ComponentType = () => ({
   } as State,
   getDeriviedStateFromProps(props: ChartProps, prevState: State) {
     if (!props.data.stacked) return prevState;
-    if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length || props.zoomed !== prevState.zoomed) {
+    if (!prevState.chartPathes || props.charts.length !== prevState.chartPathes.length || props.zoomed != prevState.zoomed) {
 
       if (props.data.percentage) {
         let stackedValues = Array(props.dataLength).fill(0);
@@ -100,8 +100,8 @@ export const Chart: ComponentType = () => ({
       {
         // key: props.zoomed ? 1 : 0,
         width: CHART_WIDTH,
-        height: CHART_HEIGHT
-        // class: `w-ch`
+        height: CHART_HEIGHT,
+        class: `w-ch`
       },
       [
         createElement(

@@ -12,7 +12,7 @@ const MAX_SLIDER_SIZE = 50;
 export const Slider: ComponentType = () => ({
   ...componentMixin(),
   state: {
-    left: CHART_WIDTH * 3 / 4,
+    left: (CHART_WIDTH * 3) / 4,
     right: CHART_WIDTH
   },
   didMount() {
@@ -23,7 +23,7 @@ export const Slider: ComponentType = () => ({
     let compensationRight;
     const id = this.props.eventId;
     const makeCompensation = (clientX: number) => {
-      const {left, right} = this.state;
+      const { left, right } = this.state;
       beginClientX = clientX;
       beginLeft = left;
       beginRight = right;
@@ -50,7 +50,6 @@ export const Slider: ComponentType = () => ({
       });
     });
     window[START_TOUCH_HANDLER_NAME + id] = (e: TouchEvent) => {
-      // e.preventDefault();
       makeCompensation(e.targetTouches[0].clientX);
     };
     window[TOUCH_END_HANDLER_NAME + id] = () => {
@@ -60,10 +59,7 @@ export const Slider: ComponentType = () => ({
   didUpdate(prevProps, prevState) {
     const left = this.state.left / CHART_WIDTH;
     const right = this.state.right / CHART_WIDTH;
-    if (
-      prevState.left !== this.state.left ||
-      prevState.right !== this.state.right
-    ) {
+    if (prevState.left !== this.state.left || prevState.right !== this.state.right) {
       this.props.onChange({ left, right });
     }
   },
@@ -89,40 +85,43 @@ export const Slider: ComponentType = () => ({
   },
   render: (props, state) => {
     const id = props.eventId;
-    return createElement(
-      "div",
-      {
-        class: "sliderWrapper",
-        style: `left: ${(state.left - CHART_WIDTH).toFixed(0)}px; right: ${-state.right.toFixed(0)}px; border-left-width: ${CHART_WIDTH}px; border-right-width: ${CHART_WIDTH}px;`
-      },
-      [
-        createElement("div", { class: "slider" }, [
+    return createElement("div", { class: "sliderWrapper abs fw" }, [
+      createElement("div", {
+        ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
+        ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
+        ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
+        ontouchmove: `${TOUCH_HANDLER_NAME + id}(event)`,
+        class: "sliderWrapper abs fw"
+      }),
+      createElement(
+        "div",
+        { style: `transform: translateX(${state.right}px)`, class: "sliderEdgeBg right" },
+        [
           createElement("div", {
-            class: "sliderEdge sliderEdgeLeft",
-            // style: `transform: translateX(${state.left}px)`,
+            class: "sliderEdge right",
             ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
             ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
             ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
-            ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME + id}(event)`,
-            draggable: "true"
-          }),
-          createElement("div", {
-            class: "sliderCenter",
-            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
-            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
-            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
-            ontouchmove: `${TOUCH_HANDLER_NAME + id}(event)`
-          }),
-          createElement("div", {
-            class: "sliderEdge sliderEdgeRight",
-            // style: `transform: translateX(${state.right}px)`,
-            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
-            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
-            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
-            ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME + id}(event)`,
+            ontouchmove: `${TOUCH_RESIZE_RIGHT_HANDLER_NAME + id}(event)`
           })
-        ])
-      ]
-    );
+        ]
+      ),
+      createElement(
+        "div",
+        {
+          style: `transform: translateX(${state.left}px)`,
+          class: "sliderEdgeBg left"
+        },
+        [
+          createElement("div", {
+            class: "sliderEdge left",
+            ontouchstart: `${START_TOUCH_HANDLER_NAME + id}(event)`,
+            ontouchend: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchcancel: `${TOUCH_END_HANDLER_NAME + id}()`,
+            ontouchmove: `${TOUCH_RESIZE_LEFT_HANDLER_NAME + id}(event)`
+          })
+        ]
+      )
+    ]);
   }
 });
