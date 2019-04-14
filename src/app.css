@@ -143,17 +143,17 @@ body.night {
 .buttons {
   margin-top: 20px;
   display: flex;
+  flex-wrap: wrap;
 }
 .button {
   position: relative;
   display: inline-flex;
   height: 32px;
-  line-height: 32px;
   padding: 0 20px;
   align-items: center;
   border-radius: 32px;
   border: 2px solid;
-  margin-right: 15px;
+  margin: 0 10px 10px 0;
   color: #fff;
 }
 .button.active {
