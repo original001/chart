@@ -269,7 +269,7 @@ export const App: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
-          createElement("div", { class: "rel", style: "height: 30px" }, [
+          createElement("div", { class: "rel", style: "height: 30px; margin-top: 5px" }, [
             createElement(
               "div",
               {

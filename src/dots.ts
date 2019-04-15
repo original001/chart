@@ -151,7 +151,7 @@ export const Dots: ComponentType = () => ({
         path(
           createStackedPathAttr([[date, v]], _ => left, projectChartY, [getStack(ar, _i)]),
           data.colors[axises[_i]],
-          (CHART_WIDTH * extraScale) / dataLength + 0.05,
+          (CHART_WIDTH * extraScale) / (zoomed ? 168 : dataLength) + 0.05,
           "",
           true
         )

@@ -82,7 +82,7 @@ export const SliderChart: ComponentType = () => ({
     return prevState;
   },
   render(props: SliderChartProps, state: State) {
-    const { charts, isStacked, dataLength, data } = props;
+    const { charts, isStacked, dataLength, data, zoomed } = props;
     return createElement(
       TransitionGroup,
       {
@@ -99,7 +99,7 @@ export const SliderChart: ComponentType = () => ({
               path(
                 isStacked ? state.chartPathes[charts.length - 1 - i] : sliderPath,
                 color,
-                isStacked ? CHART_WIDTH / dataLength : 1,
+                isStacked ? CHART_WIDTH / (zoomed ? 168 : dataLength) : 1,
                 status,
                 isStacked,
                 data.percentage

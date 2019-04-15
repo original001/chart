@@ -72,7 +72,7 @@ export interface ChildMapping {
   [key: string]: Tree
 }
 
-export function getNextChildMapping(nextChildren: Tree[], prevChildMapping: ChildMapping) {
+export function getNextChildMapping(nextChildren: Tree[], prevChildMapping: ChildMapping, passedProps?: {}) {
   let nextChildMapping = getChildMapping(nextChildren)
   let children = mergeChildMappings(prevChildMapping, nextChildMapping)
 
@@ -90,17 +90,26 @@ export function getNextChildMapping(nextChildren: Tree[], prevChildMapping: Chil
     // item is new (entering)
     if (hasNext && (!hasPrev || isLeaving)) {
       // console.log('entering', key)
+      if (passedProps) {
+        children[key].props.passedProps = passedProps
+      }
       children[key].props.in = true;
       children[key].props.status = 'appear';
     } else if (!hasNext && hasPrev && !isLeaving) {
       // item is old (exiting)
       // console.log('leaving', key)
       // update prevChild
+      if (passedProps) {
+        children[key].props.passedProps = passedProps
+      }
       children[key].props.in = false;
     } else if (hasNext && hasPrev) {
       // item hasn't changed transition states
       // copy over the last transition props;
       // console.log('unchanged', key)
+      if (passedProps) {
+        children[key].props.passedProps = passedProps
+      }
       children[key].props.in = prevChild.props.in
     }
   })

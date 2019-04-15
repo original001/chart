@@ -10,30 +10,6 @@ interface Props {
   status: "enter" | "appear";
 }
 
-let timer;
-const cbs = [];
-let initialTick = true;
-const call = (cb, i) => {
-  cb();
-  delete cbs[i];
-};
-const accomodate = (cb, timeout?) => {
-  cbs.push(cb);
-  initialTick &&
-    Promise.resolve().then(() => {
-      initialTick = true;
-      clearTimeout(timer);
-      if (timeout != null) {
-        timer = setTimeout(() => {
-          cbs.forEach(call);
-        }, timeout);
-      } else {
-        cbs.forEach(call);
-      }
-    });
-  initialTick = false;
-};
-
 export const Transition: ComponentType = () => ({
   ...componentMixin(),
   state: {
@@ -75,22 +51,18 @@ export const Transition: ComponentType = () => ({
   didUpdate() {
     const prevState = this.state as State;
     if (prevState.status === "exiting") {
-      // accomodate(() => {
-      //   this.send({ type: "update" });
-      // }, this.props.timeout || 200);
       clearTimeout(this.timer);
       this.timer = setTimeout(() => {
         this.send({ type: "update" });
       }, this.props.timeout || 200);
     }
     if (prevState.status === "entering") {
-      // accomodate(() => {
-      //   this.send({ type: "entered" });
-      // });
       clearTimeout(this.timer);
+
       this.timer = setTimeout(() => {
+      this._innerTree.host.scrollTop
       this.send({ type: "entered" });
-      }, 20);
+      }, 10);
     }
   },
   didMount() {
@@ -102,7 +74,7 @@ export const Transition: ComponentType = () => ({
     }
   },
   render: (props, state: State) => {
-    return props.children(state.status);
+    return props.children(state.status, props.passedProps);
   },
   reducer: (action, state: State): State => {
     switch (action.type) {

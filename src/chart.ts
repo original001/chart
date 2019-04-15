@@ -146,7 +146,8 @@ export const Chart: ComponentType = () => ({
       id,
       scaleY,
       offsetY,
-      showPopupOn
+      showPopupOn,
+      zoomed
     } = props;
     const { dataLength } = props;
     const { relScaleX, relScaleY } = state;
@@ -227,7 +228,7 @@ export const Chart: ComponentType = () => ({
                   : path(
                       stacked ? state.chartPathes[charts.length - 1 - i] : chartPath,
                       color,
-                      stacked ? CHART_WIDTH / dataLength + 0.05 : 2,
+                      stacked ? zoomed ? CHART_WIDTH / 168 + 0.05 : CHART_WIDTH / dataLength + 0.05 : 2,
                       status,
                       stacked,
                       percentage

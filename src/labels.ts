@@ -20,7 +20,7 @@ export const TransitionGroup: ComponentType = () => ({
     const nextState = {
       children: prevState.isFirstRender
         ? getInitialChildMapping(props.children)
-        : getNextChildMapping(props.children, prevState.children),
+        : getNextChildMapping(props.children, prevState.children, props.passedProps),
       isFirstRender: false
     };
     // console.log(nextState.children['1'])

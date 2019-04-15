@@ -77,7 +77,7 @@ export const prettifyDate = (
     case "h:m":
       const h = d.getUTCHours();
       const m = d.getUTCMinutes();
-      return `${h > 10 ? "" : "0"}${h}:${m > 10 ? "" : "0"}${m}`;
+      return `${h > 9 ? "" : "0"}${h}:${m > 9 ? "" : "0"}${m}`;
   }
 };
 
@@ -103,7 +103,7 @@ export const path = (
       d: path,
       "stroke-width": strokeWidth.toFixed(1),
       stroke: color,
-      class: `transition-p ${status}`,
+      class: `transition ${status}`,
       "vector-effect": !isStacked ? "non-scaling-stroke" : "",
       "stroke-linejoin": !isStacked ? "round" : "",
       fill: isPercentage ? color : "none",

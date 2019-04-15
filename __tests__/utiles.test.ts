@@ -2,7 +2,7 @@ import { getBoundsX, getBounds, round } from "../src/axis";
 import { shallowEqual, getStackedMax, catValuesByDates, prettifyDate } from "../src/utils";
 import { ChartInfo } from "src/prepareData";
 
-describe("dates values", () => {
+xdescribe("dates values", () => {
   it("", () => {
     const values = getBoundsX(1, 12, 2);
     expect(values).toEqual([2, 4, 6, 8, 10, 12]);
@@ -51,7 +51,7 @@ describe("shallow equal", () => {
   });
 });
 
-describe("stacked", () => {
+xdescribe("stacked", () => {
   it("max", () => {
     const res = getStackedMax(0, 3, [
       { values: [1, 2, 4] } as ChartInfo,
@@ -62,7 +62,7 @@ describe("stacked", () => {
   });
 });
 
-describe("cat", () => {
+xdescribe("cat", () => {
   it("0 .. 0.25", () => {
     const res = catValuesByDates(
       ["x", 1, 2, 3, 4, 5, 5.1, 5.2, 6, 7, 8, 9],

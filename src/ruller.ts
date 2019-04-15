@@ -2,7 +2,7 @@ import { ComponentType, componentMixin, createElement } from "./reconciler";
 import { CHART_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
-import { shallowEqual } from "./utils";
+import { shallowEqual, last } from "./utils";
 import { round } from "./axis";
 import { ChartInfo } from "./prepareData";
 
@@ -12,28 +12,59 @@ export interface RullerProps {
   scale: number;
   offset: number;
   charts: ChartInfo[];
-  pow: 1 | 1000 | 1000000
+  pow: 1 | 1000 | 1000000;
+}
+
+interface State {
+    values: number[],
+    scaleDirection: 'up' | 'down',
+    transformOrigin: number
 }
 
 export const TransitionRuller: ComponentType = () => ({
   ...componentMixin(),
+  state: {
+    values: null,
+    scaleDirection: null,
+    transformOrigin: null
+  } as State,
   shouldUpdate(nextProps: RullerProps) {
     if (nextProps.valuesY2) return true;
-    return !shallowEqual(nextProps.values, this.props.values)
+    return !shallowEqual(nextProps.values, this.props.values);
   },
-  render: (props: RullerProps, state) => {
+  getDeriviedStateFromProps(props: RullerProps, prevState: State):State {
+    if (!props.values) return;
+    if (!prevState.values) {
+      return { ...prevState, values: props.values };
+    }
+    const range = last(props.values) - props.values[0];
+    const prevRange = last(prevState.values) - prevState.values[0];
+    if (prevRange !== range) {
+      const firstDiff = (props.values[0] - prevState.values[0])
+      const lastDiff = (last(props.values) - last(prevState.values))
+      const transformOrigin = firstDiff / (firstDiff + lastDiff)
+      return {
+        ...prevState,
+        values: props.values,
+        scaleDirection: prevRange > range ? "up" : "down",
+        transformOrigin
+      };
+    }
+    return prevState;
+  },
+  render: (props: RullerProps, state: State) => {
     const { values, valuesY2, charts, pow } = props;
     const powToNumber = (v, pow) => {
-      if (v === 0) return v + '';
+      if (v === 0) return v + "";
       switch (pow) {
         case 1:
-          return v + '';
+          return v + "";
         case 1000:
-          return `${v}K`
+          return `${v}K`;
         case 1000000:
-          return `${v}M`
+          return `${v}M`;
       }
-    }
+    };
     let color1;
     let color2;
     if (valuesY2) {
@@ -47,46 +78,41 @@ export const TransitionRuller: ComponentType = () => ({
       TransitionGroup,
       {
         wrapper: children =>
-          createElement(
-            "div",
-            {
-              class: "transition translate rel w-ch-c",
-              //prettier-ignore
-              style: `transform: scale(1, ${props.scale}) translate(0, ${props.offset - 12.5 / props.scale}px) ; transform-origin: 0 ${CHART_HEIGHT}px`
-            },
-            children
-          )
+          createElement("div", { class: `rel scale-${state.scaleDirection} z-5` }, children),
+        passedProps: {
+          t: state.transformOrigin
+        }
       },
       [
-        charts.length > 0 && createElement(Transition, {
-          timeout: 500,
-          key: key,
-          children: status =>
-            createElement(
-              "div",
-              {
-                key,
-                class: `${status} transition abs fw w-ch-o`,
-              },
-              values.map((v, i) =>
-                createElement(
-                  "div",
-                  {
-                    class: `r-line abs fw w-ch`,
-                    style: `transform: scale(1, ${round(1 / props.scale, PRECISION)}) translate(0, ${CHART_HEIGHT - v}px) ; transform-origin: 0 ${CHART_HEIGHT -
-                      v}px`
-                  },
-                  //prettier-ignore
-                  !valuesY2
+        charts.length > 0 &&
+          createElement(Transition, {
+            timeout: 500,
+            key: key,
+            children: (status, passedProps) =>
+              createElement(
+                "div",
+                {
+                  key,
+                  class: `${status} flex column abs fw fh`,
+                  style: `height: ${CHART_HEIGHT}px; transform-origin: 0 ${CHART_HEIGHT * (1 -  (passedProps && passedProps.t != null ? passedProps.t : state.transformOrigin))}px`
+                },
+                values.map((v, i) =>
+                  createElement(
+                    "div",
+                    {
+                      class: `r-line fw`
+                    },
+                    //prettier-ignore
+                    !valuesY2
                     ? powToNumber(v, pow)
                     : [
                         createElement("span", { style: `color: ${color1}`, class: `${!color1 ? 'exited' : 'entered'} transition` }, powToNumber(v, pow)),
                         createElement("span", { style: `color: ${color2}`, class: `${!color2 ? 'exited' : 'entered'} transition`  }, powToNumber(valuesY2[i], pow))
                       ]
+                  )
                 )
               )
-            )
-        })
+          })
       ]
     );
   }

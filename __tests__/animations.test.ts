@@ -9,23 +9,26 @@ describe("animation", () => {
     if (document.body.firstChild)
       document.body.removeChild(document.body.firstChild);
   });
-  xit("transition", () => {
+  it("transition", () => {
     const Helper = () => ({
       ...componentMixin(),
-      state: "enter",
+      state: {
+        status: 'enter'
+      },
       reducer(action) {
         switch (action.type) {
           case "1":
-            return "appear";
+            return {status: 'appear'};
           case "2":
-            return "exit";
+            return {status: 'exit'};
         }
       },
-      render(state) {
+      render(props, state) {
         // console.log(state)
         return createElement(Transition, {
           children: status => createElement("g", { status }),
-          in: state !== "appear"
+          in: state.status !== "appear",
+          status: state.status
         });
       }
     });
@@ -39,14 +42,14 @@ describe("animation", () => {
     helperInst.send({ type: "1" });
     expect(body.firstElementChild.getAttribute("status")).toBe("exiting");
     jest.runOnlyPendingTimers();
-    expect(body.firstElementChild.tagName).toBe("notexisted");
+    expect(body.firstElementChild.getAttribute("status")).toBe("exited");
     helperInst.send({ type: "2" });
     expect(body.firstElementChild.getAttribute("status")).toBe("entering");
     jest.runOnlyPendingTimers();
     expect(body.firstElementChild.getAttribute("status")).toBe("entered");
     // expect(body.firstElementChild.getAttribute('status')).toBe('entered')
   });
-  xit("transition group", () => {
+  it("transition group", () => {
     const Helper = () => ({
       ...componentMixin(),
       state: {
@@ -105,6 +108,7 @@ describe("animation", () => {
     expect(root.firstElementChild.getAttribute("status")).toBe("exiting");
     jest.runOnlyPendingTimers();
     // expect(root).toBe({});
+    expect(root.firstElementChild.getAttribute("status")).toBe("exited");
     // expect(root.lastElementChild.tagName).toBe('notexisted');
     helperInst.send({ type: "2" });
     // expect(root).toBe({});
@@ -129,6 +133,5 @@ describe("animation", () => {
     expect(root.lastElementChild.getAttribute("status")).toBe("exiting");
     jest.runOnlyPendingTimers(); //20
     expect(root.lastElementChild.getAttribute("status")).toBe("exited");
-    // expect(root.children[1].getAttribute("status")).toBe("exiting");
   });
 });

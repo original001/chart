@@ -106,36 +106,46 @@ body.night {
   transition: opacity 0.5s;
 }
 .transition.translate {
-  transition: transform 0.5s, opacity 0.5s;
+  transition: transform 1.5s, opacity 1.5s;
   transform: scaleY(1);
 }
 .transition-d {
   transition: transform 0.5s;
 }
-.transition-d-0 {
-  transition: transform 0.001s;
-}
-.transition-p {
-  transition: opacity 0.5s;
-}
-.transition-t-d {
-  transform: scaleY(0);
-  transition: transform 0.5s, d 0.5s;
-}
-.entering.transition-t-d,
-.exiting.transition-t-d,
-.exited.transition-t-d {
-  transform: scaleY(0);
-}
-.entered.transition-t-d {
-  transform: scaleY(1);
-}
 .exiting,
 .exited {
   opacity: 0;
 }
+.scale-down .exiting {
+  transform: scaleY(0.5);
+  transition: transform .5s, opacity .5s ease-out;
+}
+.scale-down .exited {
+  transform: translateX(0);
+}
+.scale-down .entering {
+  transform: scaleY(1.5);
+}
+.scale-down .entered {
+  transform: translateX(0);
+  transition: transform .5s, opacity .5s;
+}
+.scale-up .exiting {
+  transform: scaleY(1.5);
+  transition: transform .5s, opacity .5s ease-out;
+}
+.scale-up .exited {
+  transform: translateX(0);
+}
+.scale-up .entering {
+  transform: scaleY(0.5);
+}
+.scale-up .entered {
+  transform: translateX(0);
+  transition: transform .5s, opacity .5s;
+}
 .entering {
-  opacity: 1;
+  opacity: 0;
 }
 .entered {
   opacity: 1;
@@ -271,6 +281,9 @@ body.night {
 .z-20 {
   z-index: 20;
 }
+.z-5 {
+  z-index: 5;
+}
 .night .popup {
   background: #19212b;
 }
@@ -303,6 +316,9 @@ body.night {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
+}
+.column {
+  flex-flow: column-reverse;
 }
 /* .popup {
   width: 110px;
