@@ -53,7 +53,7 @@ describe("prepare data", () => {
   });
 
   it("y scaled", () => {
-    const d = prepareData({ ...data, y_scaled: true }, );
+    const d = prepareData({ ...data, y_scaled: true });
     expected(d);
     expect(d.charts[1].sliderPath).toBe("M0 28.9 L25 45 L50 16.1 L75 0 L100 11.3");
     expect(d.charts[0].sliderPath).toBe("M0 45 L25 0 L50 9.4 L75 14.7 L100 40.8");
@@ -62,7 +62,7 @@ describe("prepare data", () => {
     expect(d.minY).toBe(0.012);
   });
   it("stacked", () => {
-    const d = prepareData({ ...data, stacked: true }, );
+    const d = prepareData({ ...data, stacked: true });
     expected(d);
     expect(d.charts[1].sliderPath).toBe(null);
     expect(d.charts[0].sliderPath).toBe(null);
@@ -99,26 +99,28 @@ describe("prepare data", () => {
 describe("localPrepare", () => {
   const expectedX = [
     1551657600000,
-    1551674880000,
-    1551692160000,
-    1551709440000,
-    1551726720000,
-    1551744000000,
-    1551761280000,
-    1551778560000,
-    1551795840000,
-    1551813120000,
-    1551830400000,
-    1551847680000,
-    1551864960000,
-    1551882240000,
-    1551899520000,
-    1551916800000,
-    1551934080000,
-    1551951360000,
-    1551968640000,
-    1551985920000,
-    1552003200000
+    1551673620000,
+    1551689640000,
+    1551705660000,
+    1551721680000,
+    1551737700000,
+    1551753720000,
+    1551769740000,
+    1551785760000,
+    1551801780000,
+    1551817800000,
+    1551833820000,
+    1551849840000,
+    1551865860000,
+    1551881880000,
+    1551897900000,
+    1551913920000,
+    1551929940000,
+    1551945960000,
+    1551961980000,
+    1551978000000,
+    1551994020000,
+    1552010040000
   ];
   it("default", () => {
     const p = prepareData(data);

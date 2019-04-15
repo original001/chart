@@ -1,5 +1,5 @@
 import { getBoundsX, getBounds, round } from "../src/axis";
-import { shallowEqual, getStackedMax, catValuesByDates } from "../src/utils";
+import { shallowEqual, getStackedMax, catValuesByDates, prettifyDate } from "../src/utils";
 import { ChartInfo } from "src/prepareData";
 
 describe("dates values", () => {
@@ -88,5 +88,16 @@ describe("cat", () => {
 });
 
 describe('dates', () => {
-  
+  it('prettify full hours', () =>{ 
+    const res = prettifyDate(1555271516030, 'h:m')
+    expect(res).toBe('19:51')
+  })
+  it('prettify partial hours', () =>{ 
+    const res = prettifyDate(1555135200130, 'h:m')
+    expect(res).toBe('06:00')
+  })
+  it('prettify partial hours', () =>{ 
+    const res = prettifyDate(1555235200130, 'h:m')
+    expect(res).toBe('09:46')
+  })
 })

@@ -56,7 +56,10 @@ export const getStackedMax = (from, to, charts: ChartInfo[]) => {
 //prettier-ignore
 var MONTH_NAMES = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
 var DAY_NAMES = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d m y" | "h:m" | "dr m y") => {
+export const prettifyDate = (
+  timestamp: number,
+  format: "m d" | "dt, d m y" | "d m y" | "h:m" | "dr m y"
+) => {
   const d = new Date(timestamp);
   const date = DAY_NAMES[d.getDay()];
   const day = d.getDate();
@@ -72,9 +75,9 @@ export const prettifyDate = (timestamp: number, format: "m d" | "dt, d m y" | "d
     case "m d":
       return `${month} ${day}`;
     case "h:m":
-      const hours = d.getUTCHours();
-      const minutes = d.getUTCMinutes();
-      return `${hours}:${minutes}`;
+      const h = d.getUTCHours();
+      const m = d.getUTCMinutes();
+      return `${h > 10 ? "" : "0"}${h}:${m > 10 ? "" : "0"}${m}`;
   }
 };
 

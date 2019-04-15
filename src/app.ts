@@ -262,7 +262,9 @@ export const App: ComponentType = () => ({
       ]
     );
     const scaledWidth = CHART_WIDTH * state.extraScale;
-
+    
+    const cuttedDates = catValues(rest(data.columns[0]), left, right, minX, maxX);
+    const isLessThanDay = (last(cuttedDates) - cuttedDates[0]) / 3600000 / 24 < 3
     const labels = createElement(
       TransitionGroup,
       {
@@ -285,7 +287,7 @@ export const App: ComponentType = () => ({
           createElement(
             "div",
             { class: `flex-labels fw fh ${status} transition` },
-            valuesX.map((x, i) => flexLabel(x, (i * scaledWidth) / valuesX.length, status, zoomed))
+            valuesX.map((x, i) => flexLabel(x, (i * scaledWidth) / valuesX.length, status, zoomed && isLessThanDay))
           ),
         key: valuesX.length
       })]
@@ -330,7 +332,6 @@ export const App: ComponentType = () => ({
       charts,
       pow
     } as RullerProps);
-    const cuttedDates = catValues(rest(data.columns[0]), left, right, minX, maxX);
     const firstDate = prettifyDate(cuttedDates[0], "dr m y");
     const lastDate = prettifyDate(last(cuttedDates), "dr m y");
     const midDate = prettifyDate(cuttedDates[Math.floor(cuttedDates.length / 2)], "dt, d m y");
