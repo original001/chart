@@ -55,27 +55,6 @@ export interface AppProps extends PreparedData {
   zoomed: boolean;
 }
 
-const times = [];
-let averageFps;
-let fps;
-
-// setTimeout(() => alert(averageFps), 5000)
-
-function refreshLoop() {
-  window.requestAnimationFrame(() => {
-    const now = performance.now();
-    while (times.length > 0 && times[0] <= now - 1000) {
-      times.shift();
-    }
-    times.push(now);
-    fps = times.length;
-    averageFps = averageFps ? Math.round((averageFps + fps) / 2) : fps;
-    refreshLoop();
-  });
-}
-
-refreshLoop();
-
 export const App: ComponentType = () => ({
   ...componentMixin(),
   id: Date.now(),
