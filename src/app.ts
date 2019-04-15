@@ -37,12 +37,14 @@ export interface AppState {
   mode: string;
   visibles: { [id: string]: boolean };
   showPopupOn: number;
+  cachedSliderPos: { left: number; right: number };
 }
 
 export const defaultAppState: AppState = {
   extraScale: 4,
   offset: 3,
   sliderPos: { left: 0.75, right: 1 },
+  cachedSliderPos: null,
   touchEndTimestamp: 0,
   mode: "night", // workaround,
   showPopupOn: null,
@@ -147,12 +149,26 @@ export const App: ComponentType = () => ({
       }, 10);
     };
   },
-  getDeriviedStateFromProps(props: AppProps, prevState) {
+  getDeriviedStateFromProps(props: AppProps, prevState: AppState): AppState {
     if (!prevState.visibles) return { ...prevState, visibles: props.visibles };
     const visibles = {};
     props.charts.forEach(c => {
       visibles[c.id] = prevState.visibles[c.id] != null ? prevState.visibles[c.id] : true;
     });
+    if (props.zoomed && !prevState.cachedSliderPos) {
+      const nextState = {
+        visibles,
+        cachedSliderPos: prevState.sliderPos
+      }
+      return this.reducer({type: 'updateSlider', payload: {left: 3/7, right: 4/7}}, nextState) 
+    }
+    if (!props.zoomed && prevState.cachedSliderPos) {
+      const nextState = {
+        visibles,
+        cachedSliderPos: null
+      }
+      return this.reducer({type: 'updateSlider', payload: prevState.cachedSliderPos}, nextState) 
+    }
     return { ...prevState, visibles };
   },
   render(props: AppProps, state: AppState) {
@@ -234,7 +250,8 @@ export const App: ComponentType = () => ({
         createElement(Slider, {
           onChange: payload => this.send({ type: "updateSlider", payload }),
           onTouchEnd: () => this.send({ type: "touchEnd", payload: Date.now() }),
-          eventId: id
+          eventId: id,
+          ...state.sliderPos
         }),
         //prettier-ignore
         createElement(SliderChart, { charts, dataLength, minY, scaleX, isStacked, data, scaledX_, y__, zoomed } as SliderChartProps)
@@ -288,7 +305,7 @@ export const App: ComponentType = () => ({
               class: `button-label ${visibles[chartId] ? "active" : ""}`,
               style: `background: ${data.colors[chartId]}`
             }),
-            visibles[chartId] && createElement("span", { class: `button-icon` }),
+            createElement("span", { class: `button-icon ${visibles[chartId] ? '' : 'hidden'}` }),
             createElement("span", { class: "rel" }, data.names[chartId])
           ]
         )

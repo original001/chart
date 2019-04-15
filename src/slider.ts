@@ -27,8 +27,8 @@ export const Slider: ComponentType = () => ({
       beginClientX = clientX;
       beginLeft = left;
       beginRight = right;
-      compensation = 10 + (clientX - beginLeft);
-      compensationRight = 10 - (beginRight - clientX);
+      compensation = (clientX - beginLeft);
+      compensationRight =  - (beginRight - clientX);
     };
     window[TOUCH_HANDLER_NAME + id] = createRaf((e: TouchEvent) => {
       e.preventDefault();
@@ -57,15 +57,35 @@ export const Slider: ComponentType = () => ({
       this.props.onTouchEnd();
     };
   },
+  getDeriviedStateFromProps(props, prevState) {
+    if (Math.abs(props.left - prevState.left / CHART_WIDTH) > 0.1 || Math.abs(props.right - prevState.right / CHART_WIDTH) > 0.1) {
+      return {
+        left: props.left * CHART_WIDTH,
+        right: props.right * CHART_WIDTH,
+        forceAnimate: true
+      }
+    }
+    return prevState
+  },
   didUpdate(prevProps, prevState) {
     const left = this.state.left / CHART_WIDTH;
     const right = this.state.right / CHART_WIDTH;
     if (prevState.left !== this.state.left || prevState.right !== this.state.right) {
       this.props.onChange({ left, right });
     }
+    if (this.state.forceAnimate) {
+      setTimeout(() => {
+        this.send({type: 'cleanAnimation'})
+      },500)
+    }
   },
   reducer({ type, payload }, state) {
     switch (type) {
+      case "cleanAnimation":
+        return {
+          ...state,
+          forceAnimate: false
+        }
       case "updatePos":
         const size = state.right - state.left;
         if (payload < 0) return { left: 0, right: size };
@@ -96,7 +116,7 @@ export const Slider: ComponentType = () => ({
       }),
       createElement(
         "div",
-        { style: `transform: translateX(${state.right}px)`, class: "sliderEdgeBg right" },
+        { style: `transform: translateX(${state.right}px)`, class: `sliderEdgeBg right ${state.forceAnimate ? 'transition-d' : ''}` },
         [
           createElement("div", {
             class: "sliderEdge right",
@@ -111,7 +131,7 @@ export const Slider: ComponentType = () => ({
         "div",
         {
           style: `transform: translateX(${state.left}px)`,
-          class: "sliderEdgeBg left"
+          class: `sliderEdgeBg left ${state.forceAnimate ? 'transition-d' : ''}`
         },
         [
           createElement("div", {

@@ -193,6 +193,9 @@ body.night {
   top: -1px;
   margin-right: 6px;
 }
+.button-icon.hidden {
+  display: none;
+}
 .switch {
   margin: 50px 0;
   color: #108be3;

@@ -165,7 +165,7 @@ export const getBounds = function(
 };
 
 export const getBoundsX = (scale: number, high: number, low: number) => {
-  let step = (high - low) / 5;
+  let step = (high - low + 3600000) / 7;
   if (scale > 1.6) {
     step = step / 2;
   }

@@ -107,7 +107,8 @@ export const path = (
       "vector-effect": !isStacked ? "non-scaling-stroke" : "",
       "stroke-linejoin": !isStacked ? "round" : "",
       fill: isPercentage ? color : "none",
-      key: color
+      key: color,
+      calcMode: 'paced'
     },
     [createElement(Animate, { value: path })]
   );
