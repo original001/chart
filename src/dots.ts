@@ -117,7 +117,7 @@ export const Dots: ComponentType = () => ({
               {},
               data.percentage
                 ? [
-                    createElement("span", { class: "b proc" }, `${values[i]}%`),
+                    createElement("span", { class: "b proc" }, `${Math.round(values[i])}%`),
                     createElement("span", {}, `${name}`)
                   ]
                 : name

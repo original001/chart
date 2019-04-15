@@ -203,9 +203,9 @@ export const localPrepare = (props: PreparedData, state: AppState): LocalData =>
       localMaxY = 100;
     } else {
       localMaxY = getStackedMax(
-        Math.floor(dataLength * left) + 1,
-        Math.ceil(dataLength * right),
-        charts
+        0,
+        cuttedCharts.length ? cuttedCharts[0].values.length : 0,
+        cuttedCharts
       );
     }
   } else {
