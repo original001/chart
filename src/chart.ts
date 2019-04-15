@@ -1,5 +1,5 @@
 import { ComponentType, componentMixin, createElement } from "./reconciler";
-import { CHART_WIDTH, CHART_HEIGHT } from "./constant";
+import { CHART_WIDTH, CHART_HEIGHT, PRECISION } from "./constant";
 import { TransitionGroup } from "./labels";
 import { Transition } from "./transition";
 import { ChartDto } from "./chart_data";
@@ -30,6 +30,7 @@ interface State {
   zoomed: boolean;
   relScaleX: number;
   relScaleY: number;
+  rescaled: boolean;
 }
 
 export const Chart: ComponentType = () => ({
@@ -38,7 +39,8 @@ export const Chart: ComponentType = () => ({
     chartPathes: null,
     zoomed: null,
     relScaleX: null,
-    relScaleY: null
+    relScaleY: null,
+    rescaled: false,
   } as State,
   getDeriviedStateFromProps(props: ChartProps, state: State) {
     const prevState = { ...state };
@@ -94,11 +96,17 @@ export const Chart: ComponentType = () => ({
     return prevState;
   },
   timer: null,
-  reducer(action, prevState) {
+  reducer(action, prevState: State): State {
     switch (action.type) {
+      case "scale2":
+        return {
+          ...prevState,
+          rescaled: false
+        };
       case "scale":
         return {
           ...prevState,
+          rescaled: true,
           relScaleX: action.payload.scaleX,
           relScaleY: action.payload.scaleY
         };
@@ -106,10 +114,18 @@ export const Chart: ComponentType = () => ({
   },
   didUpdate() {
     const props = this.props as ChartProps;
+    const state = this.state as State;
     if (props.data.y_scaled || props.data.stacked ) return;
+    if (state.rescaled) {
+      setTimeout(() => {
+        this.send({ type: 'scale2' })
+      }, 100)
+      return;
+    }
     if (this.timer) {
       clearTimeout(this.timer);
     }
+    if (state.relScaleX === props.extraScale && state.relScaleY === props.scaleY) return;
     // return;
     this.timer = setTimeout(() => {
       clearTimeout(this.timer);
@@ -137,8 +153,8 @@ export const Chart: ComponentType = () => ({
     const { y_scaled, stacked, percentage } = data;
     const chartOpacity = showPopupOn && stacked && !percentage ? 0.5 : 1;
     const offsetX = offset * CHART_WIDTH;
-    const wrapperScaleX = extraScale / relScaleX;
-    const wrapperScaleY = scaleY / relScaleY;
+    const wrapperScaleX = round(extraScale / relScaleX, PRECISION);
+    const wrapperScaleY = round(scaleY / relScaleY, PRECISION);
     const divWrapper = children =>
       y_scaled ? children : createElement(
         "div",
@@ -155,7 +171,7 @@ export const Chart: ComponentType = () => ({
             {
               //prettier-ignore
               style: `transform: scaleY(${wrapperScaleY}) translateY(${offsetY * relScaleY}px);transform-origin: 0 ${CHART_HEIGHT}px;`,
-              class: wrapperScaleX == 1 && wrapperScaleY == 1 ? "" : "transition-d"
+              class: state.rescaled ? "" : "transition-d"
             },
             [children]
           )
